@@ -1,0 +1,12 @@
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Quantum_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Classical_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/EM_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Fluid_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Nuclear_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Optics_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/SolidState_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/Thermal_obj.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/PhysicsEngine.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/PhysicsEngineTest.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/edit_cache.dir
+C:/Users/stavr/source/repos/PhysicsEngineCore/build/CMakeFiles/rebuild_cache.dir
