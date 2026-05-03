@@ -202,3 +202,7 @@ target_include_directories(PhysicsEngineTest PRIVATE
     ${EIGEN_DIR}
     ${SOLIDSTATE_DIR}/Eigen
 )
+# ── AABB collision test ─────────────────────────────────────────────────────
+add_executable(test_aabb tests/test_aabb.cpp)
+target_include_directories(test_aabb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_aabb COMMAND test_aabb)
