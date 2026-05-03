@@ -202,6 +202,16 @@ target_include_directories(PhysicsEngineTest PRIVATE
     ${EIGEN_DIR}
     ${SOLIDSTATE_DIR}/Eigen
 )
+[3 lines of post-context]
+# ── OBB collision test ───────────────────────────────────────────────────────
+add_executable(test_obb tests/test_obb.cpp)
+target_include_directories(test_obb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_obb COMMAND test_obb)
+[3 lines of post-context]
+# ── Sphere collision test ────────────────────────────────────────────────────
+add_executable(test_sphere tests/test_sphere.cpp)
+target_include_directories(test_sphere PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_sphere COMMAND test_sphere)
 # ── AABB collision test ─────────────────────────────────────────────────────
 add_executable(test_aabb tests/test_aabb.cpp)
 target_include_directories(test_aabb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
