@@ -233,3 +233,7 @@ add_test(NAME test_capsule COMMAND test_capsule)
 add_executable(test_aabb tests/test_aabb.cpp)
 target_include_directories(test_aabb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME test_aabb COMMAND test_aabb)
+# ── Convex Polyhedron collision test ─────────────────────────────────────────
+add_executable(test_convex_polyhedron tests/test_convex_polyhedron.cpp)
+target_include_directories(test_convex_polyhedron PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_convex_polyhedron COMMAND test_convex_polyhedron)
