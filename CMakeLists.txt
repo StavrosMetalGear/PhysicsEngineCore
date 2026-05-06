@@ -212,6 +212,15 @@ add_test(NAME test_obb COMMAND test_obb)
 add_executable(test_sphere tests/test_sphere.cpp)
 target_include_directories(test_sphere PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME test_sphere COMMAND test_sphere)
+# ── Plane collision test ─────────────────────────────────────────────────────
+add_executable(test_plane tests/test_plane.cpp)
+target_include_directories(test_plane PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_plane COMMAND test_plane)
+
+# ── Ray intersection test ────────────────────────────────────────────────────
+add_executable(test_ray tests/test_ray.cpp)
+target_include_directories(test_ray PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_ray COMMAND test_ray)
 # ── Capsule collision test ───────────────────────────────────────────────────
 add_executable(test_capsule tests/test_capsule.cpp)
 target_include_directories(test_capsule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
