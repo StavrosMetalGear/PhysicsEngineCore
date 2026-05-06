@@ -14,7 +14,7 @@ int main() {
     AABB box{{-1, -1, -1}, {1, 1, 1}};
     Sphere s4{{0.5f, 0.5f, 0.5f}, 0.5f};
     Sphere s5{{2, 2, 2}, 0.5f};
-    std::cout << "box intersects s4: " << intersects(box, s4) << std::endl;
-    std::cout << "box intersects s5: " << intersects(box, s5) << std::endl;
+    std::cout << "box intersects s4: " << intersects_aabb_sphere(box, s4) << std::endl;
+    std::cout << "box intersects s5: " << intersects_aabb_sphere(box, s5) << std::endl;
     return 0;
 }

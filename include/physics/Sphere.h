@@ -18,8 +18,9 @@ struct Sphere {
     }
 };
 
+#include "physics/AABB.h"
 // Check if an AABB intersects with a Sphere
-inline bool intersects(const AABB& box, const Sphere& sphere) {
+inline bool intersects_aabb_sphere(const AABB& box, const Sphere& sphere) {
     float distSq = 0.0f;
     for (int i = 0; i < 3; ++i) {
         float v = sphere.center[i];
