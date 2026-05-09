@@ -212,6 +212,10 @@ add_test(NAME test_obb COMMAND test_obb)
 add_executable(test_sphere tests/test_sphere.cpp)
 target_include_directories(test_sphere PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME test_sphere COMMAND test_sphere)
+# ── Narrowphase collision test ───────────────────────────────────────────────
+add_executable(test_narrowphase tests/test_narrowphase.cpp)
+target_include_directories(test_narrowphase PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME test_narrowphase COMMAND test_narrowphase)
 # ── Broadphase collision test ────────────────────────────────────────────────
 add_executable(test_broadphase tests/test_broadphase.cpp)
 target_include_directories(test_broadphase PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
