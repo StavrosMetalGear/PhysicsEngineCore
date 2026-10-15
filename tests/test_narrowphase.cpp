@@ -16,24 +16,6 @@ bool sphere_vs_sphere(const Shape& a, const Shape& b) {
 bool aabb_vs_sphere(const Shape& a, const Shape& b) {
     return intersects_aabb_sphere(std::get<AABB>(a.data), std::get<Sphere>(b.data));
 }
-bool sphere_vs_sphere(const Shape& a, const Shape& b) {
-bool aabb_vs_sphere(const Shape& a, const Shape& b) {
-bool obb_vs_obb(const Shape& a, const Shape& b) {
-bool capsule_vs_capsule(const Shape& a, const Shape& b) {
-bool sphere_vs_plane(const Shape& a, const Shape& b) {
-bool aabb_vs_plane(const Shape& a, const Shape& b) {
-bool sphere_vs_triangle(const Shape& a, const Shape& b) {
-bool convex_vs_convex(const Shape& a, const Shape& b) {
-// Example collision functions
-bool aabb_vs_aabb(const Shape& a, const Shape& b) {
-    return std::get<AABB>(a.data).intersects(std::get<AABB>(b.data));
-}
-bool sphere_vs_sphere(const Shape& a, const Shape& b) {
-    return std::get<Sphere>(a.data).intersects(std::get<Sphere>(b.data));
-}
-bool aabb_vs_sphere(const Shape& a, const Shape& b) {
-    return intersects_aabb_sphere(std::get<AABB>(a.data), std::get<Sphere>(b.data));
-}
 bool obb_vs_obb(const Shape& a, const Shape& b) {
     return std::get<OBB>(a.data).intersects(std::get<OBB>(b.data));
 }
