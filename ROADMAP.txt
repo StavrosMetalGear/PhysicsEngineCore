@@ -108,6 +108,16 @@ PHASE 2 CHECKPOINT
 A clean consumer can include PhysicsEngine.h, compile against documented names, and
 understand ownership, errors, units, and threading expectations without reading internals.
 
+STATUS: COMPLETED
+- Inventoried the eight module C API declaration sources and actual prefixes.
+- Corrected the Fluid API documentation from FD_* to fluid_*.
+- Documented handle ownership, lifetime, invalid-input behavior, units, and threading.
+- Added API_CONTRACT.md as the detailed public-contract reference.
+- Updated PhysicsEngine.h, PhysicsAsync.h, and PhysicsCoupling.h comments.
+- Updated README.md usage, naming, and public-contract guidance.
+- Clean explicit-root build completed successfully.
+- All 10 CTest tests passed.
+
 PHASE 3 - Build a real integration-test layer
 Goal: Test the unified library, not only the collision components.
 
