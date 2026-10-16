@@ -165,6 +165,18 @@ PHASE 4 CHECKPOINT
 Collision tests cover normal, reverse-order, boundary, degenerate, missing-dispatch,
 and empty-world cases with deterministic results.
 
+STATUS: COMPLETED
+- Converted narrowphase coverage from print-only output to assertions.
+- Added reverse-pair and missing-registration checks.
+- Added broadphase tests for empty, negative-coordinate, touching, and separated objects.
+- Added test_collision_edges.cpp for shape boundaries and degenerate cases.
+- Derived dispatch-table dimensions from ShapeType instead of a magic [7][7] size.
+- Retained the boolean intersection contract; contact manifolds remain future work.
+- Clean explicit-root build completed successfully.
+- All 13 CTest tests passed.
+- Known follow-up: OBB cross axes, convex GJK/EPA, and triangle edge proximity remain
+  simplified in the current geometry helpers and require a future accuracy phase.
+
 PHASE 5 - Harden async execution
 Goal: Make the thread-pool safe and predictable for engine/game integration.
 

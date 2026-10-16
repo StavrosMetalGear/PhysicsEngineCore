@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <cstddef>
 #include <vector>
 #include <utility>
 #include <functional>
@@ -27,5 +29,5 @@ public:
     }
 
 private:
-    CollisionFunc table[7][7] = {};
+    std::array<std::array<CollisionFunc, ShapeTypeCount>, ShapeTypeCount> table{};
 };

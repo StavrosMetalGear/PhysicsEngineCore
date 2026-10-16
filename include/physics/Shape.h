@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <variant>
 #include "physics/AABB.h"
 #include "physics/Sphere.h"
@@ -15,8 +16,11 @@ enum class ShapeType {
     Capsule,
     Plane,
     Triangle,
-    ConvexPolyhedron
+    ConvexPolyhedron,
+    Count
 };
+
+constexpr std::size_t ShapeTypeCount = static_cast<std::size_t>(ShapeType::Count);
 
 using ShapeData = std::variant<AABB, Sphere, OBB, Capsule, Plane, Triangle, ConvexPolyhedron>;
 

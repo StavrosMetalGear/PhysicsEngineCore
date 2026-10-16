@@ -6,6 +6,14 @@
 #include "physics/ConvexPolyhedron.h"
 #include <iostream>
 
+#define CHECK(condition, message) \
+    do { \
+        if (!(condition)) { \
+            std::cerr << "FAIL: " << message << "\n"; \
+            return 1; \
+        } \
+    } while (false)
+
 // Example collision functions
 bool aabb_vs_aabb(const Shape& a, const Shape& b) {
     return std::get<AABB>(a.data).intersects(std::get<AABB>(b.data));
@@ -59,15 +67,21 @@ int main() {
     Shape s10{ShapeType::Triangle, Triangle{{0,0,0},{1,0,0},{0,1,0}}};
     Shape s11{ShapeType::ConvexPolyhedron, ConvexPolyhedron{{{0,0,0},{1,0,0},{0,1,0},{0,0,1}},{{0,1,2},{0,1,3},{0,2,3},{1,2,3}}}};
     Shape s12{ShapeType::ConvexPolyhedron, ConvexPolyhedron{{{0.5f,0.5f,0.5f},{1.5f,0.5f,0.5f},{0.5f,1.5f,0.5f},{0.5f,0.5f,1.5f}},{{0,1,2},{0,1,3},{0,2,3},{1,2,3}}}};
+    Shape s13{ShapeType::Plane, Plane{{0,1,0},-5}};
+    Shape s14{ShapeType::Sphere, Sphere{{0.25f,0.25f,0.2f},0.25f}};
 
-    std::cout << "AABB vs AABB: " << np.test(s1, s2) << std::endl;
-    std::cout << "AABB vs Sphere: " << np.test(s1, s3) << std::endl;
-    std::cout << "Sphere vs Sphere: " << np.test(s3, s4) << std::endl;
-    std::cout << "OBB vs OBB: " << np.test(s5, s6) << std::endl;
-    std::cout << "Capsule vs Capsule: " << np.test(s7, s8) << std::endl;
-    std::cout << "Sphere vs Plane: " << np.test(s3, s9) << std::endl;
-    std::cout << "AABB vs Plane: " << np.test(s1, s9) << std::endl;
-    std::cout << "Sphere vs Triangle: " << np.test(s3, s10) << std::endl;
-    std::cout << "ConvexPolyhedron vs ConvexPolyhedron: " << np.test(s11, s12) << std::endl;
+    CHECK(np.test(s1, s2), "overlapping AABB pair");
+    CHECK(np.test(s1, s3), "AABB versus sphere pair");
+    CHECK(np.test(s3, s1), "reverse AABB versus sphere dispatch");
+    CHECK(!np.test(s3, s4), "separated sphere pair");
+    CHECK(np.test(s5, s6), "overlapping OBB pair");
+    CHECK(np.test(s7, s8), "overlapping capsule pair");
+    CHECK(np.test(s3, s9), "sphere touching plane");
+    CHECK(np.test(s1, s9), "AABB crossing plane");
+    CHECK(np.test(s14, s10), "sphere contained by triangle projection");
+    CHECK(np.test(s11, s12), "overlapping convex-polyhedron pair");
+    CHECK(!np.test(s9, s13), "missing plane versus plane registration");
+
+    std::cout << "Narrowphase assertions passed.\n";
     return 0;
 }
