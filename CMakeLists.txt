@@ -225,6 +225,21 @@ target_include_directories(PhysicsEngineTest PRIVATE
     ${SOLIDSTATE_DIR}/Eigen
 )
 
+# ── Unified API integration test ─────────────────────────────────────────────
+add_executable(test_engine_integration tests/test_engine_integration.cpp)
+target_link_libraries(test_engine_integration PRIVATE PhysicsEngine)
+target_include_directories(test_engine_integration PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_test(NAME test_engine_integration COMMAND test_engine_integration)
+
+add_executable(test_engine_metadata tests/test_engine_metadata.cpp)
+target_link_libraries(test_engine_metadata PRIVATE PhysicsEngine)
+target_include_directories(test_engine_metadata PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_test(NAME test_engine_metadata COMMAND test_engine_metadata)
+
 # ── OBB collision test ───────────────────────────────────────────────────────
 add_executable(test_obb tests/test_obb.cpp)
 target_include_directories(test_obb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

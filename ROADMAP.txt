@@ -136,6 +136,16 @@ PHASE 3 CHECKPOINT
 A single CTest invocation validates metadata, all eight module entry points, coupling
 formulas, and normal async lifecycle behavior.
 
+STATUS: COMPLETED
+- Added the dedicated tests/test_engine_metadata.cpp target.
+- Verified version, module count, module names, simulation counts, and invalid indices.
+- Added one assertion-based smoke path for each of the eight module APIs.
+- Added reference assertions for all PhysicsCoupling functions.
+- Added async callback completion and wait coverage.
+- Registered both integration executables with CTest.
+- Clean explicit-root build completed successfully.
+- All 12 CTest tests passed.
+
 PHASE 4 - Improve collision-system correctness
 Goal: Turn the current collision examples into a dependable subsystem.
 
