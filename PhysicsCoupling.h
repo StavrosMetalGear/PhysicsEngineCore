@@ -17,6 +17,11 @@
 extern "C" {
 #endif
 
+// Inputs use SI units unless a parameter name or comment states otherwise.
+// These functions currently return numeric results without an error/status
+// channel. Callers must provide finite, physically meaningful values and avoid
+// zero denominators; invalid-input behavior is not uniformly validated.
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  1. FLUID + THERMODYNAMICS  (convective heat transfer, compressible flow)
 // ═══════════════════════════════════════════════════════════════════════════════

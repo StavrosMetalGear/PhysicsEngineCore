@@ -10,7 +10,7 @@ PhysicsEngineCore links together all 8 physics *Core submodules — each contain
 
 | Layer | Description |
 |-------|-------------|
-| **Module C APIs** | `QP_*`, `CP_*`, `EM_*`, `FD_*`, `NP_*`, `OP_*`, `SS_*`, `TH_*` — opaque-handle C wrappers for each module |
+| **Module C APIs** | `qp_*`, `cp_*`, `em_*`, `fluid_*`, `np_*`, `op_*`, `ss_*`, `td_*` — C-compatible wrappers for each module |
 | **Async Task System** | `pe_submit_async()`, `pe_task_ready()` — thread-pool for non-blocking computation |
 | **Cross-Module Coupling** | `pe_nusselt_flat_plate()`, `pe_skin_depth()`, `pe_fermi_energy()`, etc. — bridge functions spanning multiple modules |
 | **Engine Metadata** | `pe_version()`, `pe_module_count()`, `pe_module_name()` — runtime introspection |
@@ -22,11 +22,11 @@ PhysicsEngineCore links together all 8 physics *Core submodules — each contain
 | 1 | QuantumCore | `QuantumPhysics` | `qp_*` | Quantum mechanics (ISW, HO, hydrogen, scattering, entanglement, ...) |
 | 2 | ClassicalMechanicsCore | `ClassicalPhysics` | `cp_*` | Newtonian mechanics, Lagrangian/Hamiltonian, rigid body, oscillations |
 | 3 | ElectrodynamicsCore | `EMPhysics` | `em_*` | Maxwell's equations, EM waves, circuits, radiation |
-| 4 | FluidDynamicsCore | `FluidDynamicsPhysics` | `fd_*` | Navier-Stokes, compressible flow, turbulence, MHD |
+| 4 | FluidDynamicsCore | `FluidDynamicsPhysics` | `fluid_*` | Navier-Stokes, compressible flow, turbulence, MHD |
 | 5 | NuclearCore | `NuclearPhysics` | `np_*` | Nuclear structure, decay, fission, fusion, dosimetry |
 | 6 | OpticsCore | `OpticsPhysics` | `op_*` | Geometric optics, wave optics, polarization, fiber optics |
 | 7 | SolidStateCore | `SolidStatePhysics` | `ss_*` | Crystal structure, band theory, semiconductors, magnetism |
-| 8 | ThermodynamicsCore | `ThermoPhysics` | `th_*` | Laws of thermodynamics, statistical mechanics, phase transitions |
+| 8 | ThermodynamicsCore | `ThermoPhysics` | `td_*` | Laws of thermodynamics, statistical mechanics, phase transitions |
 
 ## Building
 
@@ -82,7 +82,7 @@ PhysicsEngineCore/
 ├── PhysicsEngine_export.h    # DLL/static export macros
 ├── PhysicsAsync.h/.cpp       # Thread-pool async task system
 ├── PhysicsCoupling.h/.cpp    # Cross-module bridge functions
-├── fluid_c_api.h/.cpp        # C API for FluidDynamicsCore (was missing)
+├── fluid_c_api.h              # C API declarations for the Fluid wrapper
 └── README.md
 ```
 
@@ -101,10 +101,9 @@ int main() {
     printf("E_3 = %.6e J\n", qp_energy_1d_box(qp, 3));
     qp_destroy(qp);
 
-    // Fluid: water pipe
-    FD_Handle fd = fd_create("water", 998.0, 1.002e-3, 0.05, 1.5);
-    printf("Re = %.1f\n", fd_reynoldsNumber(fd));
-    fd_destroy(fd);
+    // Fluid: water pipe (stateless wrapper)
+    double Re = fluid_reynolds_number(998.0, 1.5, 0.05, 1.002e-3);
+    printf("Re = %.1f\n", Re);
 
     // Async: run a heavy computation off the main thread
     pe_async_init(4);
@@ -121,6 +120,22 @@ int main() {
     return 0;
 }
 ```
+
+## Public API Contract
+
+The exported module APIs use C-compatible declarations. Handle-based modules
+require callers to destroy each successfully created handle exactly once. The
+current wrappers do not provide uniform null-handle or numeric-range validation;
+callers must pass valid handles, finite values, valid dimensions, and nonzero
+denominators. The stateless `fluid_*` and `ss_*` functions do not allocate handles.
+
+Module APIs are not generally documented as thread-safe. Treat individual handles
+as thread-confined unless a module explicitly guarantees otherwise. The async API
+has separate process-global lifecycle rules and does not copy or free callback
+user data.
+
+See [API_CONTRACT.md](API_CONTRACT.md) for the complete observed contract,
+ownership rules, units, naming details, and known limitations.
 
 ## Unreal Engine Integration
 

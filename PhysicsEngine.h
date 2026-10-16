@@ -4,7 +4,8 @@
 //  PhysicsEngine.h — Master include header for the unified physics engine
 //
 //  Single header that exposes all 8 submodule C APIs plus the async task
-//  system and cross-module coupling layer.
+//  system and cross-module coupling layer. Module-specific ownership and
+//  validation details are documented in API_CONTRACT.md.
 //
 //  Usage:
 //    #include "PhysicsEngine.h"
@@ -21,11 +22,11 @@
 #include "quantum_c_api.h"           // QuantumCore          — QP_*
 #include "classical_c_api.h"         // ClassicalMechanicsCore — CP_*
 #include "em_c_api.h"                // ElectrodynamicsCore  — EM_*
-#include "fluid_c_api.h"            // FluidDynamicsCore    — fluid_*
+#include "fluid_c_api.h"             // FluidDynamicsCore    — fluid_*
 #include "nuclear_c_api.h"          // NuclearCore          — NP_*
 #include "optics_c_api.h"           // OpticsCore           — OP_*
-#include "solidstate_c_api.h"       // SolidStateCore       — SS_*
-#include "thermo_c_api.h"           // ThermodynamicsCore   — TH_*
+#include "solidstate_c_api.h"       // SolidStateCore       — ss_* (stateless)
+#include "thermo_c_api.h"           // ThermodynamicsCore   — td_*
 
 // ── Unified engine layers ───────────────────────────────────────────────────
 #include "PhysicsAsync.h"            // Async task submission / polling
@@ -37,17 +38,20 @@ extern "C" {
 
 // ── Engine metadata ─────────────────────────────────────────────────────────
 
-// Returns the engine version string (e.g. "1.0.0")
+// Returns the engine version string (e.g. "1.0.0"). The returned pointer is
+// owned by the engine and remains valid for the process lifetime.
 PHYSENG_API const char* pe_version(void);
 
-// Returns the number of submodules linked into this engine
+// Returns the number of submodules linked into this engine.
 PHYSENG_API int pe_module_count(void);
 
 // Returns the name of the i-th submodule (0-based)
-// Returns NULL if index is out of range.
+// Returns NULL if index is out of range. The returned pointer is owned by the
+// engine and remains valid for the process lifetime.
 PHYSENG_API const char* pe_module_name(int index);
 
-// Returns the number of simulation options in the i-th submodule
+// Returns the number of simulation options in the i-th submodule, or 0 for an
+// invalid index.
 PHYSENG_API int pe_module_sim_count(int index);
 
 #ifdef __cplusplus
