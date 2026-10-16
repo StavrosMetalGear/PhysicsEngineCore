@@ -1,0 +1,221 @@
+PhysicsEngineCore Development Roadmap
+====================================
+
+Purpose
+-------
+This file is the working roadmap for PhysicsEngineCore. It records the current
+baseline, explains the intended learning order, and defines the next phases of
+engineering work. Mark a step complete only after the code, tests, and notes for
+that step are finished.
+
+Current baseline: completed
+---------------------------
+- Repository location: D:\\repos\\PhysicsEngineCore
+- Build system: CMake with Ninja
+- Language: C++17
+- Toolchain: MSVC x64
+- Active build directory: out/build/x64-Debug
+- Eight sibling repositories are expected one directory above this repository.
+- The repository builds PhysicsEngine.lib as a static library.
+- The umbrella header is PhysicsEngine.h.
+- The engine exposes module metadata, module C APIs, async tasks, and coupling APIs.
+- Collision geometry and broadphase/narrowphase components are present under include/physics.
+- The malformed duplicate block in tests/test_narrowphase.cpp was repaired.
+- The project was reconfigured successfully with the Visual Studio x64 environment.
+- All configured targets built successfully.
+- All 10 registered CTest tests passed.
+
+How to study the solution
+-------------------------
+1. Read README.md for the intended product, module list, usage examples, and UE integration goal.
+2. Read CMakeLists.txt from top to bottom. First understand paths and object libraries,
+   then the unified PhysicsEngine target, then the tests.
+3. Read PhysicsEngine.h. Treat it as the public map of the library.
+4. Read PhysicsEngine.cpp to understand version and module metadata.
+5. Read main.cpp and run PhysicsEngineTest.exe. It demonstrates metadata, Quantum,
+   Fluid, Classical, Nuclear, async, and coupling functionality.
+6. Read PhysicsAsync.h before PhysicsAsync.cpp. Follow initialization, submission,
+   worker execution, completion, waiting, and shutdown.
+7. Read PhysicsCoupling.h before PhysicsCoupling.cpp. Compare every documented formula
+   with its implementation and identify input-validation gaps.
+8. Study include/physics/Shape.h, then the individual shape headers.
+9. Study Broadphase.h for candidate-pair generation.
+10. Study Narrowphase.h and tests/test_narrowphase.cpp for registered dispatch functions.
+11. Read each collision test beside the header it exercises.
+12. Inspect the eight sibling repositories only after understanding this aggregation layer.
+13. Rebuild and run CTest after each meaningful change.
+14. Keep public API changes separate from internal implementation changes.
+
+Architecture summary
+--------------------
+- CMakeLists.txt is the aggregation layer. It compiles selected source files from
+  QuantumCore, ClassicalMechanicsCore, ElectrodynamicsCore, FluidDynamicsCore,
+  NuclearCore, OpticsCore, SolidStateCore, and ThermodynamicsCore as object libraries.
+- PhysicsEngine is a static library containing those objects plus this repository's
+  metadata, async, and coupling implementations.
+- PhysicsEngine.h is the master public include and exposes the module C APIs plus
+  the engine-level APIs.
+- PhysicsEngine.cpp owns the version string and eight-entry module registry.
+- PhysicsAsync implements a process-global worker pool using std::thread, mutexes,
+  condition variables, a task queue, completion tracking, and atomic counters.
+- PhysicsCoupling implements formula-based bridge functions between physics domains.
+- include/physics contains a separate collision subsystem based on simple shape types,
+  std::variant shape storage, broadphase AABB filtering, and narrowphase function dispatch.
+- main.cpp is a smoke/example executable, not yet a comprehensive integration test.
+- tests/ contains focused executable tests for the collision subsystem.
+
+Phases and ordered work
+-----------------------
+
+PHASE 1 - Establish a reproducible build foundation
+Goal: Anyone can configure the project without editing source paths.
+
+1. Add a PHYSICSCORE_REPOS_DIR CMake cache variable defaulting to the current parent directory.
+2. Derive all eight sibling module paths from that cache variable.
+3. Add configure-time existence checks for every required sibling repository.
+4. Emit a clear CMake error naming each missing repository and its expected path.
+5. Document the path override and the D:/repos example in README.md.
+6. Add an explicit rule for generated build directories, including build/ and out/.
+
+PHASE 1 CHECKPOINT
+------------------
+Configure from a clean directory using an explicit repository-root override, build with
+Ninja/MSVC, and confirm that moving the build directory does not require source edits.
+
+PHASE 2 - Make the public API contract precise
+Goal: The public headers and naming conventions accurately describe stable behavior.
+
+7. Inventory every exported function in the eight module C APIs.
+8. Compare the names and prefixes in PhysicsEngine.h with the actual sibling headers.
+9. Resolve inconsistent naming such as fluid_* versus the README's FD_* notation.
+10. Define ownership and lifetime rules for every opaque handle.
+11. Define null-handle behavior for create, query, and destroy functions.
+12. Define invalid-argument behavior and error reporting for public functions.
+13. Decide whether the public API remains C-compatible or becomes C++-only in selected areas.
+14. Add API documentation for return units, valid ranges, and thread-safety guarantees.
+
+PHASE 2 CHECKPOINT
+------------------
+A clean consumer can include PhysicsEngine.h, compile against documented names, and
+understand ownership, errors, units, and threading expectations without reading internals.
+
+PHASE 3 - Build a real integration-test layer
+Goal: Test the unified library, not only the collision components.
+
+15. Add a dedicated tests/test_engine_metadata.cpp target.
+16. Verify version, module count, module names, and simulation counts.
+17. Add one smoke test for each of the eight module C APIs.
+18. Add tests for every PhysicsCoupling function using known reference values.
+19. Add boundary and invalid-input tests for coupling functions.
+20. Add async tests for completion, waiting, pending counts, and repeated initialization.
+21. Add async tests for shutdown with queued work.
+22. Register all integration tests with CTest.
+23. Make test output assertion-based instead of relying only on printed values.
+
+PHASE 3 CHECKPOINT
+------------------
+A single CTest invocation validates metadata, all eight module entry points, coupling
+formulas, and normal async lifecycle behavior.
+
+PHASE 4 - Improve collision-system correctness
+Goal: Turn the current collision examples into a dependable subsystem.
+
+24. Add assertions for each registered narrowphase pair.
+25. Add reverse-order tests for symmetric shape pairs.
+26. Add tests for missing narrowphase registrations.
+27. Decide whether missing registrations should return false, an error, or a status object.
+28. Add duplicate-object and empty-broadphase tests.
+29. Test broadphase boundary-touching and separated AABBs.
+30. Add tests for negative coordinates and degenerate shapes.
+31. Review the fixed-size Narrowphase dispatch table against ShapeType changes.
+32. Replace magic dimensions with a type-safe dispatch structure if needed.
+33. Define a contact result type beyond the current bool if collision response is planned.
+
+PHASE 4 CHECKPOINT
+------------------
+Collision tests cover normal, reverse-order, boundary, degenerate, missing-dispatch,
+and empty-world cases with deterministic results.
+
+PHASE 5 - Harden async execution
+Goal: Make the thread-pool safe and predictable for engine/game integration.
+
+34. Define behavior when pe_submit_async is called before pe_async_init.
+35. Define behavior for null task functions.
+36. Protect initialization and shutdown against concurrent callers.
+37. Test task exceptions and decide whether exceptions are prohibited or captured.
+38. Decide how long completed task records remain available.
+39. Prevent unbounded growth of the completion map.
+40. Test task ID rollover assumptions and stale task IDs.
+41. Add a result or cancellation model if callers need more than void callbacks.
+42. Add stress tests with many short tasks and multiple worker counts.
+43. Document which APIs may be called from game/render threads.
+
+PHASE 5 CHECKPOINT
+------------------
+Async lifecycle, error behavior, shutdown behavior, task retention, and thread-safety
+are documented and covered by repeatable stress tests.
+
+PHASE 6 - Validate scientific and numerical behavior
+Goal: Confirm that formulas and units are physically meaningful.
+
+44. Add reference-value tests for every coupling formula.
+45. Check dimensional consistency for every coupling API.
+46. Define behavior for zero, negative, NaN, and infinity inputs.
+47. Compare selected results against trusted textbook or reference calculations.
+48. Add tolerances appropriate to each numerical formula.
+49. Review constants, significant digits, and unit conversions.
+50. Document whether values are SI, MeV, electron-volts, or module-specific units.
+51. Add regression cases for known physical limits and monotonicity.
+52. Review the Drude reflectance implementation for edge cases near zero frequency.
+53. Review overflow and underflow behavior in exponentials, powers, and square roots.
+
+PHASE 6 CHECKPOINT
+------------------
+Every coupling function has reference tests, documented units, defined invalid-input
+behavior, and numerical tolerances justified by the expected use case.
+
+PHASE 7 - Packaging and consumer integration
+Goal: Make the library usable outside this repository.
+
+54. Add install rules for the static library and public headers.
+55. Export a CMake package configuration for find_package usage.
+56. Separate public headers from implementation-only headers.
+57. Define the include layout consumed by external applications.
+58. Add a minimal external consumer example outside the source tree.
+59. Test Debug and Release builds.
+60. Test a clean build with Ninja from a new output directory.
+61. Test the static library with a plain C++17 consumer.
+62. Decide whether a shared-library build is required.
+63. Test the PHYSICS_ENGINE_SHARED export path if shared builds are supported.
+64. Document Unreal Engine ThirdParty directory layout and library naming.
+
+PHASE 7 CHECKPOINT
+------------------
+A clean external consumer can configure, include, link, and run the library without
+knowing the repository's internal sibling-source layout.
+
+PHASE 8 - Continuous integration and release quality
+Goal: Prevent regressions and create repeatable releases.
+
+65. Add a CI workflow for Windows/MSVC/Ninja.
+66. Add a CI workflow for at least one GCC or Clang environment if portability is required.
+67. Run configure, build, CTest, and packaging checks in CI.
+68. Add formatting and static-analysis checks appropriate for C++17.
+69. Record compiler warnings and decide which warning levels are required.
+70. Add dependency version or commit pinning for the eight sibling repositories.
+71. Add a changelog and release versioning policy.
+72. Generate API documentation from public headers.
+73. Add a release checklist covering artifacts, tests, symbols, and licenses.
+74. Create a versioned package containing libraries, headers, and CMake metadata.
+75. Perform a clean-machine installation and consumer test before each release.
+
+PHASE 8 CHECKPOINT
+------------------
+A tagged release can be built by CI, tested on clean environments, packaged, and
+consumed through documented installation instructions.
+
+Immediate next action
+---------------------
+Start with Phase 1, step 1: make the sibling repository root configurable in
+CMakeLists.txt. This directly addresses the repository move concern and should be
+completed before adding broader integration tests.
