@@ -82,6 +82,15 @@ PHASE 1 CHECKPOINT
 Configure from a clean directory using an explicit repository-root override, build with
 Ninja/MSVC, and confirm that moving the build directory does not require source edits.
 
+STATUS: COMPLETED
+- Added PHYSICSCORE_REPOS_DIR as a configurable CMake cache path.
+- Added configure-time validation for all eight sibling repositories.
+- Documented the default layout and explicit D:/repos override in README.md.
+- Added explicit /build/ and /out/ generated-output ignore coverage.
+- Fresh default-layout build completed successfully.
+- Fresh explicit-root build completed successfully.
+- All 10 CTest tests passed in the explicit-root build.
+
 PHASE 2 - Make the public API contract precise
 Goal: The public headers and naming conventions accurately describe stable behavior.
 

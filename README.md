@@ -33,15 +33,44 @@ PhysicsEngineCore links together all 8 physics *Core submodules — each contain
 ### Prerequisites
 - CMake 3.15+
 - C++17 compiler (MSVC 2022 / GCC / Clang)
-- All 8 submodule repositories in the same parent directory (`../QuantumCore`, `../FluidDynamicsCore`, etc.)
+- All 8 sibling repositories in one directory, configured through `PHYSICSCORE_REPOS_DIR`
 
 ### Build Steps
 ```bash
-cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -G Ninja -B build -DCMAKE_BUILD_TYPE=Release \
+      -DPHYSICSCORE_REPOS_DIR=../
 cmake --build build
 ```
 
 The build produces **`PhysicsEngine.lib`** (static library) in `build/lib/`.
+
+`PHYSICSCORE_REPOS_DIR` must point to the directory containing all eight sibling
+repositories. For the repository layout used by this project:
+
+```text
+D:/repos/
+├── PhysicsEngineCore/
+├── QuantumCore/
+├── ClassicalMechanicsCore/
+├── ElectrodynamicsCore/
+├── FluidDynamicsCore/
+├── NuclearCore/
+├── OpticsCore/
+├── SolidStateCore/
+└── ThermodynamicsCore/
+```
+
+The default is the parent directory of `PhysicsEngineCore`, so the option can be
+omitted when using that layout. If the repositories are stored elsewhere, pass
+their common directory explicitly:
+
+```powershell
+cmake -S . -G Ninja -B out/build/x64-Debug `
+      -DPHYSICSCORE_REPOS_DIR=D:/repos
+```
+
+CMake stops during configuration with a message identifying the missing sibling
+repository when the configured directory is incomplete.
 
 ## Directory Structure
 

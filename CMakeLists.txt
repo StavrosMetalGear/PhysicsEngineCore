@@ -21,16 +21,38 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ── Submodule root paths ─────────────────────────────────────────────────────
-set(REPOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(PHYSICSCORE_REPOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE PATH
+    "Directory containing the PhysicsCore sibling repositories")
+get_filename_component(PHYSICSCORE_REPOS_DIR "${PHYSICSCORE_REPOS_DIR}" ABSOLUTE)
 
-set(QUANTUM_DIR         "${REPOS_DIR}/QuantumCore")
-set(CLASSICAL_DIR       "${REPOS_DIR}/ClassicalMechanicsCore")
-set(EM_DIR              "${REPOS_DIR}/ElectrodynamicsCore")
-set(FLUID_DIR           "${REPOS_DIR}/FluidDynamicsCore")
-set(NUCLEAR_DIR         "${REPOS_DIR}/NuclearCore")
-set(OPTICS_DIR          "${REPOS_DIR}/OpticsCore")
-set(SOLIDSTATE_DIR      "${REPOS_DIR}/SolidStateCore")
-set(THERMAL_DIR         "${REPOS_DIR}/ThermodynamicsCore")
+set(PHYSICSCORE_REQUIRED_REPOS
+    QuantumCore
+    ClassicalMechanicsCore
+    ElectrodynamicsCore
+    FluidDynamicsCore
+    NuclearCore
+    OpticsCore
+    SolidStateCore
+    ThermodynamicsCore
+)
+
+foreach(REPO_NAME IN LISTS PHYSICSCORE_REQUIRED_REPOS)
+    if(NOT IS_DIRECTORY "${PHYSICSCORE_REPOS_DIR}/${REPO_NAME}")
+        message(FATAL_ERROR
+            "Required sibling repository '${REPO_NAME}' was not found at "
+            "'${PHYSICSCORE_REPOS_DIR}/${REPO_NAME}'. Set PHYSICSCORE_REPOS_DIR "
+            "to the directory containing all eight PhysicsCore repositories.")
+    endif()
+endforeach()
+
+set(QUANTUM_DIR         "${PHYSICSCORE_REPOS_DIR}/QuantumCore")
+set(CLASSICAL_DIR       "${PHYSICSCORE_REPOS_DIR}/ClassicalMechanicsCore")
+set(EM_DIR              "${PHYSICSCORE_REPOS_DIR}/ElectrodynamicsCore")
+set(FLUID_DIR           "${PHYSICSCORE_REPOS_DIR}/FluidDynamicsCore")
+set(NUCLEAR_DIR         "${PHYSICSCORE_REPOS_DIR}/NuclearCore")
+set(OPTICS_DIR          "${PHYSICSCORE_REPOS_DIR}/OpticsCore")
+set(SOLIDSTATE_DIR      "${PHYSICSCORE_REPOS_DIR}/SolidStateCore")
+set(THERMAL_DIR         "${PHYSICSCORE_REPOS_DIR}/ThermodynamicsCore")
 
 # ── Eigen (header-only, bundled in QuantumCore and SolidStateCore) ───────────
 set(EIGEN_DIR "${QUANTUM_DIR}/Eigen")
