@@ -42,6 +42,26 @@ cmake -S . -G Ninja -B build -DCMAKE_BUILD_TYPE=Release \
 cmake --build build
 ```
 
+### Install and external CMake consumption
+
+The install contains the static library, unified C API headers, collision headers,
+and a relocatable CMake package. The eight sibling repositories are required only
+while building PhysicsEngineCore, not by installed consumers.
+
+```bash
+cmake --install build --prefix /path/to/physics-engine-install
+```
+
+An external C++17 project can consume the package with:
+
+```cmake
+find_package(PhysicsEngine CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE PhysicsEngine::PhysicsEngine)
+```
+
+The supported Phase 7 artifact is a static library. Shared-library export behavior
+remains deferred until a separate ABI and runtime-dependency policy is established.
+
 The build produces **`PhysicsEngine.lib`** (static library) in `build/lib/`.
 
 `PHYSICSCORE_REPOS_DIR` must point to the directory containing all eight sibling
@@ -146,10 +166,11 @@ ownership rules, units, naming details, and known limitations.
 
 This library is designed to be linked into an Unreal Engine plugin:
 
-1. Build `PhysicsEngine.lib` (Release, static).
+1. Install or copy the Release static package. The Unreal ThirdParty directory should
+   contain `lib/PhysicsEngine.lib` and the installed headers under `include/`.
 2. In your UE plugin's `.Build.cs`:
    ```csharp
-   PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyDir, "PhysicsEngine.lib"));
+   PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyDir, "lib", "PhysicsEngine.lib"));
    PublicIncludePaths.Add(Path.Combine(ThirdPartyDir, "include"));
    ```
 3. Use `pe_submit_async()` from game threads to avoid blocking the render loop.

@@ -191,3 +191,14 @@ The current wrappers do not provide a uniform error/status API.
 - Add aliases only when they do not create ambiguous ownership or maintenance cost.
 - Any future error/status redesign should be additive or versioned rather than
   silently changing numeric-return behavior.
+
+## Packaging and external consumption
+
+- The supported Phase 7 artifact is the static `PhysicsEngine` library.
+- Installation provides `include/PhysicsEngine.h`, the module C API and export headers,
+  `include/physics/` collision headers, `lib/PhysicsEngine.lib` on MSVC, and a CMake
+  package under `lib/cmake/PhysicsEngine/`.
+- External CMake projects should use `find_package(PhysicsEngine CONFIG REQUIRED)` and
+  link `PhysicsEngine::PhysicsEngine`.
+- Sibling repositories are build-time inputs only; installed consumers do not need them.
+- Shared-library packaging is deferred pending an explicit ABI and runtime dependency policy.

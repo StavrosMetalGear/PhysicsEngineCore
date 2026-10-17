@@ -17,6 +17,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(PhysicsEngineCore VERSION 1.0.0 LANGUAGES CXX)
 
+include(CMakePackageConfigHelpers)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -163,17 +165,70 @@ add_library(PhysicsEngine STATIC
 )
 
 target_include_directories(PhysicsEngine PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${QUANTUM_DIR}
-    ${CLASSICAL_DIR}
-    ${EM_DIR}
-    ${FLUID_DIR}
-    ${NUCLEAR_DIR}
-    ${OPTICS_DIR}
-    ${SOLIDSTATE_DIR}
-    ${THERMAL_DIR}
-    ${EIGEN_DIR}
-    ${SOLIDSTATE_DIR}/Eigen
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${QUANTUM_DIR}>
+    $<BUILD_INTERFACE:${CLASSICAL_DIR}>
+    $<BUILD_INTERFACE:${EM_DIR}>
+    $<BUILD_INTERFACE:${FLUID_DIR}>
+    $<BUILD_INTERFACE:${NUCLEAR_DIR}>
+    $<BUILD_INTERFACE:${OPTICS_DIR}>
+    $<BUILD_INTERFACE:${SOLIDSTATE_DIR}>
+    $<BUILD_INTERFACE:${THERMAL_DIR}>
+    $<BUILD_INTERFACE:${EIGEN_DIR}>
+    $<BUILD_INTERFACE:${SOLIDSTATE_DIR}/Eigen>
+    $<INSTALL_INTERFACE:include>
+)
+
+set(PHYSICSENGINE_PUBLIC_HEADERS
+    PhysicsEngine.h
+    PhysicsEngine_export.h
+    PhysicsAsync.h
+    PhysicsCoupling.h
+    ${QUANTUM_DIR}/quantum_c_api.h
+    ${QUANTUM_DIR}/QuantumExport.h
+    ${CLASSICAL_DIR}/classical_c_api.h
+    ${CLASSICAL_DIR}/ClassicalExport.h
+    ${EM_DIR}/em_c_api.h
+    ${EM_DIR}/EMExport.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/fluid_c_api.h
+    ${FLUID_DIR}/FluidExport.h
+    ${NUCLEAR_DIR}/nuclear_c_api.h
+    ${NUCLEAR_DIR}/NuclearExport.h
+    ${OPTICS_DIR}/optics_c_api.h
+    ${OPTICS_DIR}/OpticsExport.h
+    ${SOLIDSTATE_DIR}/solidstate_c_api.h
+    ${THERMAL_DIR}/thermo_c_api.h
+    ${THERMAL_DIR}/ThermoExport.h
+)
+
+install(TARGETS PhysicsEngine
+    EXPORT PhysicsEngineTargets
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include
+)
+install(FILES ${PHYSICSENGINE_PUBLIC_HEADERS} DESTINATION include)
+install(DIRECTORY include/physics DESTINATION include)
+
+install(EXPORT PhysicsEngineTargets
+    FILE PhysicsEngineTargets.cmake
+    NAMESPACE PhysicsEngine::
+    DESTINATION lib/cmake/PhysicsEngine
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PhysicsEngineConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/PhysicsEngineConfig.cmake
+    INSTALL_DESTINATION lib/cmake/PhysicsEngine
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/PhysicsEngineConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/PhysicsEngineConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/PhysicsEngineConfigVersion.cmake
+    DESTINATION lib/cmake/PhysicsEngine
 )
 
 # ── Automated tests ───────────────────────────────────────────────────────────

@@ -260,6 +260,19 @@ PHASE 7 CHECKPOINT
 A clean external consumer can configure, include, link, and run the library without
 knowing the repository's internal sibling-source layout.
 
+STATUS: COMPLETED
+- Added install rules for the static PhysicsEngine library and all unified, module C API,
+  export, and include/physics public headers.
+- Exported relocatable `PhysicsEngine::PhysicsEngine` and generated a versioned CMake CONFIG
+  package for `find_package(PhysicsEngine CONFIG REQUIRED)`.
+- Added examples/consumer as a plain C++17 external consumer using only the installed package.
+- Validated clean Debug and Release Ninja/MSVC builds with all 15 CTest tests passing in each.
+- Installed both configurations and successfully configured, linked, and ran the external
+  consumer against each install tree without sibling-repository paths.
+- Documented package contents, CMake consumption, static-library scope, and Unreal ThirdParty
+  lib/include layout in README.md and API_CONTRACT.md.
+- Deferred shared-library packaging and ABI/runtime dependency policy until a dedicated phase.
+
 PHASE 8 - Continuous integration and release quality
 Goal: Prevent regressions and create repeatable releases.
 
