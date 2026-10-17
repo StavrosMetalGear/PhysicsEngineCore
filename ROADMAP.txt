@@ -310,4 +310,278 @@ STATUS: COMPLETED
 
 Immediate next action
 ---------------------
-Start with the release checklist and create the next versioned release tag after CI passes.
+Start with Phase 9, step 76: complete the first reproducible release audit and publish
+the initial versioned package only after the CI workflow passes on the default branch.
+
+Post-Phase-8 expansion roadmap
+==============================
+
+The original foundational roadmap is complete. The following phases define the next
+engineering program. Each phase should preserve the public contract unless an explicit
+versioned API change is approved. Do not mark a phase complete until implementation,
+tests, documentation, and a clean validation run are finished.
+
+PHASE 9 - First reproducible release
+-------------------------------------
+Goal: Produce and verify the first tagged release from a clean environment.
+
+76. Run the Windows CI workflow on the default branch and resolve all failures.
+77. Verify every pinned sibling revision is reachable from its configured remote.
+78. Build clean Debug and Release trees from a fresh checkout.
+79. Run the complete CTest suite and external consumer test from clean directories.
+80. Generate and review the installed package manifest.
+81. Confirm generated files and local build outputs are absent from the commit.
+82. Validate the semantic version in CMake, the changelog, package metadata, and tag.
+83. Create a signed or annotated release tag according to the repository policy.
+84. Publish the versioned package artifact and release notes.
+
+PHASE 9 CHECKPOINT
+------------------
+A fresh checkout at the release tag can fetch pinned dependencies, build, test, install,
+and run the external consumer without manual source modifications.
+
+STATUS: LOCALLY VALIDATED
+- Confirmed project/package version 1.0.0 and aligned changelog metadata.
+- Validated the eight pinned dependency revisions and clean explicit-root build layout.
+- Clean Debug build completed successfully with all 15 CTest tests passing.
+- Clean strict-warning Release build completed successfully with all 15 CTest tests passing.
+- Installed a Release package containing 35 expected files and no unexpected runtime/build files.
+- Configured, built, and ran the external consumer from the installed package successfully.
+- Added /out/ to .gitignore to prevent local release-audit trees from entering commits.
+- Remaining release gates: confirm the remote GitHub Actions workflow and manually create/publish
+  the annotated version tag and package artifact.
+
+PHASE 10 - Complete module equation coverage
+---------------------------------------------
+Goal: Audit, expose, compile, and scientifically validate the equations provided by
+all eight sibling repositories before freezing the broader public API.
+
+85. Inventory every public equation and callable function in each sibling C API.
+86. Map every declaration to its implementation source file and owning module.
+87. Record which implementation files are currently included in PhysicsEngine.lib.
+88. Identify missing, duplicated, conflicting, or unreachable implementations.
+89. Decide whether module APIs are exposed through PhysicsEngine.h or separate installed headers.
+90. Add every approved implementation source to the aggregation target.
+91. Resolve duplicate symbols, source-name collisions, export macros, and dependency conflicts.
+92. Add module-by-module reference-value tests for every exposed equation.
+93. Document units, valid domains, constants, assumptions, and tolerances for each equation.
+94. Define consistent zero, negative, NaN, infinity, and overflow behavior across modules.
+95. Add CTest suites covering every supported module API and representative edge cases.
+96. Add coverage reporting so newly exposed equations cannot remain untested.
+97. Update the installed package, external consumer examples, and API contract.
+
+PHASE 10 CHECKPOINT
+-------------------
+Every approved module equation is mapped to compiled implementation code, exposed through
+a deliberate public interface, documented with units and domains, and covered by tests.
+
+PHASE 11 - API and ABI evolution
+---------------------------------
+Goal: Establish a controlled compatibility strategy before adding larger features.
+
+98. Separate the stable C API from implementation-only declarations.
+99. Define which symbols, headers, structs, enums, and constants are public guarantees.
+100. Add compile-only API compatibility tests for representative C and C++ consumers.
+101. Add an exported-symbol inspection step for every release artifact.
+102. Define deprecation annotations, warning periods, and removal policy.
+103. Introduce an API version macro and machine-readable capability metadata.
+104. Define the compatibility policy for task IDs, handles, callbacks, and result values.
+105. Add an API diff check between the current release and the previous release.
+106. Document source compatibility, binary compatibility, and package compatibility.
+
+PHASE 11 CHECKPOINT
+-------------------
+Public API and ABI changes are detectable, documented, versioned, and tested before
+they reach a release branch.
+
+PHASE 12 - Shared-library and runtime packaging
+-----------------------------------------------
+Goal: Decide and, if approved, implement a supported shared-library distribution.
+
+107. Decide whether DLL/shared-library distribution is required for Unreal and other consumers.
+108. Define the Windows export/import, runtime library, and symbol visibility policy.
+109. Add an explicit shared build option separate from the static default.
+110. Validate `PHYSICS_ENGINE_SHARED` declarations for MSVC and non-MSVC toolchains.
+111. Add shared-library install rules, runtime artifact handling, and debug symbol packaging.
+112. Test a shared external consumer with the same public package contract.
+113. Define DLL search-path and deployment guidance for Unreal ThirdParty builds.
+114. Add static-versus-shared CI jobs and compare exported symbol sets.
+115. Document whether static, shared, or both are official release artifacts.
+
+PHASE 12 CHECKPOINT
+-------------------
+The project has an explicit, tested library-linkage policy and consumers can deploy the
+chosen artifact without undocumented runtime or symbol requirements.
+
+PHASE 13 - Cross-platform portability
+-------------------------------------
+Goal: Measure and improve portability without weakening the required MSVC pipeline.
+
+116. Build each sibling repository independently with GCC on Linux.
+117. Build each sibling repository independently with Clang on Linux or macOS.
+118. Fix platform-specific includes, export macros, compiler extensions, and warnings.
+119. Add a Linux GCC/Ninja CI job using the pinned dependency revisions.
+120. Add a Clang/Ninja CI job when the dependency set is stable there.
+121. Audit filesystem paths, line endings, case-sensitive includes, and shell scripts.
+122. Add platform-specific CTest and external-consumer jobs.
+123. Classify platform support as required, supported, experimental, or unsupported.
+124. Keep Unreal/MSVC-specific integration checks separate from portable core checks.
+
+PHASE 13 CHECKPOINT
+-------------------
+The supported platform matrix is evidence-based, documented, and continuously tested;
+MSVC remains protected as a required gate throughout the portability work.
+
+PHASE 14 - Collision accuracy and physical robustness
+------------------------------------------------------
+Goal: Move the collision subsystem from testable primitives toward production accuracy.
+
+125. Define a contact manifold and collision-query result type beyond boolean intersection.
+126. Implement robust OBB cross-axis separation tests.
+127. Implement and validate convex GJK intersection queries.
+128. Add EPA penetration depth and contact-normal support where appropriate.
+129. Improve triangle edge, vertex, and coplanar proximity handling.
+130. Define tolerances and scale policies for very small and very large geometry.
+131. Add randomized differential tests against trusted reference implementations.
+132. Add deterministic regression fixtures for touching, coplanar, nested, and degenerate shapes.
+133. Document collision conventions, coordinate systems, winding, normals, and tolerances.
+134. Benchmark broadphase candidate reduction and narrowphase accuracy separately.
+
+PHASE 14 CHECKPOINT
+-------------------
+Collision queries have documented result semantics, scale-aware tolerances, deterministic
+regressions, and reference-backed accuracy for all supported shape pairs.
+
+PHASE 15 - Performance and memory engineering
+-----------------------------------------------
+Goal: Establish measurable performance budgets for engine and collision workloads.
+
+135. Define representative workloads for metadata, coupling, async, broadphase, and narrowphase.
+136. Add repeatable Release benchmarks with recorded compiler and machine metadata.
+137. Measure allocation counts and peak memory for representative workloads.
+138. Profile worker-pool contention, queue latency, completion retention, and shutdown time.
+139. Profile broadphase pair generation and narrowphase dispatch separately.
+140. Define performance budgets and regression thresholds for critical workloads.
+141. Optimize only after collecting baseline measurements and preserve correctness tests.
+142. Add sanitizer or runtime-checking jobs where supported by each toolchain.
+143. Document benchmark methodology and prevent noisy measurements from becoming hard gates.
+
+PHASE 15 CHECKPOINT
+-------------------
+Performance and memory changes are measurement-driven, reproducible, and protected by
+regression thresholds without sacrificing numerical or collision correctness.
+
+PHASE 16 - Async execution and scheduling model
+-----------------------------------------------
+Goal: Evolve the basic worker pool into a predictable engine scheduling service.
+
+144. Define task cancellation semantics and cancellation races.
+145. Add optional task result storage or a typed future-based C++ facade.
+146. Define priorities, fairness, back-pressure, and queue-capacity behavior.
+147. Add explicit task failure reporting without throwing across the C API boundary.
+148. Define shutdown behavior for queued, running, cancelled, and failed tasks.
+149. Add worker-affinity and game/render-thread integration guidance.
+150. Test task ID rollover, stale IDs, eviction, and high-volume submission.
+151. Add deterministic scheduler tests with controllable worker counts.
+152. Measure latency and throughput under contention before changing synchronization.
+153. Version any new async API separately from the existing C contract.
+
+PHASE 16 CHECKPOINT
+-------------------
+Async callers have documented cancellation, failure, result, lifecycle, and scheduling
+semantics with deterministic tests for races and high-volume operation.
+
+PHASE 17 - Simulation world and systems layer
+----------------------------------------------
+Goal: Provide a coherent runtime layer above stateless formulas and geometry primitives.
+
+154. Define world, entity, component, and system ownership boundaries.
+155. Decide whether the first runtime targets rigid bodies, particles, fluids, or mixed domains.
+156. Add a fixed-timestep update model with accumulator and interpolation guidance.
+157. Define units, coordinate conventions, integration schemes, and stability limits.
+158. Implement a minimal deterministic world loop using existing collision primitives.
+159. Add broadphase/narrowphase integration with stable entity identifiers.
+160. Add integration tests for gravity, contacts, sleeping, and removal during iteration.
+161. Define serialization and replay requirements for deterministic debugging.
+162. Keep the systems layer additive and separate from the existing C formula APIs.
+
+PHASE 17 CHECKPOINT
+-------------------
+A minimal deterministic simulation world can be created, stepped, tested, and consumed
+without requiring callers to assemble internal collision and scheduling details manually.
+
+PHASE 18 - Developer tools and observability
+--------------------------------------------
+Goal: Make failures, numerical issues, and runtime behavior easy to inspect.
+
+163. Add structured diagnostics with severity, subsystem, and source context.
+164. Define an error sink or callback that does not cross unsafe ABI boundaries.
+165. Add optional tracing for task lifecycle, collision pairs, and simulation steps.
+166. Add counters for allocations, active tasks, queue depth, contacts, and rejected inputs.
+167. Add a command-line diagnostic executable for environment and package inspection.
+168. Add deterministic repro capture for failing collision and simulation cases.
+169. Document logging overhead and production enable/disable configuration.
+170. Add CI artifact collection for diagnostics on failed tests.
+
+PHASE 18 CHECKPOINT
+-------------------
+Developers can diagnose build, API, async, collision, and simulation failures from
+reproducible logs and captured inputs without attaching a debugger to every failure.
+
+PHASE 19 - Security, safety, and reliability review
+----------------------------------------------------
+Goal: Reduce undefined behavior, unsafe input handling, and release-time surprises.
+
+171. Audit every public pointer, handle, array, string, and callback boundary.
+172. Add fuzz tests for C API numeric inputs and collision shape construction.
+173. Add malformed-input tests for package metadata and external consumer configuration.
+174. Review integer overflow, floating-point overflow, NaN propagation, and allocation failures.
+175. Define thread-safety annotations and ownership rules for every shared object.
+176. Run available sanitizers, static analyzers, and compiler security checks.
+177. Review third-party and sibling dependency licenses and notices.
+178. Add a security issue-reporting and responsible-disclosure policy.
+179. Add release artifact checksums and provenance metadata.
+
+PHASE 19 CHECKPOINT
+-------------------
+Public boundaries, malformed inputs, dependencies, artifacts, and failure modes have
+documented handling and repeatable automated coverage.
+
+PHASE 20 - Documentation, examples, and education
+--------------------------------------------------
+Goal: Make the engine understandable to new contributors and integration teams.
+
+180. Add a getting-started guide from clean checkout to first consumer executable.
+181. Add focused examples for metadata, module APIs, async tasks, coupling, and collisions.
+182. Add a C API reference generated from stable public headers.
+183. Add an Unreal integration sample with Debug/Development/Shipping guidance.
+184. Add architecture diagrams for aggregation, packaging, async, and collision layers.
+185. Add contributor instructions for formatting, testing, dependency updates, and releases.
+186. Document known scientific-model limitations and appropriate use boundaries.
+187. Add migration notes for every public API or package-layout change.
+188. Review documentation links and examples in CI.
+
+PHASE 20 CHECKPOINT
+-------------------
+A new contributor and an external integration team can build, consume, test, and extend
+the engine using documented workflows without relying on private repository knowledge.
+
+PHASE 21 - Long-term maintenance and governance
+-----------------------------------------------
+Goal: Keep the project maintainable as modules, platforms, and contributors grow.
+
+189. Define ownership for the aggregation layer, public API, collision subsystem, and CI.
+190. Define a dependency update cadence and review process for pinned repositories.
+191. Define compatibility windows and supported compiler/CMake versions.
+192. Establish issue templates for bugs, numerical discrepancies, API proposals, and features.
+193. Establish pull-request checks for tests, contract changes, documentation, and release notes.
+194. Add a deprecation calendar and planned breaking-release process.
+195. Review roadmap status quarterly and archive obsolete or completed proposals.
+196. Track release quality metrics such as test stability, issue age, and package reproducibility.
+197. Define project governance and decision records for architectural changes.
+198. Review licenses, contributor attribution, and repository archival policy.
+
+PHASE 21 CHECKPOINT
+-------------------
+The project has a sustainable maintenance process, clear ownership, predictable dependency
+updates, and an auditable policy for future architectural and API decisions.

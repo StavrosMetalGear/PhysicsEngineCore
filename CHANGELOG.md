@@ -15,6 +15,9 @@ Release tags must match the project version in `CMakeLists.txt` and the installe
 
 ## Unreleased
 
+- Completed the Phase 9 local reproducible-release audit for version 1.0.0.
+- Validated clean Debug and strict-warning Release builds with all 15 tests passing.
+- Validated installation and an external consumer from a clean Release package.
 - Added Phase 8 CI and release-quality automation.
 - Added pinned sibling-repository revisions for reproducible aggregation builds.
 - Added Windows MSVC/Ninja build, test, install, and external-consumer workflow.
