@@ -1,0 +1,23 @@
+name: Formatting
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y clang-format
+      - name: Check project-owned C++ formatting
+        shell: bash
+        run: |
+          files=$(find . -path './out' -prune -o -path './.git' -prune -o \( -name '*.cpp' -o -name '*.h' \) -print)
+          test -n "$files"
+          clang-format --dry-run --Werror $files

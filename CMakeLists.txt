@@ -19,6 +19,10 @@ project(PhysicsEngineCore VERSION 1.0.0 LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
 
+option(PHYSICSCORE_ENABLE_STRICT_WARNINGS
+       "Enable strict warnings for PhysicsEngine-owned sources and tests"
+       OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -253,8 +257,14 @@ endif()
 if(MSVC)
     target_compile_definitions(PhysicsEngine PUBLIC _USE_MATH_DEFINES NOMINMAX)
     target_compile_options(PhysicsEngine PRIVATE /W3)
+    if(PHYSICSCORE_ENABLE_STRICT_WARNINGS)
+        target_compile_options(PhysicsEngine PRIVATE /W4 /WX)
+    endif()
 else()
     target_compile_options(PhysicsEngine PRIVATE -Wall -Wextra -pedantic)
+    if(PHYSICSCORE_ENABLE_STRICT_WARNINGS)
+        target_compile_options(PhysicsEngine PRIVATE -Werror)
+    endif()
 endif()
 
 set_target_properties(PhysicsEngine PROPERTIES

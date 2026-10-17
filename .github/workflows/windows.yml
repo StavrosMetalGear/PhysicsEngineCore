@@ -1,0 +1,71 @@
+name: Windows MSVC Ninja
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-package:
+    runs-on: windows-2025
+    env:
+      DEPS_DIR: ${{ github.workspace }}\deps
+      INSTALL_DIR: ${{ github.workspace }}\install
+    steps:
+      - name: Checkout PhysicsEngineCore
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        shell: pwsh
+        run: choco install ninja --no-progress --yes
+
+      - name: Checkout pinned sibling repositories
+        shell: pwsh
+        run: |
+          $repos = @{
+            QuantumCore = @('https://github.com/StavrosMetalGear/QuantumCore.git', '529d5912af6f2e15f1f1a2b04b82f029b6c4e90c')
+            ClassicalMechanicsCore = @('https://github.com/StavrosMetalGear/ClassicalMechanicsCore.git', '044a8fa6f13fbb32b96b45a27d499fafd853d088')
+            ElectrodynamicsCore = @('https://github.com/StavrosMetalGear/ElectrodynamicsCore.git', '8ac6b1b0129f2815ff2c1f983eeab792307927b1')
+            FluidDynamicsCore = @('https://github.com/StavrosMetalGear/FluidDynamicsCore.git', '895136a5d42271f4eaac840fece6987faefc6e7a')
+            NuclearCore = @('https://github.com/StavrosMetalGear/NuclearCore.git', 'b3f7c180349d4b5d827ce27ba61bfbe0068f0497')
+            OpticsCore = @('https://github.com/StavrosMetalGear/OpticsCore.git', 'f400d442191c64a1985ce49ddeed60b0dce4643b')
+            SolidStateCore = @('https://github.com/StavrosMetalGear/SolidStateCore.git', 'd9fffbbcbe7da6417119cc5e49fc02d1d25b1982')
+            ThermodynamicsCore = @('https://github.com/StavrosMetalGear/ThermodynamicsCore.git', 'c2013de01d5dd9b202b7ae9df7c4e10b973463a6')
+          }
+          New-Item -ItemType Directory -Force -Path $env:DEPS_DIR | Out-Null
+          foreach ($entry in $repos.GetEnumerator()) {
+            git clone $entry.Value[0] "$env:DEPS_DIR\$($entry.Key)"
+            git -C "$env:DEPS_DIR\$($entry.Key)" checkout --detach $entry.Value[1]
+          }
+
+      - name: Configure
+        shell: pwsh
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --parallel 2
+
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Install package
+        shell: pwsh
+        run: cmake --install build --prefix "$env:INSTALL_DIR"
+
+      - name: Build external consumer
+        shell: pwsh
+        run: |
+          cmake -S examples/consumer -B consumer-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          cmake --build consumer-build --parallel 2
+          .\consumer-build\physics_engine_consumer.exe
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhysicsEngineCore-${{ github.sha }}
+          path: ${{ env.INSTALL_DIR }}

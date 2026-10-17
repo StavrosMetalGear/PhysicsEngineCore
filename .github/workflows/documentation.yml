@@ -1,0 +1,19 @@
+name: API Documentation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  doxygen:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y doxygen
+      - name: Generate API documentation
+        run: doxygen docs/Doxyfile

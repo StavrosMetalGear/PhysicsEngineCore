@@ -293,6 +293,21 @@ PHASE 8 CHECKPOINT
 A tagged release can be built by CI, tested on clean environments, packaged, and
 consumed through documented installation instructions.
 
+STATUS: COMPLETED
+- Added the required Windows/MSVC/Ninja GitHub Actions workflow with pinned sibling
+  repository checkout, configure, build, CTest, install, external-consumer, and artifact steps.
+- Added a clang-format workflow and opt-in `PHYSICSCORE_ENABLE_STRICT_WARNINGS` policy for
+  PhysicsEngine-owned sources without applying strict treatment to sibling object libraries.
+- Recorded exact repository URLs and revisions in dependencies/PhysicsCoreRepos.cmake.
+- Added CHANGELOG.md with semantic-versioning policy and RELEASE_CHECKLIST.md covering source,
+  dependency, build, package, documentation, license, and release gates.
+- Added docs/Doxyfile and a Doxygen CI workflow for public-header API documentation.
+- Added reusable PowerShell and Bash package-validation scripts for release consumers.
+- Locally validated strict-warning Release build, all 15 CTest tests, installation, external
+  consumer execution, and Doxygen generation.
+- GCC/Clang compilation remains best-effort and is not a required gate because the eight
+  sibling repositories are currently validated as a Windows/MSVC aggregation.
+
 Immediate next action
 ---------------------
-Start with Phase 6, step 44: add reference-value tests for every coupling formula.
+Start with the release checklist and create the next versioned release tag after CI passes.
