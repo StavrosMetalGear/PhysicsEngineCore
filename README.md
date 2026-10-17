@@ -125,14 +125,19 @@ int main() {
 
 The exported module APIs use C-compatible declarations. Handle-based modules
 require callers to destroy each successfully created handle exactly once. The
-current wrappers do not provide uniform null-handle or numeric-range validation;
-callers must pass valid handles, finite values, valid dimensions, and nonzero
-denominators. The stateless `fluid_*` and `ss_*` functions do not allocate handles.
+coupling functions validate finite numeric domains and return `NaN` for invalid
+physical parameters because their numeric-only signatures have no status channel.
+Valid zero limits return zero. The stateless `fluid_*` and `ss_*` functions do not
+allocate handles.
 
 Module APIs are not generally documented as thread-safe. Treat individual handles
 as thread-confined unless a module explicitly guarantees otherwise. The async API
-has separate process-global lifecycle rules and does not copy or free callback
-user data.
+has separate process-global lifecycle rules: initialize before submission, do not
+shutdown from a callback, and expect repeated init/shutdown calls to be no-ops.
+Submissions before initialization or with null callbacks return task ID `0`, which
+is immediately complete. Callback exceptions are contained, callback user data is
+not copied or freed, and completed task records are retained only up to a bounded
+capacity.
 
 See [API_CONTRACT.md](API_CONTRACT.md) for the complete observed contract,
 ownership rules, units, naming details, and known limitations.

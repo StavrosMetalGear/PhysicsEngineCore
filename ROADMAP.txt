@@ -196,6 +196,18 @@ PHASE 5 CHECKPOINT
 Async lifecycle, error behavior, shutdown behavior, task retention, and thread-safety
 are documented and covered by repeatable stress tests.
 
+STATUS: COMPLETED
+- Defined pre-initialization and null-callback submissions as rejected with task ID 0.
+- Serialized initialization and shutdown, made repeated lifecycle calls safe, and documented
+  that shutdown must not be called from a worker callback.
+- Contained callback exceptions so a failing task does not terminate worker threads or the process.
+- Bounded completed-task retention to 4096 records and cleared records during shutdown.
+- Added test_async_stress.cpp covering 512 short tasks, callback exceptions, concurrent
+  initialization, repeated shutdown, and shutdown draining of queued work.
+- Clean explicit-root Ninja/MSVC build completed successfully with all 14 CTest tests passing.
+- Deferred task-ID rollover validation and result/cancellation support until a concrete API
+  requirement exists.
+
 PHASE 6 - Validate scientific and numerical behavior
 Goal: Confirm that formulas and units are physically meaningful.
 
@@ -214,6 +226,19 @@ PHASE 6 CHECKPOINT
 ------------------
 Every coupling function has reference tests, documented units, defined invalid-input
 behavior, and numerical tolerances justified by the expected use case.
+
+STATUS: COMPLETED
+- Added independent reference-value tests for all nine coupling formulas.
+- Documented SI dimensions, MeV input conversion, output units, and formula-specific
+  tolerances in the public coupling header and API contract.
+- Defined invalid finite-domain inputs as NaN and preserved mathematically valid zero limits.
+- Added zero, negative, NaN, infinity, monotonicity, and physical-limit regression coverage.
+- Added Drude low- and high-frequency reflectance checks and reviewed the near-zero
+  frequency singularity by rejecting nonpositive angular frequency.
+- Added finite/domain guards before square roots, powers, and divisions in every coupling API.
+- Clean explicit-root Ninja/MSVC build completed successfully with all 15 CTest tests passing.
+- Deferred broader overflow/underflow stress testing and higher-fidelity material-model
+  validation to a future numerical-accuracy phase.
 
 PHASE 7 - Packaging and consumer integration
 Goal: Make the library usable outside this repository.
@@ -257,6 +282,4 @@ consumed through documented installation instructions.
 
 Immediate next action
 ---------------------
-Start with Phase 1, step 1: make the sibling repository root configurable in
-CMakeLists.txt. This directly addresses the repository move concern and should be
-completed before adding broader integration tests.
+Start with Phase 6, step 44: add reference-value tests for every coupling formula.

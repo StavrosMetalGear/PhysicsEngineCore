@@ -131,12 +131,14 @@ The current wrappers do not provide a uniform error/status API.
   Null or invalid handles therefore have undefined behavior and must not be passed.
 - Some create functions tolerate a null name by substituting an empty string; this
   is implementation-specific and is not a general contract for all modules.
-- Numeric domain checks are not consistently enforced. Zero denominators, negative
-  physical parameters, invalid dimensions, NaN, infinity, and out-of-range indices
-  must be treated as caller errors unless a specific header documents otherwise.
+- Coupling numeric APIs validate their documented domains. Zero denominators, negative
+  physical parameters, invalid dimensions, NaN, and infinity return NaN; valid zero
+  limits such as zero density, temperature, radius, or rate return zero.
 - Functions returning numeric results generally do not return an error code. Invalid
-  inputs may produce NaN, infinity, a mathematically meaningless value, or an
+	inputs may produce NaN, infinity, a mathematically meaningless value, or an
   implementation failure.
+- Coupling APIs return NaN for invalid numeric inputs, so callers should check
+  `std::isfinite` (or equivalent) on returned values.
 - Future API work should introduce consistent validation and an error-reporting
   policy rather than relying on these implementation details.
 
@@ -150,8 +152,9 @@ The current wrappers do not provide a uniform error/status API.
   some functions use joules, electron-volts, metres, kelvin, or dimensionless
   quantities.
 - Floating-point results should be compared with tolerances, not exact equality.
-- This phase documents observed conventions; Phase 6 will add reference-value and
-  dimensional-consistency tests.
+- Coupling units are documented in `PhysicsCoupling.h`: dimensionless Nu/reflectance,
+  W/m^2 heat flux, metres for skin depth, joules for quantum/nuclear energies, m/s
+  terminal velocity, and watts for fission power.
 
 ## Thread-safety
 
@@ -160,11 +163,23 @@ The current wrappers do not provide a uniform error/status API.
 - Independent stateless calls may be suitable for concurrent use, but this has not
   yet been formally tested for every module.
 - The async system is process-global and owns shared worker, queue, completion, and
-  pending-task state. Its public lifecycle must be coordinated by the application.
-- `pe_async_init` should be called before submission and `pe_async_shutdown` after
-  all required tasks have completed.
+  pending-task state. Initialization, submission, and shutdown lifecycle transitions
+  are serialized internally.
+- `pe_async_init` should be called before submission. Repeated initialization is a
+  no-op; `numThreads <= 0` selects hardware concurrency with a fallback.
+- `pe_async_shutdown` waits for queued/running work, joins workers, clears completion
+  records, and is idempotent. Calling shutdown from inside a task callback is not
+  supported.
 - The callback receives caller-owned `void*` data; the async system does not copy or
   free that data.
+- Submitting before initialization or with a null callback returns task ID 0 and
+  performs no work. ID 0 is immediately complete, so waiting on it cannot block.
+- Callback exceptions are caught by the worker. The existing C API has no exception
+  transport, so the task is marked complete without exposing the exception.
+- Completed task records are retained up to 4096 entries and older completed records
+  are evicted when possible. Unknown or evicted IDs are treated as complete.
+- `pe_tasks_pending` is a concurrent snapshot and may change immediately after it
+  returns.
 - The returned pointer from name APIs such as `cp_getName` may use a thread-local
   buffer and should be copied by the caller if it must survive subsequent calls.
 

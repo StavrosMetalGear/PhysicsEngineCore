@@ -240,6 +240,20 @@ target_include_directories(test_engine_metadata PRIVATE
 )
 add_test(NAME test_engine_metadata COMMAND test_engine_metadata)
 
+add_executable(test_async_stress tests/test_async_stress.cpp)
+target_link_libraries(test_async_stress PRIVATE PhysicsEngine)
+target_include_directories(test_async_stress PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_test(NAME test_async_stress COMMAND test_async_stress)
+
+add_executable(test_coupling_science tests/test_coupling_science.cpp)
+target_link_libraries(test_coupling_science PRIVATE PhysicsEngine)
+target_include_directories(test_coupling_science PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_test(NAME test_coupling_science COMMAND test_coupling_science)
+
 # ── OBB collision test ───────────────────────────────────────────────────────
 add_executable(test_obb tests/test_obb.cpp)
 target_include_directories(test_obb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

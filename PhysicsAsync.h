@@ -34,15 +34,18 @@ typedef void (*PE_TaskFunc)(void* userData);
 PHYSENG_API void pe_async_init(int numThreads);
 
 // Shut down all worker threads and release resources. The caller must coordinate
-// shutdown with submitted work. The callback userData is never freed by the API.
+// shutdown with submitted work and must not call shutdown from a task callback.
+// Repeated shutdown is a no-op. The callback userData is never freed by the API.
 PHYSENG_API void pe_async_shutdown(void);
 
 // Submit a task for asynchronous execution. The callback and userData must
-// remain valid until the callback finishes. Returns an opaque task ID.
+// remain valid until the callback finishes. Returns an opaque task ID, or 0 when
+// the system is not initialized or func is null. ID 0 is immediately complete.
 PHYSENG_API PE_TaskId pe_submit_async(PE_TaskFunc func, void* userData);
 
 // Returns 1 if the task has completed, 0 otherwise. Unknown IDs are currently
-// treated as complete; callers should retain valid task IDs.
+// treated as complete. Completed records are retained up to a bounded capacity
+// and are cleared during shutdown.
 PHYSENG_API int pe_task_ready(PE_TaskId id);
 
 // Block until the task completes.

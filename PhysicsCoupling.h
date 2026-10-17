@@ -18,9 +18,8 @@ extern "C" {
 #endif
 
 // Inputs use SI units unless a parameter name or comment states otherwise.
-// These functions currently return numeric results without an error/status
-// channel. Callers must provide finite, physically meaningful values and avoid
-// zero denominators; invalid-input behavior is not uniformly validated.
+// Results are numeric only; invalid or non-finite inputs return NaN because
+// these APIs do not have an error/status channel. Valid zero limits return 0.
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  1. FLUID + THERMODYNAMICS  (convective heat transfer, compressible flow)
@@ -30,10 +29,13 @@ extern "C" {
 // Combines fluid Re (from FluidDynamicsCore) with thermal Pr (ThermodynamicsCore).
 //   Re = rho * U * L / mu,  Pr = cp * mu / k
 //   Nu = 0.332 * Re^0.5 * Pr^(1/3)
+// Returns a dimensionless Nusselt number. rho [kg/m^3], U [m/s], L [m],
+// mu [Pa s], cp [J/(kg K)], and k [W/(m K)].
 PHYSENG_API double pe_nusselt_flat_plate(double rho, double U, double L,
                                          double mu, double cp, double k);
 
 // Convective heat flux  q = h * (T_surface - T_fluid)  where h = Nu * k / L.
+// Returns q [W/m^2]; temperatures are [K].
 PHYSENG_API double pe_convective_heat_flux(double Nu, double k, double L,
                                            double T_surface, double T_fluid);
 
@@ -42,10 +44,12 @@ PHYSENG_API double pe_convective_heat_flux(double Nu, double k, double L,
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Skin depth of an EM wave in a conductor:  delta = sqrt(2 / (mu0 * sigma * omega))
+// Returns delta [m]; sigma [S/m] and omega [rad/s].
 PHYSENG_API double pe_skin_depth(double sigma, double omega);
 
 // Reflectance of a metal surface at normal incidence from the Drude model:
 //   n + ik from plasma frequency and damping, then R = |(n-1+ik)/(n+1+ik)|^2
+// Returns dimensionless reflectance; angular frequencies are [rad/s].
 PHYSENG_API double pe_drude_reflectance(double omega_p, double gamma, double omega);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -55,10 +59,12 @@ PHYSENG_API double pe_drude_reflectance(double omega_p, double gamma, double ome
 // Quantum confinement energy shift for an electron in a quantum dot,
 // using the solid-state effective mass and the quantum ISW formula:
 //   Delta E = pi^2 hbar^2 / (2 m* L^2)
+// Returns energy [J]; mStar [kg] and L [m].
 PHYSENG_API double pe_quantum_dot_confinement(double mStar, double L);
 
 // Fermi energy of a free electron gas (from SolidStateCore DOS + QuantumCore):
 //   E_F = (hbar^2 / 2m) * (3 pi^2 n)^(2/3)
+// Returns energy [J]; electronDensity [1/m^3] and mStar [kg].
 PHYSENG_API double pe_fermi_energy(double electronDensity, double mStar);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -67,6 +73,7 @@ PHYSENG_API double pe_fermi_energy(double electronDensity, double mStar);
 
 // Gamow peak energy for stellar fusion:
 //   E_0 = (b * kT / 2)^(2/3)   where b = pi * alpha * Z1 * Z2 * sqrt(2 mu c^2)
+// Returns energy [J]; T [K], charges dimensionless, and reduced mass [kg].
 PHYSENG_API double pe_gamow_peak(double T_kelvin, int Z1, int Z2, double mu);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -75,6 +82,7 @@ PHYSENG_API double pe_gamow_peak(double T_kelvin, int Z1, int Z2, double mu);
 
 // Terminal velocity of a sphere falling through a viscous fluid:
 //   v_t = (2/9) * (rho_sphere - rho_fluid) * g * r^2 / mu
+// Returns velocity [m/s]; densities [kg/m^3], radius [m], and viscosity [Pa s].
 PHYSENG_API double pe_terminal_velocity(double rho_sphere, double rho_fluid,
                                          double radius, double mu);
 
@@ -83,6 +91,7 @@ PHYSENG_API double pe_terminal_velocity(double rho_sphere, double rho_fluid,
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Thermal power from fission:  P = fission_rate * energy_per_fission
+// Returns power [W]; fissionRate [1/s] and energyPerFission_MeV [MeV].
 PHYSENG_API double pe_fission_thermal_power(double fissionRate,
                                              double energyPerFission_MeV);
 
