@@ -85,6 +85,7 @@ endmacro()
 # 1. QuantumCore
 add_physics_module(Quantum ${QUANTUM_DIR}
     ${QUANTUM_DIR}/QuantumParticle.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/QuantumParticleCompatibility.cpp
     ${QUANTUM_DIR}/NumericalSolver.cpp
     ${QUANTUM_DIR}/quantum_c_api.cpp
 )
