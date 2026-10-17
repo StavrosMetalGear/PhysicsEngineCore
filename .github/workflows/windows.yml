@@ -22,6 +22,18 @@ jobs:
         shell: pwsh
         run: choco install ninja --no-progress --yes
 
+      - name: Initialize MSVC x64 environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Verify MSVC toolchain
+        shell: pwsh
+        run: |
+          $cl = Get-Command cl.exe -ErrorAction Stop
+          Write-Output "Using MSVC compiler: $($cl.Source)"
+          cl.exe 2>&1 | Select-Object -First 2
+
       - name: Checkout pinned sibling repositories
         shell: pwsh
         run: |
@@ -43,7 +55,7 @@ jobs:
 
       - name: Configure
         shell: pwsh
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=cl.exe -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
 
       - name: Build
         shell: pwsh
