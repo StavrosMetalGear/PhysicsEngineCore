@@ -57,16 +57,30 @@ bool test_module_apis()
 	CHECK(quantum != nullptr, "Quantum handle creation");
 	const double quantumEnergy = qp_energy_1d_box(quantum, 3);
 	CHECK(std::isfinite(quantumEnergy) && quantumEnergy > 0.0, "Quantum energy");
+	const double hbar = 1.0545718e-34;
+	const double deltaPotential = 1.0e-18;
+	CHECK(approx(qp_delta_potential_energy(quantum, deltaPotential),
+				  -9.1093837015e-31 * deltaPotential * deltaPotential /
+				  (2.0 * hbar * hbar)),
+		  "Quantum delta-potential energy");
 	qp_destroy(quantum);
 
 	CP_Handle classical = cp_create("integration-classical", 2.0, 1.0, 3);
 	CHECK(classical != nullptr, "Classical handle creation");
 	CHECK(approx(cp_getMass(classical), 2.0), "Classical mass");
+	CHECK(approx(cp_projectileX(classical, 20.0, 0.5, 2.0), 20.0 * std::cos(0.5) * 2.0),
+		  "Classical projectile position");
 	cp_destroy(classical);
 
 	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 0.0);
 	CHECK(electromagnetic != nullptr, "Electrodynamics handle creation");
 	CHECK(approx(em_get_epsilon_r(electromagnetic), 2.5), "Relative permittivity");
+	CHECK(approx(em_coulomb_force(electromagnetic, 1.0e-6, 2.0e-6, 0.1),
+				  8.9875517923e9 * 1.0e-6 * 2.0e-6 / (0.1 * 0.1)),
+		  "Coulomb force");
+	CHECK(approx(em_wave_speed_in_medium(electromagnetic),
+				  299792458.0 / std::sqrt(2.5)),
+		  "Wave speed in medium");
 	em_destroy(electromagnetic);
 
 	const double expectedReynolds = 998.0 * 1.5 * 0.05 / 1.002e-3;
@@ -82,13 +96,52 @@ bool test_module_apis()
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
 	CHECK(optics != nullptr, "Optics handle creation");
 	CHECK(approx(op_get_wavelength(optics), 632.8e-9), "Optics wavelength");
+	CHECK(approx(op_snell_refraction(optics, 0.5, 1.0, 1.5),
+				  std::asin(std::sin(0.5) / 1.5)),
+		  "Snell refraction");
+	CHECK(op_snell_refraction(optics, 1.2, 1.5, 1.0) == -1.0,
+		  "Optics total internal reflection domain");
+	CHECK(approx(op_critical_angle(optics, 1.5, 1.0), std::asin(1.0 / 1.5)),
+		  "Optics critical angle");
+	CHECK(approx(op_brewster_angle(optics, 1.0, 1.5), std::atan(1.5)),
+		  "Optics Brewster angle");
+	CHECK(approx(op_thin_lens(optics, 0.30, 0.10), 0.15), "Thin lens equation");
+	CHECK(approx(op_magnification(optics, 0.30, 0.15), -0.5), "Optics magnification");
+	CHECK(approx(op_spherical_mirror_focal(optics, 0.40), 0.20), "Spherical mirror focal length");
 	op_destroy(optics);
 
 	CHECK(approx(ss_lattice_spacing(1, 0, 0, 5.0), 5.0), "Solid-state lattice spacing");
+	CHECK(approx(ss_bragg_angle(2.5e-10, 1.0e-10, 1),
+				  std::asin(1.0e-10 / (2.0 * 2.5e-10))),
+		  "Bragg angle");
+	CHECK(approx(ss_thermal_conductivity(10.0, 200.0, 1.0e-6),
+				  (1.0 / 3.0) * 10.0 * 200.0 * 1.0e-6),
+		  "Solid-state kinetic thermal conductivity");
+	CHECK(approx(ss_landauer_conductance(0.5, 2),
+				  0.5 * 2.0 * ss_conductance_quantum()),
+		  "Landauer conductance");
 
 	TD_Handle thermo = td_create("integration-thermo", 1.0, 300.0);
 	CHECK(thermo != nullptr, "Thermodynamics handle creation");
 	CHECK(approx(td_get_temperature(thermo), 300.0), "Thermodynamics temperature");
+	CHECK(approx(td_ideal_gas_pressure(thermo, 1.0), 8.31446261815324 * 300.0),
+		  "Ideal-gas pressure");
+	CHECK(approx(td_ideal_gas_volume(thermo, 8.31446261815324 * 300.0), 1.0),
+		  "Ideal-gas volume");
+	CHECK(approx(td_isothermal_work(thermo, 1.0, 2.0),
+				  8.31446261815324 * 300.0 * std::log(2.0)),
+		  "Isothermal work");
+	CHECK(approx(td_carnot_efficiency(thermo, 600.0, 300.0), 0.5),
+		  "Carnot efficiency");
+	CHECK(approx(td_otto_efficiency(thermo, 8.0, 1.4),
+				  1.0 - std::pow(1.0 / 8.0, 0.4)),
+		  "Otto efficiency");
+	CHECK(approx(td_entropy_change_isothermal(1200.0, 300.0), 4.0),
+		  "Isothermal entropy change");
+	CHECK(approx(td_helmholtz_free_energy(5000.0, 300.0, 10.0), 2000.0),
+		  "Helmholtz free energy");
+	CHECK(approx(td_enthalpy(5000.0, 100000.0, 0.01), 6000.0),
+		  "Thermodynamic enthalpy");
 	td_destroy(thermo);
 
 	return true;

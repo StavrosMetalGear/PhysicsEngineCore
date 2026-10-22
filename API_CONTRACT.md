@@ -84,6 +84,13 @@ These functions take ordinary numeric values and do not allocate or retain handl
 Additional FluidDynamicsCore functionality exists in the sibling repository but is
 not automatically part of this wrapper unless it is declared and compiled here.
 
+The current test suite validates reference values and safe boundary behavior for
+all five functions. The remaining module APIs have representative integration
+coverage, including Solid State lattice, diffraction, thermal-transport, and
+Landauer reference checks, plus representative Thermodynamics and Optics
+equation and domain checks. Exhaustive equation coverage is still being added
+incrementally.
+
 ### Nuclear
 
 The Nuclear API includes `np_create`, `np_destroy`, binding-energy calculations,

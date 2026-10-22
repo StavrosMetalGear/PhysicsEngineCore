@@ -299,6 +299,14 @@ target_include_directories(test_engine_integration PRIVATE
 )
 add_test(NAME test_engine_integration COMMAND test_engine_integration)
 
+add_executable(test_fluid_api tests/test_fluid_api.cpp)
+target_link_libraries(test_fluid_api PRIVATE PhysicsEngine)
+target_include_directories(test_fluid_api PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${FLUID_DIR}
+)
+add_test(NAME test_fluid_api COMMAND test_fluid_api)
+
 add_executable(test_engine_metadata tests/test_engine_metadata.cpp)
 target_link_libraries(test_engine_metadata PRIVATE PhysicsEngine)
 target_include_directories(test_engine_metadata PRIVATE

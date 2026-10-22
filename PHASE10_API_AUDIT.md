@@ -6,6 +6,13 @@ This audit compares the eight pinned sibling repositories listed in
 `dependencies/PhysicsCoreRepos.cmake` with the sources aggregated by
 `CMakeLists.txt`. The pinned revision is the CI source of truth.
 
+`PHASE10_API_INVENTORY.md` is the generated parser-aware function inventory.
+Regenerate it with:
+
+```powershell
+./scripts/audit-c-api.ps1 -ReposRoot D:\repos
+```
+
 ## Module mapping
 
 | Module | Pinned revision | C API implementation | C API declaration | Aggregated implementation sources | Unified public header |
@@ -38,11 +45,36 @@ This audit compares the eight pinned sibling repositories listed in
    collision headers under `include/physics` are a separate C++17 API and are
    not part of the module C ABI.
 
+## Current equation coverage
+
+`tests/test_fluid_api.cpp` provides reference-value and safe boundary checks for
+all five stateless Fluid wrappers. `tests/test_engine_integration.cpp` provides
+representative reference checks for:
+
+- Quantum delta-potential energy;
+- Classical projectile position;
+- Electrodynamics Coulomb force and wave speed in a medium;
+- Optics Snell refraction and thin-lens image distance;
+- Solid-state Bragg angle; and
+- Thermodynamics ideal-gas pressure.
+
+The same integration test also checks Solid State kinetic thermal conductivity
+and Landauer conductance against their reference equations.
+
+The current integration coverage also checks Thermodynamics ideal-gas volume,
+isothermal work, Carnot and Otto efficiencies, entropy change, Helmholtz free
+energy, and enthalpy. Optics coverage includes total-internal-reflection
+behavior, critical and Brewster angles, magnification, and spherical-mirror
+focal length.
+
+The existing integration test also verifies lifecycle and one representative
+call for every module. This is representative coverage, not yet exhaustive
+coverage of every declaration in the large sibling C APIs.
+
 ## Phase 10 actionable gap
 
-The first concrete coverage task is to add reference-value tests for the five
-Fluid C API wrappers and verify that the installed package exposes the local
-header correctly. Before expanding coverage to the larger stateful APIs, the
-remaining module declarations should be inventoried with a parser-aware tool
-because raw regular-expression counts are distorted by multiline signatures,
-helper functions, and C++ implementation functions in the wrapper sources.
+The parser-aware inventory task is complete with zero declaration/definition
+mismatches across all eight APIs. Remaining work is grouped reference testing
+for the remaining declarations, especially stateless mathematical helpers and
+lifecycle-safe stateful operations. The inventory does not itself prove
+scientific correctness or define behavior for invalid numeric domains.
