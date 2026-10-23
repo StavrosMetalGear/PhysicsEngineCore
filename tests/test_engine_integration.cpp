@@ -136,11 +136,11 @@ bool test_module_apis()
 	CHECK(approx(td_otto_efficiency(thermo, 8.0, 1.4),
 				  1.0 - std::pow(1.0 / 8.0, 0.4)),
 		  "Otto efficiency");
-	CHECK(approx(td_entropy_change_isothermal(1200.0, 300.0), 4.0),
+	CHECK(approx(td_entropy_change_isothermal(thermo, 1200.0, 300.0), 4.0),
 		  "Isothermal entropy change");
-	CHECK(approx(td_helmholtz_free_energy(5000.0, 300.0, 10.0), 2000.0),
+	CHECK(approx(td_helmholtz_free_energy(thermo, 5000.0, 300.0, 10.0), 2000.0),
 		  "Helmholtz free energy");
-	CHECK(approx(td_enthalpy(5000.0, 100000.0, 0.01), 6000.0),
+	CHECK(approx(td_enthalpy(thermo, 5000.0, 100000.0, 0.01), 6000.0),
 		  "Thermodynamic enthalpy");
 	td_destroy(thermo);
 
