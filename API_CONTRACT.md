@@ -92,6 +92,10 @@ equation and domain checks. Exhaustive equation coverage is still being added
 incrementally. Representative Electrodynamics and Nuclear reference/domain
 checks are also included; Nuclear SEMF returns zero for nonpositive charge or
 mass-number inputs according to the current implementation.
+Quantum and Classical scalar reference checks are also included. The Quantum
+harmonic-oscillator energy helper currently follows the pinned implementation's
+dimensionless `hbar = 1` convention; callers should not assume SI energy units
+for that function without a future API clarification.
 
 ### Nuclear
 

@@ -57,6 +57,17 @@ bool test_module_apis()
 	CHECK(quantum != nullptr, "Quantum handle creation");
 	const double quantumEnergy = qp_energy_1d_box(quantum, 3);
 	CHECK(std::isfinite(quantumEnergy) && quantumEnergy > 0.0, "Quantum energy");
+	CHECK(approx(qp_get_mass(quantum), 9.1093837015e-31), "Quantum mass getter");
+	CHECK(approx(qp_energy_harmonic_oscillator(quantum, 2, 4.0), 10.0),
+		  "Quantum harmonic oscillator energy");
+	CHECK(approx(qp_hermite_polynomial(3, 0.5), -5.0), "Quantum Hermite polynomial");
+	double dx = 0.0;
+	double dp = 0.0;
+	qp_ho_uncertainty(quantum, 0, 2.0, &dx, &dp);
+	CHECK(approx(dx, std::sqrt(1.0545718e-34 / (2.0 * 9.1093837015e-31 * 2.0))),
+		  "Quantum position uncertainty");
+	CHECK(approx(dp, std::sqrt(9.1093837015e-31 * 1.0545718e-34 * 2.0 / 2.0)),
+		  "Quantum momentum uncertainty");
 	const double hbar = 1.0545718e-34;
 	const double deltaPotential = 1.0e-18;
 	CHECK(approx(qp_delta_potential_energy(quantum, deltaPotential),
@@ -70,6 +81,15 @@ bool test_module_apis()
 	CHECK(approx(cp_getMass(classical), 2.0), "Classical mass");
 	CHECK(approx(cp_projectileX(classical, 20.0, 0.5, 2.0), 20.0 * std::cos(0.5) * 2.0),
 		  "Classical projectile position");
+	CHECK(approx(cp_freeParticleKineticEnergy(classical, 3.0), 0.5 * 2.0 * 9.0),
+		  "Classical free-particle kinetic energy");
+	CHECK(approx(cp_shoPosition(classical, 2.0, 3.0, 0.0, 0.25),
+				  2.0 * std::cos(0.75)),
+		  "Classical oscillator position");
+	CHECK(approx(cp_shoEnergy(classical, 2.0, 3.0), 0.5 * 2.0 * 9.0 * 4.0),
+		  "Classical oscillator energy");
+	CHECK(approx(cp_shoPeriod(classical, 3.0), 2.0 * 3.14159265358979323846 / 3.0),
+		  "Classical oscillator period");
 	cp_destroy(classical);
 
 	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 0.0);

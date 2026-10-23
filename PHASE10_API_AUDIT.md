@@ -72,6 +72,16 @@ flux, capacitor energy, Ohm's law, and wave speed in a medium. Nuclear coverage
 includes SEMF binding energy, nuclear radius, pairing delta, and the explicit
 invalid-charge binding-energy result of zero.
 
+Quantum coverage also includes particle mass, harmonic-oscillator energy,
+Hermite polynomial values, and ground-state position/momentum uncertainties.
+Classical coverage includes free-particle kinetic energy and simple harmonic
+oscillator position, energy, and period.
+
+The pinned Quantum implementation currently uses `hbar = 1.0` for its
+harmonic-oscillator energy helper, while its wavefunction and uncertainty
+helpers use the physical `hbar` constant; tests preserve and document this
+observed implementation behavior.
+
 The existing integration test also verifies lifecycle and one representative
 call for every module. This is representative coverage, not yet exhaustive
 coverage of every declaration in the large sibling C APIs.
