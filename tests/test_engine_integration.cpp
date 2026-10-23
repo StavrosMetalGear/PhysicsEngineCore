@@ -58,6 +58,15 @@ bool test_module_apis()
 	const double quantumEnergy = qp_energy_1d_box(quantum, 3);
 	CHECK(std::isfinite(quantumEnergy) && quantumEnergy > 0.0, "Quantum energy");
 	CHECK(approx(qp_get_mass(quantum), 9.1093837015e-31), "Quantum mass getter");
+	double wavefunction[4] = {};
+	CHECK(qp_wavefunction_1d_box(quantum, 1, 4, wavefunction) == 4,
+		  "Quantum wavefunction output length");
+	CHECK(approx(wavefunction[0], 0.0) && wavefunction[3] > 0.0,
+		  "Quantum wavefunction output values");
+	double pauliX[8] = {};
+	qp_pauli_x(pauliX);
+	CHECK(approx(pauliX[2], 1.0) && approx(pauliX[4], 1.0),
+		  "Quantum Pauli-X output matrix");
 	CHECK(approx(qp_energy_harmonic_oscillator(quantum, 2, 4.0), 10.0),
 		  "Quantum harmonic oscillator energy");
 	CHECK(approx(qp_hermite_polynomial(3, 0.5), -5.0), "Quantum Hermite polynomial");
@@ -124,6 +133,13 @@ bool test_module_apis()
 	CHECK(nuclear != nullptr, "Nuclear handle creation");
 	const double bindingEnergy = np_binding_energy_semf(nuclear, 26, 56);
 	CHECK(std::isfinite(bindingEnergy) && bindingEnergy > 0.0, "Nuclear binding energy");
+	double curveA[3] = {};
+	double curveBinding[3] = {};
+	CHECK(np_compute_semf_curve(nuclear, 5, curveA, curveBinding, 3) == 3,
+		  "Nuclear SEMF curve truncated output length");
+	CHECK(approx(curveA[0], 1.0) && approx(curveA[2], 3.0) &&
+		  std::isfinite(curveBinding[1]),
+		  "Nuclear SEMF curve output values");
 	CHECK(approx(np_nuclear_radius(nuclear, 56), 1.2 * std::cbrt(56.0)),
 		  "Nuclear radius");
 	CHECK(approx(np_pairing_delta(nuclear, 100), 12.0 / 10.0), "Nuclear pairing delta");

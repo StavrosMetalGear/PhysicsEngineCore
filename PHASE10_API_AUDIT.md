@@ -77,6 +77,11 @@ Hermite polynomial values, and ground-state position/momentum uncertainties.
 Classical coverage includes free-particle kinetic energy and simple harmonic
 oscillator position, energy, and period.
 
+Array-output coverage now checks Quantum one-dimensional-box wavefunction length
+and values, Quantum Pauli-X matrix serialization, and Nuclear SEMF curve output.
+The Nuclear test confirms that the wrapper returns at most the caller-provided
+buffer length and reports the truncated count.
+
 The pinned Quantum implementation currently uses `hbar = 1.0` for its
 harmonic-oscillator energy helper, while its wavefunction and uncertainty
 helpers use the physical `hbar` constant; tests preserve and document this

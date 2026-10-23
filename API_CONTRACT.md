@@ -97,6 +97,11 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
+Array-output APIs write into caller-owned buffers. Callers must allocate enough
+space for the requested output. Nuclear paired-vector wrappers return the
+number of entries written, capped by the supplied buffer length; they do not
+allocate caller buffers.
+
 ### Nuclear
 
 The Nuclear API includes `np_create`, `np_destroy`, binding-energy calculations,
