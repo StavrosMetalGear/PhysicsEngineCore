@@ -89,7 +89,9 @@ all five functions. The remaining module APIs have representative integration
 coverage, including Solid State lattice, diffraction, thermal-transport, and
 Landauer reference checks, plus representative Thermodynamics and Optics
 equation and domain checks. Exhaustive equation coverage is still being added
-incrementally.
+incrementally. Representative Electrodynamics and Nuclear reference/domain
+checks are also included; Nuclear SEMF returns zero for nonpositive charge or
+mass-number inputs according to the current implementation.
 
 ### Nuclear
 

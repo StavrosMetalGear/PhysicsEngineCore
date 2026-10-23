@@ -67,6 +67,11 @@ energy, and enthalpy. Optics coverage includes total-internal-reflection
 behavior, critical and Brewster angles, magnification, and spherical-mirror
 focal length.
 
+Electrodynamics coverage includes Coulomb potential, dipole torque, Gauss-law
+flux, capacitor energy, Ohm's law, and wave speed in a medium. Nuclear coverage
+includes SEMF binding energy, nuclear radius, pairing delta, and the explicit
+invalid-charge binding-energy result of zero.
+
 The existing integration test also verifies lifecycle and one representative
 call for every module. This is representative coverage, not yet exhaustive
 coverage of every declaration in the large sibling C APIs.

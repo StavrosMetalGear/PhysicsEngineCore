@@ -78,6 +78,19 @@ bool test_module_apis()
 	CHECK(approx(em_coulomb_force(electromagnetic, 1.0e-6, 2.0e-6, 0.1),
 				  8.9875517923e9 * 1.0e-6 * 2.0e-6 / (0.1 * 0.1)),
 		  "Coulomb force");
+	CHECK(approx(em_coulomb_potential(electromagnetic, 2.0e-6, 0.1),
+				  8.9875517873681764e9 * 2.0e-6 / 0.1),
+		  "Coulomb potential");
+	CHECK(approx(em_dipole_torque(electromagnetic, 2.0, 3.0, 0.5),
+				  2.0 * 3.0 * std::sin(0.5)),
+		  "Electric dipole torque");
+	CHECK(approx(em_gauss_flux(electromagnetic, 1.0e-9),
+				  1.0e-9 / (2.5 * 8.854187817e-12)),
+		  "Gauss-law flux");
+	CHECK(approx(em_capacitor_energy(electromagnetic, 2.0e-6, 12.0),
+				  0.5 * 2.0e-6 * 12.0 * 12.0),
+		  "Capacitor energy");
+	CHECK(approx(em_ohm_law(electromagnetic, 12.0, 4.0), 3.0), "Ohm law current");
 	CHECK(approx(em_wave_speed_in_medium(electromagnetic),
 				  299792458.0 / std::sqrt(2.5)),
 		  "Wave speed in medium");
@@ -91,6 +104,11 @@ bool test_module_apis()
 	CHECK(nuclear != nullptr, "Nuclear handle creation");
 	const double bindingEnergy = np_binding_energy_semf(nuclear, 26, 56);
 	CHECK(std::isfinite(bindingEnergy) && bindingEnergy > 0.0, "Nuclear binding energy");
+	CHECK(approx(np_nuclear_radius(nuclear, 56), 1.2 * std::cbrt(56.0)),
+		  "Nuclear radius");
+	CHECK(approx(np_pairing_delta(nuclear, 100), 12.0 / 10.0), "Nuclear pairing delta");
+	CHECK(np_binding_energy_semf(nuclear, 0, 56) == 0.0,
+		  "Invalid nuclear charge returns zero binding energy");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
