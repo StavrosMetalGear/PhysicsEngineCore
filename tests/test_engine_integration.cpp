@@ -162,6 +162,19 @@ bool test_module_apis()
 	CHECK(approx(op_thin_lens(optics, 0.30, 0.10), 0.15), "Thin lens equation");
 	CHECK(approx(op_magnification(optics, 0.30, 0.15), -0.5), "Optics magnification");
 	CHECK(approx(op_spherical_mirror_focal(optics, 0.40), 0.20), "Spherical mirror focal length");
+	CHECK(approx(op_airy_disk_radius(optics, 500.0e-9, 0.20, 0.05),
+				  1.22 * 500.0e-9 * 0.20 / 0.05),
+		  "Airy disk radius");
+	CHECK(approx(op_chromatic_aberration(optics, 0.20, 50.0), -0.20 / 50.0),
+		  "Chromatic aberration");
+	CHECK(approx(op_anti_reflection_thickness(optics, 1.5, 600.0e-9),
+				  600.0e-9 / (4.0 * 1.5)),
+		  "Anti-reflection film thickness");
+	CHECK(approx(op_cavity_fsr(optics, 0.10, 1.5), 299792458.0 / (2.0 * 1.5 * 0.10)),
+		  "Optical cavity free spectral range");
+	CHECK(approx(op_bragg_angle(optics, 500.0e-9, 2.0e-6),
+				  std::asin(500.0e-9 / (2.0 * 2.0e-6))),
+		  "Acousto-optic Bragg angle");
 	op_destroy(optics);
 
 	CHECK(approx(ss_lattice_spacing(1, 0, 0, 5.0), 5.0), "Solid-state lattice spacing");
@@ -174,6 +187,19 @@ bool test_module_apis()
 	CHECK(approx(ss_landauer_conductance(0.5, 2),
 				  0.5 * 2.0 * ss_conductance_quantum()),
 		  "Landauer conductance");
+	const double solidStateHbar = 1.0545718e-34;
+	CHECK(approx(ss_free_electron_energy(2.0e9, 9.1093837015e-31),
+				  solidStateHbar * solidStateHbar * 4.0e18 /
+				  (2.0 * 9.1093837015e-31)),
+		  "Free-electron energy");
+	CHECK(approx(ss_fermi_energy(1.0e28, 9.1093837015e-31),
+				  (solidStateHbar * solidStateHbar /
+				   (2.0 * 9.1093837015e-31)) *
+				  std::pow(3.0 * 3.14159265358979323846 * 3.14159265358979323846 * 1.0e28,
+							2.0 / 3.0)),
+		  "Fermi energy");
+	CHECK(approx(ss_flux_quantum(), 6.62607015e-34 / (2.0 * 1.602176634e-19)),
+		  "Superconducting flux quantum");
 
 	TD_Handle thermo = td_create("integration-thermo", 1.0, 300.0);
 	CHECK(thermo != nullptr, "Thermodynamics handle creation");
@@ -196,6 +222,14 @@ bool test_module_apis()
 		  "Helmholtz free energy");
 	CHECK(approx(td_enthalpy(thermo, 5000.0, 100000.0, 0.01), 6000.0),
 		  "Thermodynamic enthalpy");
+	CHECK(approx(td_adiabatic_index(thermo, 3), 5.0 / 3.0),
+		  "Ideal-gas adiabatic index");
+	CHECK(approx(td_brownian_msd(thermo, 2.0e-12, 0.50), 2.0e-12),
+		  "Brownian mean-square displacement");
+	const double boltzmann = 1.380649e-23;
+	CHECK(approx(td_bose_einstein_occupation(thermo, 2.0 * boltzmann * 300.0, 0.0, 300.0),
+				  1.0 / (std::exp(2.0) - 1.0)),
+		  "Bose-Einstein occupation");
 	td_destroy(thermo);
 
 	return true;
