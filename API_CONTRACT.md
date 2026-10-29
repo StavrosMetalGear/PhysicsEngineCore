@@ -29,6 +29,10 @@ seven sibling headers plus the local fluid header. The headers are intentionally
 kept as the single source of truth because several modules expose substantially
 more than the representative functions shown below.
 
+`PHASE10_API_CATEGORIES.md` provides the generated Phase 10.1 planning view of
+all 811 declarations. Its categories describe testing strategy only; they do
+not expand the behavioral guarantees of an API.
+
 ## Naming and linkage
 
 The actual naming differs from the original README table:
