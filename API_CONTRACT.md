@@ -33,6 +33,12 @@ more than the representative functions shown below.
 all 811 declarations. Its categories describe testing strategy only; they do
 not expand the behavioral guarantees of an API.
 
+`PHASE10_API_TEST_PLAN.md` records exact references from the current C++ tests.
+An API marked tested there has a call-site reference, but callers must still
+consult the module-specific domain and ownership rules before relying on it.
+The current plan records 88 tested declarations out of 811; this is active
+validation progress, not an assertion that every exported equation is complete.
+
 ## Naming and linkage
 
 The actual naming differs from the original README table:

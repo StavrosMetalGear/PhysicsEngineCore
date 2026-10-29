@@ -90,15 +90,38 @@ bool test_module_apis()
 	CHECK(approx(cp_getMass(classical), 2.0), "Classical mass");
 	CHECK(approx(cp_projectileX(classical, 20.0, 0.5, 2.0), 20.0 * std::cos(0.5) * 2.0),
 		  "Classical projectile position");
+	CHECK(approx(cp_freeParticlePosition(classical, 1.0, 3.0, 2.0), 7.0),
+		  "Classical free-particle position");
+	CHECK(approx(cp_freeParticleVelocity(classical, 3.0), 3.0),
+		  "Classical free-particle velocity");
 	CHECK(approx(cp_freeParticleKineticEnergy(classical, 3.0), 0.5 * 2.0 * 9.0),
 		  "Classical free-particle kinetic energy");
+	CHECK(approx(cp_freeParticleMomentum(classical, 3.0), 6.0),
+		  "Classical free-particle momentum");
+	CHECK(approx(cp_projectileY(classical, 20.0, 0.5, 2.0, 9.81),
+				  20.0 * std::sin(0.5) * 2.0 - 0.5 * 9.81 * 4.0),
+		  "Classical projectile height");
+	CHECK(approx(cp_projectileRange(classical, 20.0, 0.5, 9.81),
+				  400.0 * std::sin(1.0) / 9.81),
+		  "Classical projectile range");
+	CHECK(approx(cp_projectileMaxHeight(classical, 20.0, 0.5, 9.81),
+				  std::pow(20.0 * std::sin(0.5), 2.0) / (2.0 * 9.81)),
+		  "Classical projectile maximum height");
+	CHECK(approx(cp_projectileTimeOfFlight(classical, 20.0, 0.5, 9.81),
+				  40.0 * std::sin(0.5) / 9.81),
+		  "Classical projectile time of flight");
 	CHECK(approx(cp_shoPosition(classical, 2.0, 3.0, 0.0, 0.25),
 				  2.0 * std::cos(0.75)),
 		  "Classical oscillator position");
+	CHECK(approx(cp_shoVelocity(classical, 2.0, 3.0, 0.0, 0.25),
+				  -6.0 * std::sin(0.75)),
+		  "Classical oscillator velocity");
 	CHECK(approx(cp_shoEnergy(classical, 2.0, 3.0), 0.5 * 2.0 * 9.0 * 4.0),
 		  "Classical oscillator energy");
 	CHECK(approx(cp_shoPeriod(classical, 3.0), 2.0 * 3.14159265358979323846 / 3.0),
 		  "Classical oscillator period");
+	CHECK(approx(cp_shoFrequencyFromSpring(classical, 8.0), 2.0),
+		  "Classical spring frequency");
 	cp_destroy(classical);
 
 	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 0.0);
@@ -200,10 +223,17 @@ bool test_module_apis()
 		  "Fermi energy");
 	CHECK(approx(ss_flux_quantum(), 6.62607015e-34 / (2.0 * 1.602176634e-19)),
 		  "Superconducting flux quantum");
+	CHECK(approx(ss_bcs_gap(0.0, 2.0e-22, 10.0), 2.0e-22),
+		  "Zero-temperature BCS gap");
+	CHECK(approx(ss_bcs_gap(10.0, 2.0e-22, 10.0), 0.0),
+		  "Critical-temperature BCS gap");
 
 	TD_Handle thermo = td_create("integration-thermo", 1.0, 300.0);
 	CHECK(thermo != nullptr, "Thermodynamics handle creation");
 	CHECK(approx(td_get_temperature(thermo), 300.0), "Thermodynamics temperature");
+	td_set_temperature(thermo, 350.0);
+	CHECK(approx(td_get_temperature(thermo), 350.0), "Thermodynamics temperature setter");
+	td_set_temperature(thermo, 300.0);
 	CHECK(approx(td_ideal_gas_pressure(thermo, 1.0), 8.31446261815324 * 300.0),
 		  "Ideal-gas pressure");
 	CHECK(approx(td_ideal_gas_volume(thermo, 8.31446261815324 * 300.0), 1.0),
@@ -224,6 +254,13 @@ bool test_module_apis()
 		  "Thermodynamic enthalpy");
 	CHECK(approx(td_adiabatic_index(thermo, 3), 5.0 / 3.0),
 		  "Ideal-gas adiabatic index");
+	CHECK(approx(td_boltzmann_probability(thermo, 2.0 * 1.380649e-23 * 300.0, 300.0),
+				  std::exp(-2.0)),
+		  "Boltzmann probability");
+	CHECK(approx(td_fermi_dirac_distribution(thermo, 2.0 * 1.380649e-23 * 300.0,
+								  0.0, 300.0),
+				  1.0 / (std::exp(2.0) + 1.0)),
+		  "Fermi-Dirac distribution");
 	CHECK(approx(td_brownian_msd(thermo, 2.0e-12, 0.50), 2.0e-12),
 		  "Brownian mean-square displacement");
 	const double boltzmann = 1.380649e-23;
