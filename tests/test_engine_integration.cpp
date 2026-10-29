@@ -142,7 +142,23 @@ bool test_module_apis()
 	CHECK(approx(em_capacitor_energy(electromagnetic, 2.0e-6, 12.0),
 				  0.5 * 2.0e-6 * 12.0 * 12.0),
 		  "Capacitor energy");
+	CHECK(approx(em_capacitance_parallel_plate(electromagnetic, 0.02, 1.0e-3),
+				  2.5 * 8.854187817e-12 * 0.02 / 1.0e-3),
+		  "Parallel-plate capacitance");
 	CHECK(approx(em_ohm_law(electromagnetic, 12.0, 4.0), 3.0), "Ohm law current");
+	CHECK(approx(em_biot_savart_wire(electromagnetic, 4.0, 0.20),
+				  1.2566370614e-6 * 4.0 / (2.0 * 3.14159265358979323846 * 0.20)),
+		  "Biot-Savart wire field");
+	CHECK(approx(em_ampere_wire_field(electromagnetic, 4.0, 0.20),
+				  1.2566370614e-6 * 4.0 / (2.0 * 3.14159265358979323846 * 0.20)),
+		  "Ampere wire field");
+	CHECK(approx(em_radiation_pressure(electromagnetic, 600.0, 1), 600.0 / 299792458.0),
+		  "Absorbed radiation pressure");
+	CHECK(approx(em_radiation_pressure(electromagnetic, 600.0, 0), 1200.0 / 299792458.0),
+		  "Reflected radiation pressure");
+	CHECK(approx(em_skin_depth(electromagnetic, 1.0e9),
+				  std::sqrt(2.0 / (1.2566370614e-6 * 1.0 * 1.0e9))),
+		  "Electromagnetic skin depth");
 	CHECK(approx(em_wave_speed_in_medium(electromagnetic),
 				  299792458.0 / std::sqrt(2.5)),
 		  "Wave speed in medium");
@@ -168,6 +184,11 @@ bool test_module_apis()
 	CHECK(approx(np_pairing_delta(nuclear, 100), 12.0 / 10.0), "Nuclear pairing delta");
 	CHECK(np_binding_energy_semf(nuclear, 0, 56) == 0.0,
 		  "Invalid nuclear charge returns zero binding energy");
+	CHECK(approx(np_cherenkov_angle(nuclear, 0.9, 1.5),
+				  std::acos(1.0 / (0.9 * 1.5))),
+		  "Nuclear Cherenkov angle");
+	CHECK(np_cherenkov_angle(nuclear, 0.5, 1.5) == 0.0,
+		  "Sub-threshold Cherenkov angle");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
@@ -261,6 +282,17 @@ bool test_module_apis()
 								  0.0, 300.0),
 				  1.0 / (std::exp(2.0) + 1.0)),
 		  "Fermi-Dirac distribution");
+	CHECK(approx(td_isobaric_work(thermo, 100000.0, 1.0, 1.5), 50000.0),
+		  "Isobaric work");
+	CHECK(approx(td_internal_energy_change(thermo, 20.0, 300.0, 350.0), 1000.0),
+		  "Internal energy change");
+	CHECK(approx(td_gibbs_free_energy(thermo, 5000.0, 300.0, 10.0), 2000.0),
+		  "Gibbs free energy");
+	CHECK(approx(td_equipartition_energy(thermo, 4, 300.0),
+				  0.5 * 4.0 * 1.380649e-23 * 300.0),
+		  "Equipartition energy");
+	CHECK(approx(td_planck_peak_wavelength(thermo, 300.0), 2.897771955e-3 / 300.0),
+		  "Planck peak wavelength");
 	CHECK(approx(td_brownian_msd(thermo, 2.0e-12, 0.50), 2.0e-12),
 		  "Brownian mean-square displacement");
 	const double boltzmann = 1.380649e-23;
