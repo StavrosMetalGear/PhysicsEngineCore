@@ -124,7 +124,7 @@ bool test_module_apis()
 		  "Classical spring frequency");
 	cp_destroy(classical);
 
-	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 0.0);
+	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 5.8e7);
 	CHECK(electromagnetic != nullptr, "Electrodynamics handle creation");
 	CHECK(approx(em_get_epsilon_r(electromagnetic), 2.5), "Relative permittivity");
 	CHECK(approx(em_coulomb_force(electromagnetic, 1.0e-6, 2.0e-6, 0.1),
@@ -157,8 +157,23 @@ bool test_module_apis()
 	CHECK(approx(em_radiation_pressure(electromagnetic, 600.0, 0), 1200.0 / 299792458.0),
 		  "Reflected radiation pressure");
 	CHECK(approx(em_skin_depth(electromagnetic, 1.0e9),
-				  std::sqrt(2.0 / (1.2566370614e-6 * 1.0 * 1.0e9))),
+				  std::sqrt(2.0 / (1.2566370614e-6 * 1.0 * 5.8e7 * 1.0e9))),
 		  "Electromagnetic skin depth");
+	CHECK(approx(em_resistance(electromagnetic, 1.0e-6, 2.0, 0.5), 4.0e-6),
+		  "Electromagnetic resistance");
+	CHECK(approx(em_power_dissipated(electromagnetic, 3.0, 4.0), 36.0),
+		  "Electromagnetic dissipated power");
+	CHECK(approx(em_rc_time_constant(electromagnetic, 1000.0, 2.0e-6), 2.0e-3),
+		  "RC time constant");
+	CHECK(approx(em_magnetic_dipole_torque(electromagnetic, 2.0, 3.0, 0.5),
+				  6.0 * std::sin(0.5)),
+		  "Magnetic dipole torque");
+	CHECK(approx(em_magnetic_dipole_energy(electromagnetic, 2.0, 3.0, 0.5),
+				  -6.0 * std::cos(0.5)),
+		  "Magnetic dipole energy");
+	CHECK(approx(em_faraday_emf(electromagnetic, 4.0), -4.0), "Faraday EMF");
+	CHECK(approx(em_motional_emf(electromagnetic, 2.0, 3.0, 4.0), 24.0),
+		  "Motional EMF");
 	CHECK(approx(em_wave_speed_in_medium(electromagnetic),
 				  299792458.0 / std::sqrt(2.5)),
 		  "Wave speed in medium");
