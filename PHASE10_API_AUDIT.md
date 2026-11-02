@@ -116,13 +116,18 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-139 APIs with exact current test references and 672 APIs still requiring
+163 APIs with exact current test references and 648 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
 helpers, plus Electrodynamics capacitance, magnetic-field, radiation-pressure,
 and skin-depth behavior; Nuclear Cherenkov threshold behavior; and additional
 Thermodynamics work, energy, free-energy, equipartition, and Planck helpers.
+The current batch adds Solid State dispersion, Fermi-Dirac, tight-binding,
+diode, Hall, Josephson, Ising, BCS, Brillouin, and Curie-Weiss checks, together
+with Thermodynamics getter, Van der Waals, Maxwell, Diesel, entropy,
+Clausius-Clapeyron, Joule-Thomson, chemical-potential, thermal-wavelength, and
+radiation checks.
 The next implementation batch is the remaining
 low-risk scalar-domain and lifecycle-state APIs; array, matrix, numerical, and
 export categories require separate buffer, numerical-reference, and filesystem

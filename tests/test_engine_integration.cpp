@@ -346,9 +346,38 @@ bool test_module_apis()
 		  "Zero-temperature BCS gap");
 	CHECK(approx(ss_bcs_gap(10.0, 2.0e-22, 10.0), 0.0),
 		  "Critical-temperature BCS gap");
+	CHECK(approx(ss_monatomic_dispersion(1.0, 0.5, 4.0, 2.0),
+			  2.0 * std::sqrt(2.0) * std::abs(std::sin(0.25))),
+		  "Monatomic lattice dispersion");
+	CHECK(approx(ss_fermi_dirac(0.0, 0.0, 300.0), 0.5),
+		  "Solid-state Fermi-Dirac midpoint");
+	CHECK(approx(ss_tight_binding_1d(2.0, 0.5, 3.14159265358979323846, 1.0), 3.0),
+		  "Tight-binding one-dimensional energy");
+	CHECK(approx(ss_diode_current(1.0e-12, 0.0, 300.0, 1.0), 0.0),
+		  "Ideal diode zero-bias current");
+	CHECK(approx(ss_hall_coefficient(1.0e28, 1.602176634e-19),
+			  -1.0 / (1.0e28 * 1.602176634e-19)),
+		  "Hall coefficient");
+	CHECK(approx(ss_josephson_ac_freq(1.0e-6),
+			  2.0 * 1.602176634e-19 * 1.0e-6 / 6.62607015e-34),
+		  "Josephson AC frequency");
+	CHECK(approx(ss_ising_2d_tc(1.0),
+			  2.0 / (1.380649e-23 * std::log(1.0 + std::sqrt(2.0)))),
+		  "Two-dimensional Ising critical temperature");
+	CHECK(approx(ss_bcs_tc(1.0e-21, 2.0e46, 1.0e-47),
+			  1.13e-21 * std::exp(-1.0 / (2.0e46 * 1.0e-47))),
+		  "BCS critical temperature");
+	CHECK(approx(ss_brillouin_function(0.0, 0.5), 0.0),
+		  "Brillouin zero-field limit");
+	CHECK(approx(ss_curie_weiss_temperature(1.0e28, 0.5, 2.0, 1.0),
+			  (1.0e28 * 1.2566370614e-6 * 4.0 *
+			   9.2740100783e-24 * 9.2740100783e-24 * 0.5 * 1.5) /
+			  (3.0 * 1.380649e-23)),
+		  "Curie-Weiss temperature");
 
 	TD_Handle thermo = td_create("integration-thermo", 1.0, 300.0);
 	CHECK(thermo != nullptr, "Thermodynamics handle creation");
+	CHECK(approx(td_get_nMoles(thermo), 1.0), "Thermodynamics amount getter");
 	CHECK(approx(td_get_temperature(thermo), 300.0), "Thermodynamics temperature");
 	td_set_temperature(thermo, 350.0);
 	CHECK(approx(td_get_temperature(thermo), 350.0), "Thermodynamics temperature setter");
@@ -397,6 +426,47 @@ bool test_module_apis()
 	CHECK(approx(td_bose_einstein_occupation(thermo, 2.0 * boltzmann * 300.0, 0.0, 300.0),
 				  1.0 / (std::exp(2.0) - 1.0)),
 		  "Bose-Einstein occupation");
+	CHECK(approx(td_vdw_pressure(thermo, 1.0, 1.0, 0.01),
+			  8.31446261815324 * 300.0 / 0.99 - 1.0),
+		  "Van der Waals pressure");
+	CHECK(approx(td_vdw_critical_temperature(thermo, 1.0, 0.01),
+			  8.0 / (27.0 * 8.31446261815324 * 0.01)),
+		  "Van der Waals critical temperature");
+	CHECK(approx(td_maxwell_rms_speed(thermo, 0.028, 300.0),
+			  std::sqrt(3.0 * 8.31446261815324 * 300.0 / 0.028)),
+		  "Maxwell RMS speed");
+	CHECK(approx(td_diesel_efficiency(thermo, 8.0, 2.0, 1.4),
+			  1.0 - (std::pow(2.0, 1.4) - 1.0) /
+			  (1.4 * (2.0 - 1.0) * std::pow(8.0, 0.4))),
+		  "Diesel efficiency");
+	CHECK(approx(td_entropy_change_ideal_gas(thermo, 20.0, 300.0, 600.0, 1.0, 2.0),
+			  20.0 * std::log(2.0) + 8.31446261815324 * std::log(2.0)),
+		  "Ideal-gas entropy change");
+	CHECK(approx(td_clausius_clapeyron_slope(thermo, 40000.0, 300.0, 0.01),
+			  40000.0 / (300.0 * 0.01)),
+		  "Clausius-Clapeyron slope");
+	CHECK(approx(td_vapor_pressure_cc(thermo, 100000.0, 40000.0, 300.0, 300.0), 100000.0),
+		  "Clausius-Clapeyron reference pressure");
+	CHECK(approx(td_joule_thomson_inversion_temp(thermo, 1.0, 0.01),
+			  2.0 / (8.31446261815324 * 0.01)),
+		  "Joule-Thomson inversion temperature");
+	CHECK(approx(td_chemical_potential_ideal_gas(thermo, 100.0, 300.0, 101325.0, 101325.0),
+			  100.0),
+		  "Ideal-gas chemical potential reference pressure");
+	CHECK(approx(td_thermal_wavelength(thermo, 300.0, 4.65e-26),
+			  6.62607015e-34 /
+			  std::sqrt(2.0 * 3.14159265358979323846 * 4.65e-26 *
+						 1.380649e-23 * 300.0)),
+		  "Thermal de Broglie wavelength");
+	CHECK(approx(td_stefan_boltzmann_power(thermo, 300.0, 2.0),
+			  5.670374419e-8 * 2.0 * std::pow(300.0, 4.0)),
+		  "Stefan-Boltzmann power");
+	CHECK(approx(td_wien_displacement_law(thermo, 300.0), 2.897771955e-3 / 300.0),
+		  "Wien displacement law");
+	CHECK(approx(td_rayleigh_jeans(thermo, 1.0e12, 300.0),
+			  2.0 * 1.380649e-23 * 300.0 * 1.0e24 /
+			  (299792458.0 * 299792458.0)),
+		  "Rayleigh-Jeans spectral radiance");
 	td_destroy(thermo);
 
 	return true;
