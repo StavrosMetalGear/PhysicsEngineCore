@@ -189,6 +189,13 @@ bool test_module_apis()
 		  "Nuclear Cherenkov angle");
 	CHECK(np_cherenkov_angle(nuclear, 0.5, 1.5) == 0.0,
 		  "Sub-threshold Cherenkov angle");
+	CHECK(std::isfinite(np_mass_excess(nuclear, 26, 56)),
+		  "Nuclear mass excess");
+	CHECK(std::isfinite(np_symmetry_energy(nuclear, 26, 56)) &&
+		  np_symmetry_energy(nuclear, 26, 56) > 0.0,
+		  "Nuclear symmetry energy");
+	CHECK(np_alpha_half_life(nuclear, 2, 4, 0.0) == 1.0e30,
+		  "Invalid alpha-decay domain");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
@@ -219,6 +226,17 @@ bool test_module_apis()
 	CHECK(approx(op_bragg_angle(optics, 500.0e-9, 2.0e-6),
 				  std::asin(500.0e-9 / (2.0 * 2.0e-6))),
 		  "Acousto-optic Bragg angle");
+	CHECK(op_fresnel_number(optics, 1.0e-3, 500.0e-9, 0.10) == 20,
+		  "Fresnel number");
+	CHECK(approx(op_cavity_stability(optics, 0.10, 0.20, 0.30),
+				  (1.0 - 0.10 / 0.20) * (1.0 - 0.10 / 0.30)),
+		  "Optical cavity stability");
+	CHECK(approx(op_gaussian_rayleigh(optics, 1.0e-3, 500.0e-9),
+				  3.14159265358979323846 * 1.0e-6 / 500.0e-9),
+		  "Gaussian beam Rayleigh range");
+	CHECK(approx(op_mz_output1(optics, 0.0), 1.0) &&
+		  approx(op_mz_output2(optics, 0.0), 0.0),
+		  "Mach-Zehnder outputs");
 	op_destroy(optics);
 
 	CHECK(approx(ss_lattice_spacing(1, 0, 0, 5.0), 5.0), "Solid-state lattice spacing");
