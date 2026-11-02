@@ -211,6 +211,26 @@ bool test_module_apis()
 		  "Nuclear symmetry energy");
 	CHECK(np_alpha_half_life(nuclear, 2, 4, 0.0) == 1.0e30,
 		  "Invalid alpha-decay domain");
+	CHECK(approx(np_fermi_energy(nuclear, 56),
+			  (197.3269804 * 197.3269804) *
+			  std::pow(9.0 * 3.14159265358979323846 / 4.0, 2.0 / 3.0) /
+			  (1.2 * 1.2 * 2.0 * 938.2720813)),
+		  "Nuclear Fermi energy");
+	CHECK(approx(np_level_density_bethe(nuclear, 100, 10.0),
+			  std::sqrt(3.14159265358979323846) / 12.0 *
+			  std::exp(2.0 * std::sqrt((100.0 / 8.0) * (10.0 - 1.2))) /
+			  (std::pow(100.0 / 8.0, 0.25) * std::pow(10.0 - 1.2, 1.25))),
+		  "Nuclear Bethe level density");
+	CHECK(approx(np_radiocarbon_age(nuclear, 0.5), 5730.0),
+		  "Nuclear radiocarbon half-life");
+	CHECK(approx(np_threshold_energy(nuclear, -2.0, 1.0, 2.0), 2.0),
+		  "Nuclear threshold energy");
+	CHECK(approx(np_four_factor(nuclear, 0.9, 0.8, 0.95, 1.1),
+			  0.9 * 0.8 * 0.95 * 1.1),
+		  "Nuclear four-factor formula");
+	CHECK(approx(np_moderation_xi(nuclear, 2.0),
+			  1.0 + 1.0 / 18.0 * std::log(1.0 / 3.0)),
+		  "Nuclear moderation logarithmic decrement");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
@@ -249,6 +269,51 @@ bool test_module_apis()
 	CHECK(approx(op_gaussian_rayleigh(optics, 1.0e-3, 500.0e-9),
 				  3.14159265358979323846 * 1.0e-6 / 500.0e-9),
 		  "Gaussian beam Rayleigh range");
+	const double fresnelTransmittedCosine =
+		std::sqrt(1.0 - std::pow(std::sin(0.4) / 1.5, 2.0));
+	CHECK(approx(op_fresnel_rs(optics, 0.4, 1.0, 1.5),
+			  std::pow((std::cos(0.4) - 1.5 * fresnelTransmittedCosine) /
+						(std::cos(0.4) + 1.5 * fresnelTransmittedCosine), 2.0)),
+		  "Fresnel s-polarized reflectance");
+	CHECK(approx(op_fresnel_rp(optics, 0.4, 1.0, 1.5),
+			  std::pow((1.5 * std::cos(0.4) - fresnelTransmittedCosine) /
+						(1.5 * std::cos(0.4) + fresnelTransmittedCosine), 2.0)),
+		  "Fresnel p-polarized reflectance");
+	CHECK(approx(op_thick_lens_focal_length(optics, 1.5, 0.20, -0.20, 0.01),
+			  1.0 / (0.5 / 0.20 - (-0.5 / -0.20) -
+					(0.01 / 1.5) * (0.5 / 0.20) * (-0.5 / -0.20))),
+		  "Thick lens focal length");
+	CHECK(approx(op_mirror_equation(optics, 0.30, 0.10), 0.15),
+		  "Mirror equation");
+	CHECK(approx(op_prism_deviation(optics, 0.3, 1.5, 0.2),
+			  0.3 + std::asin(1.5 * std::sin(0.2 -
+						 std::asin(std::sin(0.3) / 1.5))) - 0.2),
+		  "Prism deviation");
+	CHECK(approx(op_prism_min_deviation(optics, 1.5, 0.2),
+			  2.0 * std::asin(1.5 * std::sin(0.1)) - 0.2),
+		  "Minimum prism deviation");
+	CHECK(approx(op_telescope_magnification(optics, 1.0, 0.05), -20.0) &&
+		  approx(op_microscope_na(optics, 1.5, 0.4), 1.5 * std::sin(0.4)) &&
+		  approx(op_rayleigh_criterion(optics, 500.0e-9, 0.5), 0.61e-6),
+		  "Optical instrument formulas");
+	CHECK(approx(op_fiber_na(optics, 1.5, 1.4), std::sqrt(1.5 * 1.5 - 1.4 * 1.4)) &&
+		  approx(op_fiber_v_number(optics, 4.0e-6, 0.5, 1.0e-6),
+				 2.0 * 3.14159265358979323846 * 4.0e-6 * 0.5 / 1.0e-6) &&
+		  op_fiber_num_modes(optics, 4.0) == 8,
+		  "Optical fiber formulas");
+	CHECK(approx(op_optical_path_length(optics, 1.5, 0.20), 0.30) &&
+		  approx(op_eikonal_phase(optics, 0.30, 600.0e-9),
+				 2.0 * 3.14159265358979323846 * 0.30 / 600.0e-9),
+		  "Optical path and eikonal phase");
+	CHECK(approx(op_grating_resolving_power(optics, 2, 500), 1000.0) &&
+		  approx(op_michelson_visibility(optics, 3.0, 1.0), 0.5) &&
+		  approx(op_fabry_perot_finesse(optics, 0.25),
+				 3.14159265358979323846 * 0.5 / 0.75),
+		  "Interferometer formulas");
+	CHECK(approx(op_degree_of_coherence(optics, 0.5, 1.0),
+			  std::exp(-3.14159265358979323846 * 0.25)) &&
+		  approx(op_malus_law(optics, 4.0, 3.14159265358979323846 / 3.0), 1.0),
+		  "Coherence and Malus-law formulas");
 	CHECK(approx(op_mz_output1(optics, 0.0), 1.0) &&
 		  approx(op_mz_output2(optics, 0.0), 0.0),
 		  "Mach-Zehnder outputs");
