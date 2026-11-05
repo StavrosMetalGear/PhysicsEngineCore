@@ -107,14 +107,16 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
-The generated Phase 10 test plan currently records 218 referenced declarations out
+The generated Phase 10 test plan currently records 255 referenced declarations out
 of 811; this is measured exact-symbol coverage, not proof that every API domain,
 buffer contract, numerical solver, or export path is fully validated.
 
 Array-output APIs write into caller-owned buffers. Callers must allocate enough
 space for the requested output. Nuclear paired-vector wrappers return the
 number of entries written, capped by the supplied buffer length; they do not
-allocate caller buffers.
+allocate caller buffers. Quantum `qp_list_allowed_j` and `qp_list_allowed_f`
+return the total available count even when the supplied buffer is shorter;
+they write at most the specified capacity and support a null buffer for count queries.
 
 ### Nuclear
 

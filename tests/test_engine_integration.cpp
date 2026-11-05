@@ -51,6 +51,141 @@ bool test_metadata()
 	return true;
 }
 
+bool test_quantum_states()
+{
+	const double s = 1.0 / std::sqrt(2.0);
+	const auto matches = [](const double* actual, const double* expected, int size) {
+		for (int i = 0; i < size; ++i) {
+			if (std::abs(actual[i] - expected[i]) > 1.0e-12 || !std::isfinite(actual[i])) return false;
+		}
+		return true;
+	};
+	const double identity[8] = {1, 0, 0, 0, 0, 0, 1, 0};
+	const double x[8] = {0, 0, 1, 0, 1, 0, 0, 0};
+	const double y[8] = {0, 0, 0, -1, 0, 1, 0, 0};
+	const double z[8] = {1, 0, 0, 0, 0, 0, -1, 0};
+	const double hadamard[8] = {s, 0, s, 0, s, 0, -s, 0};
+	double gate[9] = {};
+	gate[8] = 123.0;
+	qp_gate_identity(gate);
+	CHECK(matches(gate, identity, 8) && gate[8] == 123.0, "Identity gate and buffer boundary");
+	qp_gate_pauli_x(gate);
+	CHECK(matches(gate, x, 8), "Pauli X gate");
+	qp_gate_pauli_y(gate);
+	CHECK(matches(gate, y, 8), "Pauli Y gate");
+	qp_gate_pauli_z(gate);
+	CHECK(matches(gate, z, 8), "Pauli Z gate");
+	qp_gate_hadamard(gate);
+	CHECK(matches(gate, hadamard, 8), "Hadamard gate");
+	const double phaseS[8] = {1, 0, 0, 0, 0, 0, 0, 1};
+	qp_gate_phase_s(gate);
+	CHECK(matches(gate, phaseS, 8), "Phase S gate");
+	const double phaseT[8] = {1, 0, 0, 0, 0, 0, s, s};
+	qp_gate_t(gate);
+	CHECK(matches(gate, phaseT, 8), "T gate");
+	const double pi = 3.14159265358979323846;
+	const double rxPi[8] = {0, 0, 0, -1, 0, -1, 0, 0};
+	const double ryPi[8] = {0, 0, -1, 0, 1, 0, 0, 0};
+	const double rzPi[8] = {0, -1, 0, 0, 0, 0, 0, 1};
+	qp_gate_rx(pi, gate);
+	CHECK(matches(gate, rxPi, 8), "X rotation gate");
+	qp_gate_ry(pi, gate);
+	CHECK(matches(gate, ryPi, 8), "Y rotation gate");
+	qp_gate_rz(pi, gate);
+	CHECK(matches(gate, rzPi, 8), "Z rotation gate");
+	double product[8] = {};
+	qp_multiply_spin_matrices(x, x, product);
+	CHECK(matches(product, identity, 8), "Pauli X squared");
+	const double spinUp[4] = {1, 0, 0, 0};
+	const double spinDown[4] = {0, 0, 1, 0};
+	double spinResult[4] = {};
+	qp_apply_gate_to_spinor(x, spinUp, spinResult);
+	CHECK(matches(spinResult, spinDown, 4), "Apply X gate to spinor");
+
+	double rho[8] = {};
+	const double plusRho[8] = {0.5, 0, 0.5, 0, 0.5, 0, 0.5, 0};
+	qp_density_matrix_2x2(s, 0, s, 0, rho);
+	CHECK(matches(rho, plusRho, 8), "Pure-state density matrix");
+	double mixed[8] = {};
+	const double mixedExpected[8] = {0.25, 0, 0, 0, 0, 0, 0.75, 0};
+	qp_mixed_state_diagonal(0.25, mixed);
+	CHECK(matches(mixed, mixedExpected, 8), "Diagonal mixed state");
+	double blochRho[8] = {};
+	qp_density_matrix_from_bloch(1.0, 0.0, 0.0, blochRho);
+	CHECK(matches(blochRho, plusRho, 8), "Density matrix from Bloch vector");
+	double bx = 0.0, by = 0.0, bz = 0.0;
+	qp_bloch_vector_from_rho(rho, &bx, &by, &bz);
+	CHECK(std::abs(bx - 1.0) < 1.0e-12 && std::abs(by) < 1.0e-12 &&
+		  std::abs(bz) < 1.0e-12, "Bloch vector from density matrix");
+	qp_qubit_bloch_vector(1.0, 0.0, 0.0, 1.0, &bx, &by, &bz);
+	CHECK(std::abs(bx) < 1.0e-12 && std::abs(by - 1.0) < 1.0e-12 &&
+		  std::abs(bz) < 1.0e-12, "Bloch vector from complex amplitudes");
+	CHECK(approx(qp_von_neumann_entropy_2x2(mixed),
+			  -0.25 * std::log(0.25) - 0.75 * std::log(0.75)), "Mixed-state entropy");
+	CHECK(approx(qp_fidelity_2x2(rho, rho), 1.0), "Identical-state fidelity");
+	double channel[8] = {};
+	const double damped[8] = {0.625, 0, s * 0.5 * std::sqrt(1.5), 0,
+								 s * 0.5 * std::sqrt(1.5), 0, 0.375, 0};
+	qp_amplitude_damping_channel(rho, 0.25, channel);
+	CHECK(matches(channel, damped, 8), "Amplitude damping channel");
+	const double dephased[8] = {0.5, 0, 0.25, 0, 0.25, 0, 0.5, 0};
+	qp_phase_damping_channel(rho, 0.75, channel);
+	CHECK(matches(channel, dephased, 8), "Phase damping channel");
+	const double depolarized[8] = {0.5, 0, 0.375, 0, 0.375, 0, 0.5, 0};
+	qp_depolarizing_channel(rho, 0.25, channel);
+	CHECK(matches(channel, depolarized, 8), "Depolarizing channel");
+
+	double phi[8] = {}, psi[8] = {};
+	const double phiExpected[8] = {s, 0, 0, 0, 0, 0, s, 0};
+	const double psiExpected[8] = {0, 0, s, 0, -s, 0, 0, 0};
+	qp_bell_state_phi(1, phi);
+	qp_bell_state_psi(0, psi);
+	CHECK(matches(phi, phiExpected, 8) && matches(psi, psiExpected, 8), "Bell-state amplitudes");
+	CHECK(approx(qp_concurrence(phi), 1.0), "Bell-state concurrence");
+	CHECK(approx(qp_chsh_correlator(phi, 0.0, 0.0), 1.0), "Bell-state Z correlation");
+	CHECK(approx(qp_measure_qubit_prob(phi, 0, 0), 0.5) &&
+		  approx(qp_measure_qubit_prob(phi, 1, 1), 0.5), "Bell-state measurement probabilities");
+	double rho4[32] = {}, reducedA[8] = {}, reducedB[8] = {};
+	qp_density_matrix_from_state(phi, rho4);
+	CHECK(std::abs(rho4[0] - 0.5) < 1.0e-12 && std::abs(rho4[6] - 0.5) < 1.0e-12 &&
+		  std::abs(rho4[24] - 0.5) < 1.0e-12 && std::abs(rho4[30] - 0.5) < 1.0e-12,
+		  "Bell density-matrix entries");
+	qp_partial_trace_a(rho4, reducedA);
+	qp_partial_trace_b(rho4, reducedB);
+	const double maximallyMixed[8] = {0.5, 0, 0, 0, 0, 0, 0.5, 0};
+	CHECK(matches(reducedA, maximallyMixed, 8) && matches(reducedB, maximallyMixed, 8),
+		  "Bell-state partial traces");
+	const double basis00[8] = {1, 0, 0, 0, 0, 0, 0, 0};
+	const double basis10[8] = {0, 0, 0, 0, 1, 0, 0, 0};
+	const double basis01[8] = {0, 0, 1, 0, 0, 0, 0, 0};
+	const double basis11[8] = {0, 0, 0, 0, 0, 0, 1, 0};
+	double state[8] = {};
+	qp_apply_single_qubit_gate(basis00, x, 0, state);
+	CHECK(matches(state, basis10, 8), "Apply X to first qubit");
+	qp_apply_single_qubit_gate(basis00, x, 1, state);
+	CHECK(matches(state, basis01, 8), "Apply X to second qubit");
+	qp_apply_cnot(basis10, 0, 1, state);
+	CHECK(matches(state, basis11, 8), "Controlled-NOT gate");
+	qp_apply_swap(basis10, state);
+	CHECK(matches(state, basis01, 8), "SWAP gate");
+	qp_apply_cz(basis11, state);
+	const double negative11[8] = {0, 0, 0, 0, 0, 0, -1, 0};
+	CHECK(matches(state, negative11, 8), "Controlled-Z gate");
+	qp_collapse_after_measurement(phi, 0, 1, state);
+	CHECK(matches(state, basis11, 8), "Bell-state measurement collapse");
+
+	double allowedJ[3] = {-1.0, -1.0, 99.0};
+	CHECK(qp_list_allowed_j(1.5, 1.0, allowedJ, 2) == 3 &&
+		  approx(allowedJ[0], 0.5) && approx(allowedJ[1], 1.5) && allowedJ[2] == 99.0,
+		  "Allowed J total count and truncated buffer");
+	double allowedF[3] = {-1.0, -1.0, 99.0};
+	CHECK(qp_list_allowed_f(1.5, 1.0, allowedF, 2) == 3 &&
+		  approx(allowedF[0], 0.5) && approx(allowedF[1], 1.5) && allowedF[2] == 99.0,
+		  "Allowed F total count and truncated buffer");
+	CHECK(qp_list_allowed_j(1.5, 1.0, nullptr, 0) == 3, "Allowed J count query");
+	return true;
+}
+
 bool test_module_apis()
 {
 	QP_Handle quantum = qp_create("integration-quantum", 9.1093837015e-31, 1.0e-10, 1);
@@ -667,6 +802,7 @@ bool test_async_api()
 int main()
 {
 	if (!test_metadata() ||
+		!test_quantum_states() ||
 		!test_module_apis() ||
 		!test_coupling_api() ||
 		!test_async_api()) {
