@@ -122,7 +122,86 @@ bool test_module_apis()
 		  "Classical oscillator period");
 	CHECK(approx(cp_shoFrequencyFromSpring(classical, 8.0), 2.0),
 		  "Classical spring frequency");
+	CHECK(approx(cp_dampedHOPosition(classical, 2.0, 3.0, 1.0, 0.5),
+			  2.0 * std::exp(-0.5) * std::cos(std::sqrt(8.0) * 0.5)),
+		  "Underdamped oscillator position");
+	CHECK(approx(cp_dampedHOPosition(classical, 2.0, 3.0, 3.0, 0.5),
+			  5.0 * std::exp(-1.5)),
+		  "Critically damped oscillator position");
+	CHECK(approx(cp_dampedHOEnvelope(classical, 2.0, 1.0, 0.5), 2.0 * std::exp(-0.5)),
+		  "Damped oscillator envelope");
+	CHECK(approx(cp_dampedHOQFactor(classical, 3.0, 0.5), 3.0),
+		  "Damped oscillator quality factor");
+	CHECK(cp_dampedHORegime(classical, 3.0, 1.0) == 0 &&
+		  cp_dampedHORegime(classical, 3.0, 3.0) == 1 &&
+		  cp_dampedHORegime(classical, 3.0, 4.0) == 2,
+		  "Damped oscillator regimes");
+	CHECK(approx(cp_drivenHOAmplitude(classical, 4.0, 3.0, 2.0, 0.5),
+			  2.0 / std::sqrt(29.0)),
+		  "Driven oscillator amplitude");
+	CHECK(approx(cp_drivenHOPhase(classical, 3.0, 2.0, 0.5), std::atan2(2.0, 5.0)),
+		  "Driven oscillator phase");
+	CHECK(approx(cp_drivenHOResonanceFreq(classical, 3.0, 0.5), std::sqrt(8.5)) &&
+		  cp_drivenHOResonanceFreq(classical, 1.0, 1.0) == 0.0,
+		  "Driven oscillator resonance frequency");
+	CHECK(approx(cp_drivenHOPowerAbsorbed(classical, 4.0, 3.0, 2.0, 0.5), 8.0 / 29.0),
+		  "Driven oscillator absorbed power");
+	CHECK(approx(cp_keplerEnergy(classical, 2.0, 4.0, 2.0, 1.0, 8.0), -2.0),
+		  "Kepler energy");
+	CHECK(approx(cp_keplerEffectivePotential(classical, 4.0, 2.0, 8.0, 2.0), -3.0),
+		  "Kepler effective potential");
+	CHECK(approx(cp_keplerOrbitRadius(classical, 4.0, 2.0, 8.0, 0.5, 0.0), 2.0 / 3.0),
+		  "Kepler orbit radius");
+	CHECK(approx(cp_keplerEccentricity(classical, -1.0, 4.0, 2.0, 8.0), std::sqrt(0.75)),
+		  "Kepler eccentricity");
+	CHECK(approx(cp_keplerPeriod(classical, 1.0, 2.0, 8.0), 3.14159265358979323846),
+		  "Kepler period");
+	CHECK(approx(cp_keplerSemiMajorAxis(classical, -2.0, 2.0, 8.0), 2.0),
+		  "Kepler semi-major axis");
+	CHECK(approx(cp_twoBodyReducedMass(classical, 2.0, 6.0), 1.5), "Two-body reduced mass");
+	CHECK(approx(cp_gravitationalPE(classical, 2.0, 6.0, 3.0), -4.0 * 6.67430e-11),
+		  "Gravitational potential energy");
+	CHECK(approx(cp_escapeVelocity(classical, 3.0e24, 6.0e6),
+			  std::sqrt(2.0 * 6.67430e-11 * 3.0e24 / 6.0e6)), "Escape velocity");
+	CHECK(approx(cp_orbitalVelocity(classical, 3.0e24, 6.0e6),
+			  std::sqrt(6.67430e-11 * 3.0e24 / 6.0e6)), "Orbital velocity");
+	CHECK(approx(cp_hillSphereRadius(classical, 100.0, 3.0, 1000.0), 10.0),
+		  "Hill sphere radius");
+	CHECK(approx(cp_cyclotronFrequency(classical, -2.0, 3.0), 3.0),
+		  "Cyclotron frequency with negative charge");
+	CHECK(approx(cp_cyclotronRadius(classical, 12.0, -2.0, 3.0), 4.0),
+		  "Cyclotron radius with negative charge");
 	cp_destroy(classical);
+
+	CHECK(approx(cp_momentOfInertiaSphere(3.0, 2.0), 4.8), "Solid sphere inertia");
+	CHECK(approx(cp_momentOfInertiaCylinder(3.0, 2.0), 6.0), "Cylinder inertia");
+	CHECK(approx(cp_momentOfInertiaRod(3.0, 2.0), 1.0), "Rod inertia");
+	CHECK(approx(cp_momentOfInertiaDisk(3.0, 2.0), 6.0), "Disk inertia");
+	CHECK(approx(cp_momentOfInertiaHollowSphere(3.0, 2.0), 8.0), "Hollow sphere inertia");
+	CHECK(approx(cp_momentOfInertiaRectPlate(3.0, 2.0, 4.0), 5.0), "Plate inertia");
+	CHECK(approx(cp_parallelAxisTheorem(2.0, 3.0, 2.0), 14.0), "Parallel axis theorem");
+	const double lightSpeed = 299792458.0;
+	const double speed = 0.6 * lightSpeed;
+	CHECK(approx(cp_lorentzGamma(speed), 1.25) && approx(cp_lorentzGamma(0.0), 1.0),
+		  "Lorentz factor");
+	CHECK(approx(cp_relativisticMomentum(2.0, speed), 1.25 * 2.0 * speed),
+		  "Relativistic momentum");
+	CHECK(approx(cp_relativisticKineticEnergy(2.0, speed), 0.25 * 2.0 * lightSpeed * lightSpeed),
+		  "Relativistic kinetic energy");
+	CHECK(approx(cp_relativisticTotalEnergy(2.0, speed), 1.25 * 2.0 * lightSpeed * lightSpeed),
+		  "Relativistic total energy");
+	CHECK(approx(cp_lengthContraction(10.0, speed), 8.0), "Relativistic length contraction");
+	CHECK(approx(cp_timeDilation(4.0, speed), 5.0), "Relativistic time dilation");
+	CHECK(approx(cp_velocityAddition(speed, speed), 1.2 * lightSpeed / 1.36),
+		  "Relativistic velocity addition");
+	CHECK(approx(cp_relativisticDoppler(100.0, speed), 200.0), "Relativistic Doppler shift");
+	CHECK(approx(cp_youngModulusStress(200.0, 0.01), 2.0), "Elastic stress");
+	CHECK(approx(cp_poissonRatio(-0.002, 0.01), 0.2) && cp_poissonRatio(1.0, 0.0) == 0.0,
+		  "Poisson ratio and zero axial strain");
+	CHECK(approx(cp_shearModulus(200.0, 0.25), 80.0), "Shear modulus");
+	CHECK(approx(cp_bulkModulus(150.0, 0.25), 100.0), "Bulk modulus");
+	CHECK(approx(cp_waveSpeedLongitudinal(200.0, 2.0), 10.0), "Longitudinal wave speed");
+	CHECK(approx(cp_waveSpeedTransverse(50.0, 2.0), 5.0), "Transverse wave speed");
 
 	EM_Handle electromagnetic = em_create("integration-em", 2.5, 1.0, 5.8e7);
 	CHECK(electromagnetic != nullptr, "Electrodynamics handle creation");
@@ -214,7 +293,7 @@ bool test_module_apis()
 	CHECK(approx(np_fermi_energy(nuclear, 56),
 			  (197.3269804 * 197.3269804) *
 			  std::pow(9.0 * 3.14159265358979323846 / 4.0, 2.0 / 3.0) /
-			  (1.2 * 1.2 * 2.0 * 938.2720813)),
+			  (1.2 * 1.2 * 2.0 * 938.272046)),
 		  "Nuclear Fermi energy");
 	CHECK(approx(np_level_density_bethe(nuclear, 100, 10.0),
 			  std::sqrt(3.14159265358979323846) / 12.0 *
@@ -231,6 +310,23 @@ bool test_module_apis()
 	CHECK(approx(np_moderation_xi(nuclear, 2.0),
 			  1.0 + 1.0 / 18.0 * std::log(1.0 / 3.0)),
 		  "Nuclear moderation logarithmic decrement");
+	CHECK(approx(np_quadrupole_moment(nuclear, 2, 8, 0.2),
+			  3.0 / std::sqrt(5.0 * 3.14159265358979323846) * 2.0 *
+			  2.4 * 2.4 * 0.2 * (1.0 + 0.36 * 0.2)), "Nuclear quadrupole moment");
+	CHECK(approx(np_internal_conversion(nuclear, 10, 1, 1.0),
+			  std::pow(1.0 / 137.035999084, 4.0) * 1000.0 *
+			  std::pow(2.0 * 0.510998950, 1.5) * 2.0), "Internal conversion coefficient");
+	CHECK(np_internal_conversion(nuclear, 10, 1, 0.0) == 0.0, "Internal conversion zero energy");
+	CHECK(approx(np_q_value(nuclear, 26, 56, 20, 40, 26, 56, 20, 40), 0.0),
+		  "Balanced nuclear reaction Q value");
+	double attenuationX[4] = {-1.0, -1.0, -1.0, -1.0};
+	double attenuationI[4] = {-1.0, -1.0, -1.0, -1.0};
+	CHECK(np_compute_exponential_atten(nuclear, 2.0, 2.0, attenuationX, attenuationI, 3) == 3,
+		  "Nuclear attenuation truncated length");
+	CHECK(approx(attenuationX[0], 0.0) && approx(attenuationX[2], 0.02) &&
+		  approx(attenuationI[0], 1.0) && approx(attenuationI[2], std::exp(-0.04)) &&
+		  attenuationX[3] == -1.0 && attenuationI[3] == -1.0,
+		  "Nuclear attenuation values and buffer boundary");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
@@ -280,7 +376,7 @@ bool test_module_apis()
 						(1.5 * std::cos(0.4) + fresnelTransmittedCosine), 2.0)),
 		  "Fresnel p-polarized reflectance");
 	CHECK(approx(op_thick_lens_focal_length(optics, 1.5, 0.20, -0.20, 0.01),
-			  1.0 / (0.5 / 0.20 - (-0.5 / -0.20) -
+			  1.0 / (0.5 / 0.20 + (-0.5 / -0.20) -
 					(0.01 / 1.5) * (0.5 / 0.20) * (-0.5 / -0.20))),
 		  "Thick lens focal length");
 	CHECK(approx(op_mirror_equation(optics, 0.30, 0.10), 0.15),
@@ -317,6 +413,29 @@ bool test_module_apis()
 	CHECK(approx(op_mz_output1(optics, 0.0), 1.0) &&
 		  approx(op_mz_output2(optics, 0.0), 0.0),
 		  "Mach-Zehnder outputs");
+	CHECK(approx(op_get_n_medium(optics), 1.0), "Optics medium index getter");
+	const double slitAngle = std::asin(0.25);
+	const double pi = 3.14159265358979323846;
+	CHECK(approx(op_single_slit_intensity(optics, 0.0, 1.0, 1.0), 1.0) &&
+		  approx(op_single_slit_intensity(optics, slitAngle, 1.0, 1.0),
+				 std::pow(std::sin(pi / 4.0) / (pi / 4.0), 2.0)), "Single slit intensity");
+	CHECK(approx(op_double_slit_intensity(optics, 0.0, 1.0, 1.0, 1.0), 4.0) &&
+		  approx(op_double_slit_intensity(optics, slitAngle, 1.0, 1.0, 1.0),
+				 4.0 * std::pow(std::sin(pi / 4.0) / (pi / 4.0), 2.0) * 0.5),
+		  "Double slit intensity");
+	CHECK(approx(op_grating_intensity(optics, 0.0, 1.0, 1.0, 1.0, 4), 1.0),
+		  "Grating central maximum");
+	CHECK(approx(op_airy_intensity(optics, 0.0, 1.0, 1.0), 1.0), "Airy central maximum");
+	CHECK(approx(op_michelson_intensity(optics, 0.0, 1.0), 1.0) &&
+		  std::abs(op_michelson_intensity(optics, 0.25, 1.0)) < 1.0e-12,
+		  "Michelson bright and dark fringes");
+	CHECK(approx(op_fabry_perot_transmission(optics, 0.0, 3.0), 1.0) &&
+		  approx(op_fabry_perot_transmission(optics, pi, 3.0), 0.25),
+		  "Fabry-Perot transmission extrema");
+	CHECK(approx(op_fabry_perot_fsr(optics, 0.10, 1.5), lightSpeed / 0.30),
+		  "Fabry-Perot free spectral range");
+	CHECK(approx(op_talbot_distance(optics, 2.0e-6, 500.0e-9), 16.0e-6),
+		  "Talbot distance");
 	op_destroy(optics);
 
 	CHECK(approx(ss_lattice_spacing(1, 0, 0, 5.0), 5.0), "Solid-state lattice spacing");
@@ -329,7 +448,7 @@ bool test_module_apis()
 	CHECK(approx(ss_landauer_conductance(0.5, 2),
 				  0.5 * 2.0 * ss_conductance_quantum()),
 		  "Landauer conductance");
-	const double solidStateHbar = 1.0545718e-34;
+	const double solidStateHbar = 1.054571817e-34;
 	CHECK(approx(ss_free_electron_energy(2.0e9, 9.1093837015e-31),
 				  solidStateHbar * solidStateHbar * 4.0e18 /
 				  (2.0 * 9.1093837015e-31)),
@@ -432,8 +551,8 @@ bool test_module_apis()
 	CHECK(approx(td_vdw_critical_temperature(thermo, 1.0, 0.01),
 			  8.0 / (27.0 * 8.31446261815324 * 0.01)),
 		  "Van der Waals critical temperature");
-	CHECK(approx(td_maxwell_rms_speed(thermo, 0.028, 300.0),
-			  std::sqrt(3.0 * 8.31446261815324 * 300.0 / 0.028)),
+	CHECK(approx(td_maxwell_rms_speed(thermo, 4.65e-26, 300.0),
+			  std::sqrt(3.0 * boltzmann * 300.0 / 4.65e-26)),
 		  "Maxwell RMS speed");
 	CHECK(approx(td_diesel_efficiency(thermo, 8.0, 2.0, 1.4),
 			  1.0 - (std::pow(2.0, 1.4) - 1.0) /
@@ -454,9 +573,8 @@ bool test_module_apis()
 			  100.0),
 		  "Ideal-gas chemical potential reference pressure");
 	CHECK(approx(td_thermal_wavelength(thermo, 300.0, 4.65e-26),
-			  6.62607015e-34 /
-			  std::sqrt(2.0 * 3.14159265358979323846 * 4.65e-26 *
-						 1.380649e-23 * 300.0)),
+			  std::sqrt(2.0 * 3.14159265358979323846 * 1.0545718e-34 *
+						 1.0545718e-34 / (4.65e-26 * boltzmann * 300.0))),
 		  "Thermal de Broglie wavelength");
 	CHECK(approx(td_stefan_boltzmann_power(thermo, 300.0, 2.0),
 			  5.670374419e-8 * 2.0 * std::pow(300.0, 4.0)),
