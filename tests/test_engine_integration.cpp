@@ -218,6 +218,92 @@ bool test_module_apis()
 				  -9.1093837015e-31 * deltaPotential * deltaPotential /
 				  (2.0 * hbar * hbar)),
 		  "Quantum delta-potential energy");
+	const double quantumPi = 3.14159265358979323846;
+	const double quantumMass = 9.1093837015e-31;
+	const double quantumCharge = 1.602176634e-19;
+	const double quantumPlanck = 6.62607015e-34;
+	const double quantumC = 299792458.0;
+	const double quantumLength = 1.0e-9;
+	const double boxEnergy = hbar * hbar * quantumPi * quantumPi /
+		(2.0 * quantumMass * quantumLength * quantumLength);
+	CHECK(approx(qp_get_length(quantum), 1.0e-10) && qp_get_dimension(quantum) == 1,
+		  "Quantum length and dimension getters");
+	CHECK(approx(qp_energy_2d_box(quantum, 1, 2, quantumLength, quantumLength), 5.0 * boxEnergy) &&
+		  approx(qp_energy_3d_box(quantum, 1, 2, 3, quantumLength, quantumLength, quantumLength),
+				 14.0 * boxEnergy) &&
+		  approx(qp_quantum_well_energy(1, quantumLength, quantumMass, 0.0, 0.0), boxEnergy) &&
+		  approx(qp_quantum_dot_energy(1, 2, 3, quantumLength, quantumLength, quantumLength, quantumMass),
+				 14.0 * boxEnergy),
+		  "Quantum box and confinement energies");
+	CHECK(approx(qp_tight_binding_energy(5.0, 2.0, 0.0, 1.0), 1.0) &&
+		  approx(qp_tight_binding_energy(5.0, 2.0, quantumPi, 1.0), 9.0) &&
+		  approx(qp_tight_binding_effective_mass(2.0e-19, quantumLength),
+				 hbar * hbar / (4.0e-19 * quantumLength * quantumLength)),
+		  "Quantum tight-binding dispersion and effective mass");
+	const double dosEnergy = 1.0e-19;
+	CHECK(approx(qp_dos_1d(dosEnergy, quantumMass),
+				 std::sqrt(2.0 * quantumMass / (hbar * hbar * dosEnergy)) / quantumPi) &&
+		  approx(qp_dos_2d(quantumMass), quantumMass / (quantumPi * hbar * hbar)) &&
+		  approx(qp_dos_3d(dosEnergy, quantumMass),
+				 std::pow(2.0 * quantumMass / (hbar * hbar), 1.5) * std::sqrt(dosEnergy) /
+				 (2.0 * quantumPi * quantumPi)) &&
+		  approx(qp_dos_1d(0.0, quantumMass), 0.0) &&
+		  approx(qp_dos_3d(-dosEnergy, quantumMass), 0.0),
+		  "Quantum free-particle densities of states");
+	CHECK(approx(qp_dos_quantum_well_2deg(0.5 * boxEnergy, quantumLength, quantumMass, 3), 0.0) &&
+		  approx(qp_dos_quantum_well_2deg(5.0 * boxEnergy, quantumLength, quantumMass, 3),
+				 2.0 * quantumMass / (quantumPi * hbar * hbar)),
+		  "Quantum well density of states subband steps");
+	CHECK(approx(qp_coherent_state_mean_n(2.0), 4.0) &&
+		  approx(qp_coherent_state_variance_n(2.0), 4.0) &&
+		  approx(qp_coherent_state_photon_prob(2.0, 0), std::exp(-4.0)) &&
+		  approx(qp_coherent_state_photon_prob(2.0, 2), 8.0 * std::exp(-4.0)),
+		  "Coherent-state photon statistics");
+	CHECK(approx(qp_squeezed_uncertainty_x(0.5, 2.0, quantumMass),
+				 std::sqrt(hbar / (4.0 * quantumMass)) * std::exp(-0.5)) &&
+		  approx(qp_squeezed_uncertainty_p(0.5, 2.0, quantumMass),
+				 std::sqrt(quantumMass * hbar) * std::exp(0.5)),
+		  "Squeezed-state uncertainties");
+	CHECK(approx(qp_berry_phase_spin_half(quantumPi / 2.0), -quantumPi) &&
+		  approx(qp_berry_phase_two_level(quantumPi), -2.0 * quantumPi) &&
+		  approx(qp_solid_angle_cone(quantumPi / 2.0), 2.0 * quantumPi) &&
+		  approx(qp_dynamic_phase(hbar, 2.0), -2.0) &&
+		  approx(qp_adiabatic_parameter(1.0e-19, 1.0e-5), hbar * 1.0e-5 / 1.0e-38),
+		  "Geometric, dynamic and adiabatic phases");
+	CHECK(approx(qp_landau_zener_probability(1.0e-20, 1.0e-5),
+				 std::exp(-2.0 * quantumPi * 1.0e-40 / (hbar * 1.0e-5))) &&
+		  approx(qp_landau_zener_probability(1.0e-20, 0.0), 0.0),
+		  "Landau-Zener transition probability");
+	CHECK(approx(qp_flux_quantum(), quantumPlanck / quantumCharge) &&
+		  approx(qp_aharonov_bohm_phase(1.0e-15, quantumCharge), quantumCharge * 1.0e-15 / hbar) &&
+		  approx(qp_ab_phase_from_flux_ratio(0.5), quantumPi),
+		  "Aharonov-Bohm phase and flux quantum");
+	const double cyclotron = quantumCharge * 2.0 / quantumMass;
+	CHECK(approx(qp_cyclotron_frequency(2.0, quantumMass), cyclotron) &&
+		  approx(qp_landau_level_energy(2, 2.0, quantumMass), 2.5 * hbar * cyclotron) &&
+		  approx(qp_magnetic_length(2.0), std::sqrt(hbar / (quantumCharge * 2.0))) &&
+		  approx(qp_filling_factor(1.0e15, 2.0), 1.0e15 * quantumPlanck / (quantumCharge * 2.0)),
+		  "Landau levels and magnetic length");
+	CHECK(approx(qp_hall_conductivity_iqhe(2), 2.0 * quantumCharge * quantumCharge / quantumPlanck) &&
+		  approx(qp_hall_resistance_iqhe(2), quantumPlanck / (2.0 * quantumCharge * quantumCharge)) &&
+		  approx(qp_hyperfine_energy(4.0, 1.0, 0.5, 0.5), 1.0) &&
+		  approx(qp_hydrogen_21cm_frequency(), 1420.405751768e6) &&
+		  approx(qp_hydrogen_21cm_wavelength(), quantumC / 1420.405751768e6),
+		  "Integer quantum Hall and hyperfine quantities");
+	const double restEnergy = quantumMass * quantumC * quantumC;
+	const double momentum = quantumMass * quantumC;
+	const double waveNumber = momentum / hbar;
+	CHECK(approx(qp_relativistic_energy(0.0, quantumMass), restEnergy) &&
+		  approx(qp_relativistic_energy(momentum, quantumMass), std::sqrt(2.0) * restEnergy) &&
+		  approx(qp_relativistic_kinetic_energy(momentum, quantumMass), (std::sqrt(2.0) - 1.0) * restEnergy) &&
+		  approx(qp_compton_wavelength(quantumMass), quantumPlanck / (quantumMass * quantumC)) &&
+		  approx(qp_reduced_compton_wavelength(quantumMass), hbar / (quantumMass * quantumC)),
+		  "Relativistic energy and Compton wavelengths");
+	CHECK(approx(qp_klein_gordon_dispersion(waveNumber, quantumMass),
+				 std::sqrt(2.0) * quantumC * waveNumber) &&
+		  approx(qp_klein_gordon_group_velocity(waveNumber, quantumMass), quantumC / std::sqrt(2.0)) &&
+		  approx(qp_klein_gordon_phase_velocity(waveNumber, quantumMass), quantumC * std::sqrt(2.0)),
+		  "Klein-Gordon dispersion and velocities");
 	qp_destroy(quantum);
 
 	CP_Handle classical = cp_create("integration-classical", 2.0, 1.0, 3);
@@ -976,6 +1062,80 @@ bool test_module_apis()
 			  2.0 * 1.380649e-23 * 300.0 * 1.0e24 /
 			  (299792458.0 * 299792458.0)),
 		  "Rayleigh-Jeans spectral radiance");
+	const double thermoPi = 3.14159265358979323846;
+	const double thermoHbar = 1.0545718e-34;
+	const double electronCharge = 1.602176634e-19;
+	const double gasConstant = 8.31446261815324;
+	const double particleMass = 9.1093837015e-31;
+	const double density = 1.0e28;
+	const double fermiEnergy = thermoHbar * thermoHbar / (2.0 * particleMass) *
+		std::pow(3.0 * thermoPi * thermoPi * density, 2.0 / 3.0);
+	CHECK(approx(td_fermi_energy(thermo, density, particleMass), fermiEnergy) &&
+		  approx(td_fermi_dirac_occupation(thermo, boltzmann * 300.0, 0.0, 300.0),
+				 1.0 / (std::exp(1.0) + 1.0)) &&
+		  approx(td_fermi_dirac_occupation(thermo, 0.0, 0.0, 300.0), 0.5),
+		  "Fermi gas energy and occupation");
+	CHECK(approx(td_bec_critical_temperature(thermo, density, particleMass),
+				 2.0 * thermoPi * thermoHbar * thermoHbar / (particleMass * boltzmann) *
+				 std::pow(density / 2.612, 2.0 / 3.0)) &&
+		  approx(td_bec_condensate_fraction(thermo, 0.0, 100.0), 1.0) &&
+		  approx(td_bec_condensate_fraction(thermo, 25.0, 100.0), 0.875) &&
+		  approx(td_bec_condensate_fraction(thermo, 100.0, 100.0), 0.0) &&
+		  approx(td_bec_condensate_fraction(thermo, 125.0, 100.0), 0.0),
+		  "Bose condensation temperature and phase boundary");
+	CHECK(approx(td_sommerfeld_energy(thermo, fermiEnergy, 300.0),
+				 0.6 * fermiEnergy * (1.0 + 5.0 * thermoPi * thermoPi * boltzmann * boltzmann *
+				 300.0 * 300.0 / (12.0 * fermiEnergy * fermiEnergy))) &&
+		  approx(td_sommerfeld_specific_heat(thermo, fermiEnergy, 300.0),
+				 thermoPi * thermoPi * boltzmann * boltzmann * 300.0 / (2.0 * fermiEnergy)),
+		  "Sommerfeld energy and heat capacity");
+	const double radiationDensity = 4.0 * 5.670374419e-8 * std::pow(300.0, 4.0) / 299792458.0;
+	CHECK(approx(td_photon_gas_energy(thermo, 300.0, 2.0), 2.0 * radiationDensity) &&
+		  approx(td_photon_gas_pressure(thermo, 300.0), radiationDensity / 3.0) &&
+		  approx(td_chandrasekhar_mass(thermo, 2.0), 1.44 * 1.989e30 / 4.0),
+		  "Photon gas and Chandrasekhar mass");
+	CHECK(approx(td_einstein_solid_multiplicity(thermo, 2, 3), 6.0) &&
+		  approx(td_einstein_solid_multiplicity(thermo, 0, 3), 1.0) &&
+		  approx(td_einstein_specific_heat(thermo, 300.0, 300.0),
+				 3.0 * gasConstant * std::exp(1.0) / std::pow(std::exp(1.0) - 1.0, 2.0)),
+		  "Einstein solid multiplicity and specific heat");
+	CHECK(approx(td_brillouin_function(thermo, 0.5, 0.0), 0.0) &&
+		  approx(td_brillouin_function(thermo, 0.5, 0.7), std::tanh(0.7)) &&
+		  approx(td_curie_law_susceptibility(thermo, 2.0, 4.0), 0.5) &&
+		  approx(td_ising_2d_onsager_tc(thermo, boltzmann),
+				 2.0 / std::log(1.0 + std::sqrt(2.0))),
+		  "Paramagnetic and Ising references");
+	CHECK(approx(td_mean_free_path(thermo, 2.0e25, 5.0e-20), 1.0e-6) &&
+		  approx(td_knudsen_number(thermo, 1.0e-6, 1.0e-3), 1.0e-3) &&
+		  approx(td_fick_flux(thermo, 2.0e-9, 3.0), -6.0e-9) &&
+		  approx(td_diffusion_length(thermo, 2.0e-9, 4.0), std::sqrt(16.0e-9)),
+		  "Mean free path and diffusion transport");
+	CHECK(approx(td_drude_conductivity(thermo, density, 1.0e-14, particleMass),
+				 density * electronCharge * electronCharge * 1.0e-14 / particleMass) &&
+		  approx(td_lorenz_number(thermo), thermoPi * thermoPi * boltzmann * boltzmann /
+				 (3.0 * electronCharge * electronCharge)),
+		  "Drude conductivity and Lorenz number");
+	CHECK(approx(td_thermal_conductivity_kinetic(thermo, 3.0, 4.0, 0.5), 2.0) &&
+		  approx(td_fourier_heat_flux(thermo, 2.0, -3.0), 6.0) &&
+		  approx(td_viscosity_kinetic(thermo, 3.0, 2.0, 4.0, 0.5), 4.0) &&
+		  approx(td_reynolds_number(thermo, 2.0, 3.0, 4.0, 0.5), 48.0),
+		  "Heat conduction, viscosity and Reynolds number");
+	CHECK(approx(td_einstein_relation(thermo, 300.0, 1.0e-3, 1.0e-6),
+				 boltzmann * 300.0 / (6.0 * thermoPi * 1.0e-3 * 1.0e-6)) &&
+		  approx(td_langevin_msd(thermo, 300.0, 2.0, 1.0, 2.0),
+				 2.0 * boltzmann * 300.0 * (2.0 - 2.0 * (1.0 - std::exp(-1.0)))) &&
+		  approx(td_langevin_msd(thermo, 300.0, 2.0, 1.0, 0.0), 0.0),
+		  "Stokes-Einstein diffusion and Langevin displacement");
+	CHECK(approx(td_landau_free_energy(thermo, 2.0, -1.0, 2.0, 3.0), 9.0) &&
+		  approx(td_landau_order_parameter(thermo, -2.0, 8.0), 0.5) &&
+		  approx(td_landau_order_parameter(thermo, 0.0, 8.0), 0.0) &&
+		  approx(td_mean_field_beta(thermo), 0.5) &&
+		  approx(td_mean_field_gamma(thermo), 1.0),
+		  "Landau order and mean-field exponents");
+	CHECK(approx(td_equilibrium_constant(thermo, 0.0, 300.0), 1.0) &&
+		  approx(td_equilibrium_constant(thermo, gasConstant * 300.0, 300.0), std::exp(-1.0)) &&
+		  approx(td_gibbs_paradox_correction(thermo, 1, 1), 2.0 * boltzmann * std::log(2.0)),
+		  "Chemical equilibrium and entropy of mixing");
 	td_destroy(thermo);
 
 	return true;

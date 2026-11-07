@@ -107,7 +107,7 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
-The generated Phase 10 test plan currently records 345 referenced declarations out
+The generated Phase 10 test plan currently records 419 referenced declarations out
 of 811; this is measured exact-symbol coverage, not proof that every API domain,
 buffer contract, numerical solver, or export path is fully validated.
 

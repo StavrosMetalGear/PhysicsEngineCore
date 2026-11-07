@@ -106,6 +106,14 @@ for the remaining declarations, especially stateless mathematical helpers and
 lifecycle-safe stateful operations. The inventory does not itself prove
 scientific correctness or define behavior for invalid numeric domains.
 
+Scientific review is needed for two pinned Thermodynamics implementations:
+`ThermoSystem::debyeSpecificHeat` does not appear to approach the standard
+high-temperature limit of 3 nR, and `debyeEntropyLowT` appears to use the
+low-temperature heat-capacity coefficient rather than the entropy coefficient.
+Verify against authoritative references and correct in ThermodynamicsCore before
+claiming these APIs are scientifically validated; neither is covered by the
+new reference tests.
+
 ## Phase 10.1 status
 
 Complete: all 811 declarations are categorized reproducibly, with category
@@ -116,7 +124,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-345 APIs with exact current test references and 466 APIs still requiring
+419 APIs with exact current test references and 392 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -137,6 +145,9 @@ diffraction and interferometry reference checks.
 Quantum coverage includes complex gate matrices, density and decoherence
 channels, Bell-state entanglement, partial traces, measurement, and truncated
 angular-momentum enumerations.
+Additional Quantum reference checks cover confinement and density-of-states
+formulas, coherent and squeezed states, phase and Landau-level quantities,
+and relativistic energies and wave propagation.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.
@@ -145,6 +156,8 @@ spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.
 Optics coverage now also includes Gaussian beams, optical activity, laser and
 nonlinear optics, photon statistics, quantum optics, and material responses.
+Thermodynamics reference checks also cover quantum gases, Einstein and Ising
+models, transport coefficients, Landau theory, and chemical equilibrium.
 The next implementation batch is the remaining
 low-risk scalar-domain and lifecycle-state APIs; array, matrix, numerical, and
 export categories require separate buffer, numerical-reference, and filesystem
