@@ -107,12 +107,15 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
-The generated Phase 10 test plan currently records 527 referenced declarations out
+The generated Phase 10 test plan currently records 538 referenced declarations out
 of 811; this is measured exact-symbol coverage, not proof that every API domain,
 buffer contract, numerical solver, or export path is fully validated.
 
 Array-output APIs write into caller-owned buffers. Callers must allocate enough
-space for the requested output. Nuclear paired-vector wrappers return the
+space for the requested output. The pinned Quantum two-level exact and
+perturbative wrappers write the positive energy branch to the first output and
+the negative branch to the second, despite the sibling header's reversed labels.
+Nuclear paired-vector wrappers return the
 number of entries written, capped by the supplied buffer length; they do not
 allocate caller buffers. Use nonnegative capacities and provide valid pointers
 for both outputs when capacity is positive. Quantum `qp_list_allowed_j` and `qp_list_allowed_f`

@@ -119,6 +119,11 @@ denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
 before claiming the exposed API is scientifically validated.
 
+The Quantum header labels `qp_two_level_perturbation` and `qp_two_level_exact`
+outputs as E_minus then E_plus, but their pinned implementations return the
+positive branch first and negative branch second. Correct the sibling header
+or version the API deliberately rather than silently changing the output order.
+
 ## Phase 10.1 status
 
 Complete: all 811 declarations are categorized reproducibly, with category
@@ -129,7 +134,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-527 APIs with exact current test references and 284 APIs still requiring
+538 APIs with exact current test references and 273 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -155,6 +160,8 @@ formulas, coherent and squeezed states, phase and Landau-level quantities,
 and relativistic energies and wave propagation.
 Additional references cover oscillator wavefunctions, hyperfine and Landau
 quantities, Aharonov-Bohm scattering, Gamow tunneling, and relativistic density.
+Spin operator layouts, eigenstates, expectation values, two-level energies,
+Hermitian diagonalization and hydrogen expectation arrays now have reference checks.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.

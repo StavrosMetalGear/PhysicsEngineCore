@@ -101,6 +101,54 @@ bool test_quantum_states()
 	double spinResult[4] = {};
 	qp_apply_gate_to_spinor(x, spinUp, spinResult);
 	CHECK(matches(spinResult, spinDown, 4), "Apply X gate to spinor");
+	const double spinHbar = 1.0545718e-34;
+	double spinMatrix[9] = {};
+	spinMatrix[8] = 123.0;
+	qp_spin_operator('x', spinMatrix);
+	CHECK(approx(spinMatrix[2], spinHbar / 2.0) && approx(spinMatrix[4], spinHbar / 2.0) &&
+		  spinMatrix[0] == 0.0 && spinMatrix[6] == 0.0 && spinMatrix[8] == 123.0,
+		  "Spin X operator and output boundary");
+	qp_spin_operator('y', spinMatrix);
+	CHECK(approx(spinMatrix[3], -spinHbar / 2.0) && approx(spinMatrix[5], spinHbar / 2.0) &&
+		  spinMatrix[2] == 0.0 && spinMatrix[4] == 0.0 && spinMatrix[8] == 123.0,
+		  "Spin Y operator complex layout");
+	qp_spin_operator('z', spinMatrix);
+	CHECK(approx(spinMatrix[0], spinHbar / 2.0) && approx(spinMatrix[6], -spinHbar / 2.0) &&
+		  spinMatrix[2] == 0.0 && spinMatrix[4] == 0.0 && spinMatrix[8] == 123.0,
+		  "Spin Z operator");
+	qp_spin_raising(spinMatrix);
+	CHECK(approx(spinMatrix[2], spinHbar) && spinMatrix[4] == 0.0 && spinMatrix[8] == 123.0,
+		  "Spin raising operator");
+	qp_spin_lowering(spinMatrix);
+	CHECK(spinMatrix[2] == 0.0 && approx(spinMatrix[4], spinHbar) && spinMatrix[8] == 123.0,
+		  "Spin lowering operator");
+	double eigenstate[5] = {0, 0, 0, 0, 123.0};
+	const double spinYPlus[4] = {s, 0, 0, s};
+	const double spinXMinus[4] = {s, 0, -s, 0};
+	qp_eigenstate_spin('y', 1, eigenstate);
+	CHECK(matches(eigenstate, spinYPlus, 4) && eigenstate[4] == 123.0, "Spin Y eigenstate and boundary");
+	qp_eigenstate_spin('x', 0, eigenstate);
+	CHECK(matches(eigenstate, spinXMinus, 4) && eigenstate[4] == 123.0, "Spin X negative eigenstate");
+	double sx = 0.0, sy = 0.0, sz = 0.0;
+	qp_spin_expectation(s, 0.0, 0.0, s, &sx, &sy, &sz);
+	CHECK(approx(sy, spinHbar / 2.0) && std::abs(sx) < 1.0e-45 && std::abs(sz) < 1.0e-45,
+		  "Spin Y expectation values");
+	qp_spin_expectation(1.0, 0.0, 0.0, 0.0, nullptr, nullptr, &sz);
+	CHECK(approx(sz, spinHbar / 2.0), "Spin expectation optional outputs");
+	double upper = 0.0, lower = 0.0;
+	qp_two_level_exact(3.0, 4.0, &upper, &lower);
+	CHECK(approx(upper, 2.5 * spinHbar) && approx(lower, -2.5 * spinHbar),
+		  "Exact two-level energy ordering");
+	qp_two_level_perturbation(4.0, 2.0, &upper, &lower);
+	CHECK(approx(upper, 2.25 * spinHbar) && approx(lower, -2.25 * spinHbar),
+		  "Perturbative two-level energy ordering");
+	qp_degenerate_two_level(2.0 * spinHbar, 2.0, &upper, &lower);
+	CHECK(approx(upper, 3.0 * spinHbar) && approx(lower, spinHbar), "Degenerate level splitting");
+	qp_diagonalize_2x2(2.0, 4.0, 0.0, 2.0, &upper, &lower);
+	CHECK(approx(upper, 3.0 + std::sqrt(5.0)) && approx(lower, 3.0 - std::sqrt(5.0)),
+		  "Hermitian matrix eigenvalues with imaginary coupling");
+	qp_diagonalize_2x2(2.0, 4.0, 0.0, 0.0, nullptr, &lower);
+	CHECK(approx(lower, 2.0), "Matrix diagonalization optional output");
 
 	double rho[8] = {};
 	const double plusRho[8] = {0.5, 0, 0.5, 0, 0.5, 0, 0.5, 0};
@@ -213,6 +261,18 @@ bool test_module_apis()
 	CHECK(approx(dp, std::sqrt(9.1093837015e-31 * 1.0545718e-34 * 2.0 / 2.0)),
 		  "Quantum momentum uncertainty");
 	const double hbar = 1.0545718e-34;
+	const double bohrRadius = 5.29177210903e-11;
+	double hydrogenValues[5] = {0, 0, 0, 0, 123.0};
+	qp_hydrogen_expectations(quantum, 1, 0, 1.0, hydrogenValues);
+	CHECK(approx(hydrogenValues[0], 1.5 * bohrRadius) &&
+		  approx(hydrogenValues[1], 3.0 * bohrRadius * bohrRadius) &&
+		  approx(hydrogenValues[2], 1.0 / bohrRadius) &&
+		  approx(hydrogenValues[3], 2.0 / (bohrRadius * bohrRadius)) && hydrogenValues[4] == 123.0,
+		  "Hydrogen ground-state expectation values and boundary");
+	CHECK(approx(qp_matrix_element_isw(quantum, 1, 1), 0.5e-10) &&
+		  approx(qp_matrix_element_isw(quantum, 1, 2), -16.0e-10 / (9.0 * 3.14159265358979323846 * 3.14159265358979323846)) &&
+		  approx(qp_matrix_element_isw(quantum, 1, 3), 0.0),
+		  "Square-well matrix elements and parity");
 	const double deltaPotential = 1.0e-18;
 	CHECK(approx(qp_delta_potential_energy(quantum, deltaPotential),
 				  -9.1093837015e-31 * deltaPotential * deltaPotential /
