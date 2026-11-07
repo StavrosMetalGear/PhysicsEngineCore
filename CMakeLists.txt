@@ -299,6 +299,11 @@ target_include_directories(test_engine_integration PRIVATE
 )
 add_test(NAME test_engine_integration COMMAND test_engine_integration)
 
+add_executable(test_em_exports tests/test_em_exports.cpp)
+target_link_libraries(test_em_exports PRIVATE PhysicsEngine)
+target_include_directories(test_em_exports PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME test_em_exports COMMAND test_em_exports)
+
 add_executable(test_fluid_api tests/test_fluid_api.cpp)
 target_link_libraries(test_fluid_api PRIVATE PhysicsEngine)
 target_include_directories(test_fluid_api PRIVATE
