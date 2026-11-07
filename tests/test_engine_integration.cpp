@@ -755,6 +755,78 @@ bool test_module_apis()
 		  "Fabry-Perot free spectral range");
 	CHECK(approx(op_talbot_distance(optics, 2.0e-6, 500.0e-9), 16.0e-6),
 		  "Talbot distance");
+	const double waist = 1.0e-3;
+	const double wavelength = 500.0e-9;
+	const double rayleighRange = pi * waist * waist / wavelength;
+	CHECK(approx(op_gaussian_waist(optics, waist, 0.0, wavelength), waist) &&
+		  approx(op_gaussian_waist(optics, waist, rayleighRange, wavelength), waist * std::sqrt(2.0)) &&
+		  approx(op_gaussian_divergence(optics, waist, wavelength), wavelength / (pi * waist)) &&
+		  approx(op_gaussian_gouy_phase(optics, rayleighRange, rayleighRange), pi / 4.0) &&
+		  approx(op_gaussian_intensity(optics, waist, waist), std::exp(-2.0)),
+		  "Gaussian beam propagation and intensity");
+	CHECK(approx(op_birefringent_phase_delay(optics, 0.1, 2.0e-6, wavelength), 0.8 * pi) &&
+		  approx(op_walkoff_angle(optics, 1.4, 1.4, pi / 4.0), 0.0) &&
+		  approx(op_optical_rotation(optics, 2.0, 0.5, 0.3), 0.3) &&
+		  approx(op_faraday_rotation(optics, 4.0, 0.2, 0.3), 0.24),
+		  "Birefringence and optical rotation");
+	CHECK(approx(op_laser_threshold_gain(optics, 0.2, 0.5), 0.2) &&
+		  approx(op_laser_slope_efficiency(optics, 2.0, 3.0, 4.0, 12.0), 0.5) &&
+		  approx(op_mode_lock_rep_rate(optics, 0.5, 1.5), lightSpeed / 1.5) &&
+		  approx(op_mode_lock_pulse_duration(optics, 2.0e12), 0.5e-12),
+		  "Laser threshold and mode-locking formulas");
+	CHECK(approx(op_shg_phase_mismatch(optics, 1.5, 1.6, wavelength), 0.4 * pi / wavelength) &&
+		  approx(op_shg_phase_mismatch(optics, 1.5, 1.5, wavelength), 0.0) &&
+		  approx(op_shg_coherence_length(optics, 1.5, 1.6, wavelength), wavelength / 0.4),
+		  "Second-harmonic phase mismatch and coherence length");
+	CHECK(approx(op_kerr_index(optics, 1.5, 2.0e-20, 1.0e12), 1.5 + 2.0e-8) &&
+		  approx(op_b_integral(optics, 2.0e-20, 1.0e12, 0.1, wavelength),
+				 2.0 * pi * 2.0e-20 * 1.0e12 * 0.1 / wavelength) &&
+		  approx(op_critical_power(optics, wavelength, 1.5, 2.0e-20),
+				 3.77 * wavelength * wavelength / (8.0 * pi * 1.5 * 2.0e-20)),
+		  "Kerr index, phase and critical power");
+	CHECK(approx(op_opa_gain(optics, 2.0, 0.5, 0.0), std::pow(std::cosh(1.0), 2.0)) &&
+		  approx(op_opa_gain(optics, 2.0, 0.5, 4.0), 1.0) &&
+		  approx(op_opa_gain(optics, 2.0, 0.5, 5.0), 1.0) &&
+		  approx(op_opa_idler_wavelength(optics, 500.0e-9, 750.0e-9), 1.5e-6),
+		  "Optical parametric amplification and idler wavelength");
+	const double halfWaveVoltage = wavelength * 1.0e-3 / (8.0 * 2.0e-12);
+	CHECK(approx(op_half_wave_voltage(optics, wavelength, 2.0, 2.0e-12, 1.0e-3), halfWaveVoltage) &&
+		  approx(op_pockels_phase_shift(optics, 2.0, 2.0e-12, halfWaveVoltage, wavelength, 1.0e-3), pi) &&
+		  approx(op_ao_frequency_shift(optics, 80.0e6), 80.0e6),
+		  "Electro-optic half-wave voltage and acousto-optic shift");
+	CHECK(approx(op_poisson_distribution(2.0, 0), std::exp(-2.0)) &&
+		  approx(op_poisson_distribution(2.0, 3), 4.0 * std::exp(-2.0) / 3.0) &&
+		  approx(op_thermal_distribution(2.0, 0), 1.0 / 3.0) &&
+		  approx(op_thermal_distribution(2.0, 2), 4.0 / 27.0) &&
+		  approx(op_mandel_q(optics, 1.0, 2.0), -0.5),
+		  "Photon statistics distributions and Mandel Q");
+	CHECK(approx(op_hbt_g2_thermal(optics, 0.0, 2.0), 2.0) &&
+		  approx(op_hbt_g2_thermal(optics, -2.0, 2.0), 1.0 + std::exp(-2.0)) &&
+		  approx(op_hom_dip(optics, 0.0, 2.0), 0.0) &&
+		  approx(op_hom_dip(optics, 2.0, 2.0), 1.0 - std::exp(-1.0)) &&
+		  approx(op_mz_sensitivity(optics, pi / 2.0), 1.0),
+		  "Photon correlations and interferometer sensitivity");
+	CHECK(approx(op_squeezed_variance_x(optics, 0.5), std::exp(-1.0)) &&
+		  approx(op_squeezed_variance_p(optics, 0.5), std::exp(1.0)) &&
+		  approx(op_squeezed_db(optics, 0.5), -10.0 / std::log(10.0)),
+		  "Squeezed-light variances and decibels");
+	const double qber = 0.05;
+	const double binaryEntropy = -qber * std::log2(qber) - (1.0 - qber) * std::log2(1.0 - qber);
+	CHECK(approx(op_bb84_qber(optics, 0.02, 0.03), qber) &&
+		  approx(op_bb84_secure_key_rate(optics, 0.0, 1.0), 1.0) &&
+		  approx(op_bb84_secure_key_rate(optics, qber, 1.0), 1.0 - 2.0 * binaryEntropy) &&
+		  approx(op_bb84_secure_key_rate(optics, 0.11, 1.0), 0.0),
+		  "BB84 error and secure-rate threshold");
+	const double sppFactor = std::sqrt(2.0);
+	CHECK(approx(op_spp_wavevector(optics, 3.0e15, -2.0, 1.0), 3.0e15 * sppFactor / lightSpeed) &&
+		  approx(op_spr_resonance_angle(optics, 2.0, -2.0, 1.0), pi / 4.0),
+		  "Surface plasmon wavevector and resonance angle");
+	CHECK(approx(op_metamaterial_epsilon(optics, 2.0, 3.0, 1.0), -0.8) &&
+		  approx(op_metamaterial_mu(optics, 2.0, 1.0, 0.6, 0.1), 0.8) &&
+		  approx(op_metamaterial_n(optics, -4.0, -1.0), -2.0) &&
+		  approx(op_metamaterial_n(optics, 4.0, 1.0), 2.0) &&
+		  approx(op_negative_refraction(optics, pi / 6.0, 1.0, -1.0), -pi / 6.0),
+		  "Metamaterial response and negative refraction");
 	op_destroy(optics);
 
 	CHECK(approx(ss_lattice_spacing(1, 0, 0, 5.0), 5.0), "Solid-state lattice spacing");
