@@ -114,6 +114,11 @@ Verify against authoritative references and correct in ThermodynamicsCore before
 claiming these APIs are scientifically validated; neither is covered by the
 new reference tests.
 
+`EMField::metamaterialPermittivity` takes the real part of its complex
+denominator before division, so its damping argument has no effect. Review
+against the intended complex Drude response and correct in ElectrodynamicsCore
+before claiming the exposed API is scientifically validated.
+
 ## Phase 10.1 status
 
 Complete: all 811 declarations are categorized reproducibly, with category
@@ -124,7 +129,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-419 APIs with exact current test references and 392 APIs still requiring
+477 APIs with exact current test references and 334 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -151,6 +156,9 @@ and relativistic energies and wave propagation.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.
+Additional Electrodynamics checks cover circuit transients, Maxwell equations,
+wave and antenna quantities, relativistic fields, plasma, superconductivity,
+image charges, and induction.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.

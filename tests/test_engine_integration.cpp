@@ -569,6 +569,101 @@ bool test_module_apis()
 		  approx(em_reflection_coefficient(electromagnetic, 50.0, 50.0), 0.0),
 		  "Transmission-line reflection coefficient");
 	CHECK(approx(em_vswr(electromagnetic, -0.2), 1.5), "Standing-wave ratio");
+	CHECK(approx(em_back_emf(electromagnetic, 2.0, 3.0), -6.0) &&
+		  approx(em_self_inductance_solenoid(electromagnetic, 10.0, 0.2, 0.5),
+				 emMu0 * 10.0 * 10.0 * 0.2 * 0.5) &&
+		  approx(em_coupling_coefficient(electromagnetic, 0.5, 1.0, 4.0), 0.25),
+		  "Electromagnetic induction and solenoid inductance");
+	CHECK(approx(em_lr_current_growth(electromagnetic, 12.0, 4.0, 2.0, 0.0), 0.0) &&
+		  approx(em_lr_current_growth(electromagnetic, 12.0, 4.0, 2.0, 0.5), 3.0 * (1.0 - std::exp(-1.0))) &&
+		  approx(em_lr_current_decay(electromagnetic, 3.0, 4.0, 2.0, 0.5), 3.0 * std::exp(-1.0)) &&
+		  approx(em_lc_frequency(electromagnetic, 2.0, 0.5), 1.0 / (2.0 * emPi)) &&
+		  approx(em_lc_charge(electromagnetic, 2.0, 2.0, 0.5, emPi), -2.0),
+		  "LR transients and LC oscillations");
+	CHECK(approx(em_rlc_resonant_freq(electromagnetic, 2.0, 0.5), 1.0 / (2.0 * emPi)) &&
+		  approx(em_rlc_damping(electromagnetic, 2.0, 2.0), 0.5) &&
+		  approx(em_rlc_quality(electromagnetic, 2.0, 2.0, 0.5), 1.0) &&
+		  approx(em_rlc_charge_underdamped(electromagnetic, 3.0, 2.0, 2.0, 0.5, 1.0),
+				 3.0 * std::exp(-0.5) * std::cos(std::sqrt(0.75))) &&
+		  approx(em_impedance_resistor(electromagnetic, 4.0), 4.0) &&
+		  approx(em_power_factor(electromagnetic, 4.0, 2.0, 0.5, 1.0), 1.0),
+		  "RLC resonance, damped charge and AC power factor");
+	CHECK(approx(em_div_e(electromagnetic, 1.0e-9), 1.0e-9 / (2.5 * eps0)) &&
+		  approx(em_div_b(electromagnetic), 0.0) &&
+		  approx(em_gauss_law_integral(electromagnetic, 1.0e-9), 1.0e-9 / (2.5 * eps0)) &&
+		  approx(em_faraday_integral(electromagnetic, 3.0), -3.0) &&
+		  approx(em_ampere_maxwell_integral(electromagnetic, 2.0, 1.0e10),
+				 emMu0 * (2.0 + 2.5 * eps0 * 1.0e10)),
+		  "Differential and integral Maxwell equations");
+	CHECK(approx(em_wave_impedance(electromagnetic), 376.730313668 / std::sqrt(2.5)) &&
+		  approx(em_wavelength(electromagnetic, 1.0e9), mediumSpeed / 1.0e9) &&
+		  approx(em_wave_number(electromagnetic, 1.0e9), 2.0 * emPi * 1.0e9 / mediumSpeed) &&
+		  approx(em_poynting_magnitude(electromagnetic, 4.0, 3.0), 12.0 / emMu0) &&
+		  approx(em_intensity_from_e0(electromagnetic, 4.0), 0.5 * 2.5 * eps0 * mediumSpeed * 16.0),
+		  "Wave impedance, wavelength and energy flux");
+	CHECK(approx(em_evanescent_decay(electromagnetic, 1.5, 1.0, emPi / 3.0, 500.0e-9),
+				 2.0 * emPi / 500.0e-9 * std::sqrt(1.5 * 1.5 * 0.75 - 1.0)) &&
+		  approx(em_thin_film_reflectance(electromagnetic, 1.0, 1.5, 1.0, 0.0, 500.0e-9, 0.0), 0.0) &&
+		  approx(em_antenna_effective_area(electromagnetic, 2.0, 0.5), 0.5 / (4.0 * emPi)) &&
+		  approx(em_friis_transmission(electromagnetic, 4.0, 2.0, 3.0, 0.5, 10.0),
+				 24.0 * std::pow(0.5 / (4.0 * emPi * 10.0), 2.0)),
+		  "Evanescent decay, thin film and antenna transmission");
+	CHECK(approx(em_lienard_wiechert_scalar(electromagnetic, 1.0e-9, 2.0, 0.5, 1.0),
+				 coulombConstant * 1.0e-9) &&
+		  approx(em_monopole_potential(electromagnetic, 1.0e-9, 2.0), coulombConstant * 1.0e-9 / 2.0) &&
+		  approx(em_quadrupole_potential(electromagnetic, 2.0, 2.0, 0.0), coulombConstant / 8.0) &&
+		  approx(em_magnetic_quadrupole_potential(electromagnetic, 2.0, 2.0, 0.0),
+				 emMu0 / (4.0 * emPi * 8.0)),
+		  "Retarded and multipole potentials");
+	const double emCharge = 1.602176634e-19;
+	const double emElectronMass = 9.1093837015e-31;
+	const double emBoltzmann = 1.380649e-23;
+	const double emPlanck = 6.62607015e-34;
+	const double classicalElectronRadius = coulombConstant * emCharge * emCharge /
+		(emElectronMass * lightSpeed * lightSpeed);
+	CHECK(approx(em_thomson_cross_section(electromagnetic),
+				 8.0 * emPi * classicalElectronRadius * classicalElectronRadius / 3.0) &&
+		  approx(em_rayleigh_cross_section(electromagnetic, 1.0e-8, 1.0, 500.0e-9), 0.0) &&
+		  approx(em_lorentz_gamma(electromagnetic, 0.6 * lightSpeed), 1.25) &&
+		  approx(em_relativistic_doppler(electromagnetic, 100.0, 0.6 * lightSpeed), 200.0),
+		  "Scattering and relativistic formulas");
+	CHECK(approx(em_field_invariant1(electromagnetic, lightSpeed, 0.0, 0.0, 0.0, 2.0, 0.0), 3.0) &&
+		  approx(em_field_invariant2(electromagnetic, lightSpeed, 0.0, 0.0, 2.0, 0.0, 0.0), 2.0),
+		  "Electromagnetic field invariants");
+	CHECK(approx(em_plasma_frequency(electromagnetic, 1.0e20, emElectronMass),
+				 std::sqrt(1.0e20 * emCharge * emCharge / (emElectronMass * eps0))) &&
+		  approx(em_plasma_refractive_index(electromagnetic, 2.0, 1.0), std::sqrt(0.75)) &&
+		  approx(em_plasma_refractive_index(electromagnetic, 1.0, 2.0), 0.0) &&
+		  approx(em_debye_length(electromagnetic, 1.0e20, 10000.0),
+				 std::sqrt(eps0 * emBoltzmann * 10000.0 / (1.0e20 * emCharge * emCharge))) &&
+		  approx(em_surface_resistance(electromagnetic, 1.0e9), std::sqrt(emMu0 * 1.0e9 / (2.0 * 5.8e7))),
+		  "Plasma dispersion, Debye length and surface resistance");
+	CHECK(approx(em_cyclotron_frequency(electromagnetic, -emCharge, 2.0, emElectronMass),
+				 emCharge * 2.0 / emElectronMass) &&
+		  approx(em_cyclotron_radius(electromagnetic, emElectronMass, 1.0e6, -emCharge, 2.0),
+				 emElectronMass * 1.0e6 / (emCharge * 2.0)) &&
+		  approx(em_loss_cone_angle(electromagnetic, 1.0, 4.0), emPi / 6.0) &&
+		  approx(em_london_penetration_depth(electromagnetic, 1.0e28, emElectronMass, emCharge),
+				 std::sqrt(emElectronMass / (emMu0 * 1.0e28 * emCharge * emCharge))),
+		  "Magnetic confinement and London penetration depth");
+	CHECK(approx(em_meissner_field_decay(electromagnetic, 2.0, 0.1, 0.1), 2.0 * std::exp(-1.0)) &&
+		  approx(em_flux_quantum(electromagnetic), emPlanck / (2.0 * emCharge)) &&
+		  approx(em_critical_field(electromagnetic, 4.0, 5.0, 10.0), 3.0) &&
+		  approx(em_critical_field(electromagnetic, 4.0, 10.0, 10.0), 0.0),
+		  "Superconducting field, flux and critical temperature");
+	CHECK(approx(em_image_charge_potential(electromagnetic, 1.0e-9, 1.0, 0.5, 0.0), 0.0) &&
+		  approx(em_image_charge_force(electromagnetic, 1.0e-9, 1.0), -coulombConstant * 1.0e-18 / 4.0) &&
+		  approx(em_legendre_p(electromagnetic, 2, 0.5), -0.125) &&
+		  approx(em_separation_sphere_potential(electromagnetic, 1.0, 2.0, 0.5, 0.0), 0.0) &&
+		  approx(em_separation_sphere_potential(electromagnetic, 1.0, 2.0, 2.0, 0.0), -3.5),
+		  "Image-charge and spherical boundary conditions");
+	CHECK(approx(em_faraday_disk_emf(electromagnetic, 2.0, 3.0, 4.0), 48.0) &&
+		  approx(em_generator_emf(electromagnetic, 2.0, 3.0, 4.0, 1.0, emPi / 2.0), 24.0) &&
+		  approx(em_transformer_voltage(electromagnetic, 12.0, 4.0, 2.0), 6.0) &&
+		  approx(em_waveguide_phase_velocity(electromagnetic, 2.0, 1.0), lightSpeed / std::sqrt(0.75)) &&
+		  approx(em_waveguide_group_velocity(electromagnetic, 2.0, 1.0), lightSpeed * std::sqrt(0.75)) &&
+		  approx(em_negative_refractive_index(electromagnetic, -4.0, -1.0), -2.0),
+		  "Induction, waveguide dispersion and negative index");
 	em_destroy(electromagnetic);
 
 	const double expectedReynolds = 998.0 * 1.5 * 0.05 / 1.002e-3;
