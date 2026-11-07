@@ -391,6 +391,98 @@ bool test_module_apis()
 	CHECK(approx(em_wave_speed_in_medium(electromagnetic),
 				  299792458.0 / std::sqrt(2.5)),
 		  "Wave speed in medium");
+	const double emPi = 3.14159265358979323846;
+	const double eps0 = 8.854187817e-12;
+	const double emMu0 = 1.2566370614e-6;
+	const double coulombConstant = 8.9875517873681764e9;
+	const double mediumSpeed = 299792458.0 / std::sqrt(2.5);
+	CHECK(approx(em_get_mu_r(electromagnetic), 1.0) &&
+		  approx(em_get_sigma(electromagnetic), 5.8e7), "Electromagnetic material getters");
+	CHECK(approx(em_coulomb_energy(electromagnetic, 2.0e-6, -3.0e-6, 0.5),
+			  coulombConstant * 2.0e-6 * -3.0e-6 / 0.5), "Coulomb energy");
+	CHECK(approx(em_dipole_potential(electromagnetic, 2.0e-6, 0.5, 0.3),
+			  coulombConstant * 2.0e-6 * std::cos(0.3) / 0.25), "Electric dipole potential");
+	CHECK(approx(em_dipole_energy(electromagnetic, 2.0, 3.0, 0.3), -6.0 * std::cos(0.3)),
+		  "Electric dipole energy");
+	CHECK(approx(em_field_infinite_plane(electromagnetic, 1.0e-9), 1.0e-9 / (2.0 * 2.5 * eps0)),
+		  "Infinite charged plane field");
+	CHECK(approx(em_field_infinite_line(electromagnetic, 1.0e-9, 0.2),
+			  1.0e-9 / (2.0 * emPi * 2.5 * eps0 * 0.2)), "Infinite charged line field");
+	const double sphereFieldSurface = 1.0e-9 / (4.0 * emPi * 2.5 * eps0 * 0.2 * 0.2);
+	CHECK(approx(em_field_uniform_sphere(electromagnetic, 1.0e-9, 0.2, 0.1),
+			  sphereFieldSurface * 0.5) &&
+		  approx(em_field_uniform_sphere(electromagnetic, 1.0e-9, 0.2, 0.2), sphereFieldSurface) &&
+		  approx(em_field_uniform_sphere(electromagnetic, 1.0e-9, 0.2, 0.4),
+				 sphereFieldSurface * 0.25), "Uniform sphere field inside, surface and outside");
+	CHECK(approx(em_potential_point_charge(electromagnetic, 1.0e-9, 0.5),
+			  coulombConstant * 1.0e-9 / 0.5), "Point charge potential");
+	CHECK(approx(em_potential_ring(electromagnetic, 1.0e-9, 0.3, 0.4),
+			  coulombConstant * 1.0e-9 / 0.5), "Ring potential on axis");
+	CHECK(approx(em_potential_disk(electromagnetic, 1.0e-9, 0.3, 0.4),
+			  1.0e-9 / (2.0 * eps0) * 0.1), "Disk potential on axis");
+	CHECK(approx(em_potential_spherical_shell(electromagnetic, 1.0e-9, 0.2, 0.1),
+			  coulombConstant * 1.0e-9 / 0.2) &&
+		  approx(em_potential_spherical_shell(electromagnetic, 1.0e-9, 0.2, 0.4),
+				 coulombConstant * 1.0e-9 / 0.4), "Spherical shell potential inside and outside");
+	CHECK(approx(em_capacitance_cylindrical(electromagnetic, 2.0, 0.1, 0.2),
+			  2.0 * emPi * 2.5 * eps0 * 2.0 / std::log(2.0)), "Cylindrical capacitance");
+	CHECK(approx(em_capacitance_spherical(electromagnetic, 0.1, 0.2),
+			  4.0 * emPi * 2.5 * eps0 * 0.1 * 0.2 / 0.1), "Spherical capacitance");
+	CHECK(approx(em_polarization_field(electromagnetic, 1.5, 100.0), eps0 * 1.5 * 100.0),
+		  "Dielectric polarization");
+	CHECK(approx(em_displacement_field(electromagnetic, 100.0), 2.5 * eps0 * 100.0),
+		  "Electric displacement field");
+	CHECK(approx(em_dielectric_capacitance(electromagnetic, 2.0e-6), 5.0e-6),
+		  "Dielectric capacitance");
+	CHECK(approx(em_drift_velocity(electromagnetic, 2.0, 1.0e28, 1.0e-6),
+			  2.0 / (1.0e28 * 1.602176634e-19 * 1.0e-6)), "Charge carrier drift velocity");
+	CHECK(em_rc_charge_voltage(electromagnetic, 12.0, 1000.0, 2.0e-6, 0.0) == 0.0 &&
+		  approx(em_rc_charge_voltage(electromagnetic, 12.0, 1000.0, 2.0e-6, 2.0e-3),
+				 12.0 * (1.0 - std::exp(-1.0))), "RC charging voltage");
+	CHECK(approx(em_rc_discharge_current(electromagnetic, 12.0, 1000.0, 2.0e-6, 0.0), 0.012) &&
+		  approx(em_rc_discharge_current(electromagnetic, 12.0, 1000.0, 2.0e-6, 2.0e-3),
+				 0.012 * std::exp(-1.0)), "RC discharge current");
+	CHECK(approx(em_field_center_loop(electromagnetic, 4.0, 0.2), emMu0 * 4.0 / 0.4),
+		  "Circular loop center field");
+	CHECK(approx(em_field_on_axis_loop(electromagnetic, 4.0, 0.2, 0.0), emMu0 * 4.0 / 0.4),
+		  "Circular loop axis field at center");
+	CHECK(approx(em_field_solenoid(electromagnetic, 100.0, 4.0), emMu0 * 400.0),
+		  "Solenoid magnetic field");
+	CHECK(approx(em_field_inside_wire(electromagnetic, 4.0, 0.2, 0.1),
+			  emMu0 * 4.0 * 0.1 / (2.0 * emPi * 0.2 * 0.2)), "Field inside wire");
+	CHECK(approx(em_field_toroid(electromagnetic, 100.0, 4.0, 0.2),
+			  emMu0 * 400.0 / (2.0 * emPi * 0.2)), "Toroid magnetic field");
+	CHECK(approx(em_langevin(electromagnetic, 1.0e-9), 1.0e-9 / 3.0), "Langevin small-field limit");
+	CHECK(approx(em_brillouin(electromagnetic, 0.5, 1.0e-9), 1.0e-9), "Brillouin small-field limit");
+	CHECK(approx(em_curie_weiss(electromagnetic, 4.0, 300.0, 100.0), 0.02), "Curie-Weiss susceptibility");
+	CHECK(approx(em_malus_law(electromagnetic, 4.0, emPi / 3.0), 1.0), "Electromagnetic Malus law");
+	CHECK(approx(em_brewster_angle(electromagnetic, 1.0, 1.5), std::atan(1.5)), "EM Brewster angle");
+	CHECK(approx(em_snell_angle(electromagnetic, 1.0, 1.5, 0.4), std::asin(std::sin(0.4) / 1.5)) &&
+		  em_snell_angle(electromagnetic, 1.5, 1.0, 1.2) == -1.0, "EM Snell refraction and total reflection");
+	CHECK(approx(em_fresnel_rs(electromagnetic, 1.0, 1.5, 0.0), -0.2) &&
+		  approx(em_fresnel_rp(electromagnetic, 1.0, 1.5, 0.0), 0.2), "Fresnel amplitude coefficients");
+	CHECK(approx(em_reflectance(electromagnetic, 1.0, 1.5, 0.0, 1), 0.04) &&
+		  approx(em_reflectance(electromagnetic, 1.0, 1.5, 0.0, 0), 0.04), "Normal-incidence reflectance");
+	CHECK(approx(em_critical_angle(electromagnetic, 1.5, 1.0), std::asin(1.0 / 1.5)),
+		  "EM critical angle");
+	CHECK(approx(em_anti_reflection_thickness(electromagnetic, 1.5, 600.0e-9), 100.0e-9),
+		  "EM anti-reflection thickness");
+	CHECK(approx(em_rect_waveguide_cutoff(electromagnetic, 1, 0, 0.2, 0.1), mediumSpeed / 0.4),
+		  "Rectangular waveguide cutoff");
+	CHECK(approx(em_rect_waveguide_phase_vel(electromagnetic, 2.0, 1.0), mediumSpeed / std::sqrt(0.75)) &&
+		  approx(em_rect_waveguide_group_vel(electromagnetic, 2.0, 1.0), mediumSpeed * std::sqrt(0.75)),
+		  "Waveguide phase and group velocities");
+	CHECK(approx(em_circ_waveguide_cutoff_te(electromagnetic, 1, 1, 0.1),
+			  1.8412 * mediumSpeed / (2.0 * emPi * 0.1)), "Circular TE cutoff");
+	CHECK(approx(em_circ_waveguide_cutoff_tm(electromagnetic, 0, 1, 0.1),
+			  2.4048 * mediumSpeed / (2.0 * emPi * 0.1)), "Circular TM cutoff");
+	CHECK(approx(em_coax_impedance(electromagnetic, 0.1, 0.2),
+			  376.730313668 / (2.0 * emPi) * std::sqrt(1.0 / 2.5) * std::log(2.0)),
+		  "Coaxial impedance");
+	CHECK(approx(em_reflection_coefficient(electromagnetic, 75.0, 50.0), 0.2) &&
+		  approx(em_reflection_coefficient(electromagnetic, 50.0, 50.0), 0.0),
+		  "Transmission-line reflection coefficient");
+	CHECK(approx(em_vswr(electromagnetic, -0.2), 1.5), "Standing-wave ratio");
 	em_destroy(electromagnetic);
 
 	const double expectedReynolds = 998.0 * 1.5 * 0.05 / 1.002e-3;
