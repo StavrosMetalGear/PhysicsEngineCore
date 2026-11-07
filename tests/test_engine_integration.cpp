@@ -304,6 +304,77 @@ bool test_module_apis()
 		  approx(qp_klein_gordon_group_velocity(waveNumber, quantumMass), quantumC / std::sqrt(2.0)) &&
 		  approx(qp_klein_gordon_phase_velocity(waveNumber, quantumMass), quantumC * std::sqrt(2.0)),
 		  "Klein-Gordon dispersion and velocities");
+	const double oscillatorOmega = 2.0e15;
+	const double oscillatorScale = quantumMass * oscillatorOmega / hbar;
+	CHECK(approx(qp_harmonic_oscillator_psi(quantum, 0, 0.0, oscillatorOmega),
+				 std::pow(oscillatorScale / quantumPi, 0.25)) &&
+		  approx(qp_harmonic_oscillator_psi(quantum, 1, 0.0, oscillatorOmega), 0.0) &&
+		  approx(qp_coherent_state_wavefunction(quantum, 0.0, 0.0, 0.0, oscillatorOmega, 0.0),
+				 std::pow(oscillatorScale / quantumPi, 0.25)) &&
+		  approx(qp_wigner_function_coherent(quantum, 0.0, 0.0, 0.0, 0.0, oscillatorOmega),
+				 1.0 / (quantumPi * hbar)),
+		  "Oscillator and coherent-state ground wavefunctions");
+	const double bohrMagneton = 9.2740100783e-24;
+	const double magneticLength = std::sqrt(hbar / (quantumCharge * 2.0));
+	const double landauGroundEnergy = 0.5 * hbar * cyclotron;
+	const double landauWidth = 1.0e-22;
+	CHECK(approx(qp_landau_level_energy_with_spin(2, 2.0, quantumMass, 2.0, 0.5),
+				 2.5 * hbar * cyclotron + 2.0 * bohrMagneton) &&
+		  approx(qp_landau_degeneracy_per_area(2.0), quantumCharge * 2.0 / quantumPlanck) &&
+		  approx(qp_landau_wavefunction(0, 0.0, 2.0, quantumMass),
+				 std::sqrt(1.0 / (std::sqrt(quantumPi) * magneticLength))) &&
+		  approx(qp_landau_dos(landauGroundEnergy, 2.0, quantumMass, 0, landauWidth),
+				 quantumCharge * 2.0 / (quantumPlanck * quantumPi * landauWidth)),
+		  "Landau spin energy, degeneracy, wavefunction and density");
+	const double protonMass = 1.67262192369e-27;
+	CHECK(approx(qp_hyperfine_constant_a(1, 1.0, 2.0),
+				 (8.0 / 3.0) * std::pow(1.0 / 137.035999084, 2.0) * 2.0 *
+				 quantumMass / protonMass * 13.6057 * quantumCharge) &&
+		  approx(qp_hyperfine_gf(1.0, 0.5, 0.5, 2.0, 0.0), 1.0) &&
+		  approx(qp_hyperfine_gf(0.0, 0.5, 0.5, 2.0, 0.0), 0.0) &&
+		  approx(qp_hyperfine_zeeman_weak(1.0e-23, 2.0, 0.5, 2.0), 1.0e-23 + 2.0 * bohrMagneton),
+		  "Hyperfine constant, g factor and weak-field splitting");
+	CHECK(approx(qp_ab_interference(0.0, 1.0, 1.0, 0.0), 1.0) &&
+		  approx(qp_ab_interference(0.0, 1.0, 1.0, quantumPi / 2.0), 0.5) &&
+		  approx(qp_ab_scattering_cross_section(quantumPi, 2.0, 0.5), 1.0 / (4.0 * quantumPi)),
+		  "Aharonov-Bohm interference and scattering");
+	const double coulombCoupling = quantumCharge * quantumCharge / (4.0 * quantumPi * 8.854187817e-12);
+	const double reducedMass = protonMass / 2.0;
+	const double reactionEnergy = 1.0e-14;
+	const double nuclearRadius = 1.0e-15;
+	const double turningPoint = coulombCoupling / reactionEnergy;
+	const double radiusFraction = nuclearRadius / turningPoint;
+	const double gamowIntegral = std::sqrt(2.0 * reducedMass * reactionEnergy) * turningPoint / hbar *
+		(std::acos(std::sqrt(radiusFraction)) - std::sqrt(radiusFraction * (1.0 - radiusFraction)));
+	const double alpha = 1.0 / 137.035999084;
+	const double gamowEnergy = 2.0 * reducedMass * quantumC * quantumC * std::pow(quantumPi * alpha, 2.0);
+	const double thermalEnergy = 1.380649e-23 * 1.0e7;
+	const double gamowPeak = std::cbrt(gamowEnergy * thermalEnergy * thermalEnergy / 4.0);
+	CHECK(approx(qp_nuclear_radius(8, 1.2e-15), 2.4e-15) &&
+		  approx(qp_coulomb_barrier_height(1.0, 1.0, nuclearRadius), coulombCoupling / nuclearRadius) &&
+		  approx(qp_gamow_factor(reactionEnergy, 1.0, 1.0, reducedMass, nuclearRadius), gamowIntegral) &&
+		  approx(qp_gamow_tunneling_prob(reactionEnergy, 1.0, 1.0, reducedMass, nuclearRadius),
+				 std::exp(-2.0 * gamowIntegral)) &&
+		  approx(qp_gamow_factor(2.0 * coulombCoupling / nuclearRadius, 1.0, 1.0, reducedMass, nuclearRadius), 0.0),
+		  "Coulomb barrier and Gamow tunneling");
+	CHECK(approx(qp_gamow_energy(1.0, 1.0, reducedMass), gamowEnergy) &&
+		  approx(qp_sommerfeld_parameter(reactionEnergy, 1.0, 1.0, reducedMass),
+				 coulombCoupling / (hbar * std::sqrt(2.0 * reactionEnergy / reducedMass))) &&
+		  approx(qp_gamow_peak_energy(1.0e7, 1.0, 1.0, reducedMass), gamowPeak) &&
+		  approx(qp_gamow_window_width(1.0e7, 1.0, 1.0, reducedMass),
+				 4.0 * std::sqrt(gamowPeak * thermalEnergy / 3.0)) &&
+		  approx(qp_cross_section_from_s_factor(reactionEnergy, 1.0e-40, 1.0, 1.0, reducedMass),
+				 1.0e-40 / reactionEnergy * std::exp(-std::sqrt(gamowEnergy / reactionEnergy))),
+		  "Gamow peak, window and astrophysical S factor");
+	CHECK(approx(qp_zitterbewegung_frequency(quantumMass), 2.0 * restEnergy / hbar) &&
+		  approx(qp_zitterbewegung_amplitude(quantumMass), hbar / (2.0 * quantumMass * quantumC)) &&
+		  approx(qp_relativistic_dos_3d(restEnergy, quantumMass), 0.0) &&
+		  approx(qp_relativistic_dos_3d(2.0 * restEnergy, quantumMass),
+				 2.0 * std::sqrt(3.0) * restEnergy * restEnergy /
+				 (quantumPi * quantumPi * std::pow(hbar * quantumC, 3.0))) &&
+		  approx(qp_relativistic_de_broglie((std::sqrt(2.0) - 1.0) * restEnergy, quantumMass),
+				 quantumPlanck / momentum),
+		  "Relativistic density, de Broglie wavelength and zitterbewegung");
 	qp_destroy(quantum);
 
 	CP_Handle classical = cp_create("integration-classical", 2.0, 1.0, 3);

@@ -129,7 +129,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-487 APIs with exact current test references and 324 APIs still requiring
+527 APIs with exact current test references and 284 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -153,13 +153,15 @@ angular-momentum enumerations.
 Additional Quantum reference checks cover confinement and density-of-states
 formulas, coherent and squeezed states, phase and Landau-level quantities,
 and relativistic energies and wave propagation.
+Additional references cover oscillator wavefunctions, hyperfine and Landau
+quantities, Aharonov-Bohm scattering, Gamow tunneling, and relativistic density.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.
 Additional Electrodynamics checks cover circuit transients, Maxwell equations,
 wave and antenna quantities, relativistic fields, plasma, superconductivity,
 image charges, and induction.
-Ten Electrodynamics CSV exports have isolated filesystem tests checking their
+Twenty-five Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values; failure reporting and other
 export variants remain to be reviewed.
 Nuclear array tests now also cover binding and charge-density curves, beta

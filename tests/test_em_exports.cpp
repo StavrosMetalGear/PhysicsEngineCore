@@ -171,6 +171,90 @@ bool testExports(const fs::path& root)
 		const double v = 50.0 * i;
 		return std::vector<double>{v, v};
 	});
+	em_export_inductance_csv(em, filename("inductance.csv").c_str(), 10.0, 0.2, 3);
+	verify("inductance.csv", "l,L", [&](int i) {
+		const double length = 0.01 + 0.5 * i;
+		return std::vector<double>{length, mu0 * 100.0 * 0.2 * length};
+	});
+	em_export_lr_csv(em, filename("lr.csv").c_str(), 12.0, 4.0, 2.0, 3);
+	verify("lr.csv", "t,I_growth,I_decay", [](int i) {
+		const double t = 1.25 * i;
+		return std::vector<double>{t, 3.0 * (1.0 - std::exp(-2.0 * t)), 3.0 * std::exp(-2.0 * t)};
+	});
+	em_export_lc_csv(em, filename("lc.csv").c_str(), 2.0, 1.0, 1.0, 3);
+	verify("lc.csv", "t,Q", [&](int i) {
+		const double t = 5.0 * pi * i;
+		return std::vector<double>{t, i == 1 ? -2.0 : 2.0};
+	});
+	em_export_rlc_csv(em, filename("rlc.csv").c_str(), 2.0, 0.2, 1.0, 1.0, 3);
+	verify("rlc.csv", "t,Q", [&](int i) {
+		const double t = 10.0 * pi * i;
+		return std::vector<double>{t, 2.0 * std::exp(-0.1 * t) * std::cos(std::sqrt(0.99) * t)};
+	});
+	em_export_ac_csv(em, filename("ac.csv").c_str(), 2.0, 1.0, 1.0, 3);
+	verify("ac.csv", "f,Z_mag,PowerFactor", [&](int i) {
+		const double omega = i == 0 ? 0.1 : (i == 1 ? 1.0 : 10.0);
+		const double impedance = std::sqrt(4.0 + std::pow(omega - 1.0 / omega, 2.0));
+		return std::vector<double>{omega / (2.0 * pi), impedance, 2.0 / impedance};
+	});
+	em_export_maxwell_diff_csv(em, filename("maxwell-diff.csv").c_str(), 3);
+	verify("maxwell-diff.csv", "rho,divE", [&](int i) {
+		const double rho = (i - 1) * 1.0e-5;
+		return std::vector<double>{rho, rho / (2.5 * eps0)};
+	});
+	em_export_maxwell_int_csv(em, filename("maxwell-int.csv").c_str(), 3);
+	verify("maxwell-int.csv", "Q,Flux", [&](int i) {
+		const double q = (i - 1) * 1.0e-5;
+		return std::vector<double>{q, q / (2.5 * eps0)};
+	});
+	const double speed = 299792458.0 / std::sqrt(2.5);
+	em_export_poynting_csv(em, filename("poynting.csv").c_str(), 100.0, 3);
+	verify("poynting.csv", "E0,I,u_E,u_B", [&](int i) {
+		const double e = 100.0 * i;
+		return std::vector<double>{e, 0.5 * 2.5 * eps0 * speed * e * e,
+			0.5 * 2.5 * eps0 * e * e, 0.5 * e * e / (speed * speed * mu0)};
+	});
+	em_export_rect_waveguide_csv(em, filename("rect-waveguide.csv").c_str(), 0.2, 0.1, 3);
+	verify("rect-waveguide.csv", "f,v_phase,v_group", [&](int i) {
+		const double cutoff = speed / 0.4;
+		const double factor = 1.01 + 1.5 * i;
+		const double ratio = std::sqrt(1.0 - 1.0 / (factor * factor));
+		return std::vector<double>{cutoff * factor, speed / ratio, speed * ratio};
+	});
+	em_export_retarded_csv(em, filename("retarded.csv").c_str(), charge, 3);
+	verify("retarded.csv", "cosTheta,V_LW", [&](int i) {
+		const double cosine = (i - 1) * 0.99;
+		return std::vector<double>{cosine, ke * charge / (1.0 - 0.5 * cosine)};
+	});
+	em_export_electric_multipole_csv(em, filename("multipole.csv").c_str(), charge, 2.0e-9, 3.0e-9, 3);
+	verify("multipole.csv", "r,V_mono,V_dipole,V_quad", [&](int i) {
+		const double r = 0.01 + 0.25 * i;
+		return std::vector<double>{r, ke * charge / r, ke * 2.0e-9 / (r * r),
+			ke * 3.0e-9 / (2.0 * r * r * r)};
+	});
+	em_export_skin_effect_csv(em, filename("skin.csv").c_str(), 3);
+	verify("skin.csv", "f,delta,Rs", [&](int i) {
+		const double f = i == 0 ? 1.0e3 : (i == 1 ? 1.0e6 : 1.0e9);
+		const double omega = 2.0 * pi * f;
+		return std::vector<double>{f, std::sqrt(2.0 / (mu0 * 5.8e7 * omega)),
+			std::sqrt(mu0 * omega / (2.0 * 5.8e7))};
+	});
+	em_export_image_charge_csv(em, filename("image.csv").c_str(), charge, 0.2, 3);
+	verify("image.csv", "y,V", [&](int i) {
+		const double y = 0.001 + 0.05 * i;
+		return std::vector<double>{y, ke * charge * (1.0 / (0.2 - y) - 1.0 / (0.2 + y))};
+	});
+	em_export_separation_csv(em, filename("separation.csv").c_str(), 0.2, 2.0, 3);
+	verify("separation.csv", "r,V_sphere,V_cylinder", [](int i) {
+		const double r = 0.202 + 0.4 * i;
+		return std::vector<double>{r, -2.0 * r + 2.0 * 0.008 / (r * r), -2.0 * r + 2.0 * 0.04 / r};
+	});
+	em_export_waveguide_dispersion_csv(em, filename("waveguide.csv").c_str(), 2.0, 3);
+	verify("waveguide.csv", "omega_ratio,v_phase_over_c,v_group_over_c", [](int i) {
+		const double ratio = 1.01 + 2.0 * i;
+		const double group = std::sqrt(1.0 - 1.0 / (ratio * ratio));
+		return std::vector<double>{ratio, 1.0 / group, group};
+	});
 	return ok;
 }
 
