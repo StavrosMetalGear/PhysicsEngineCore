@@ -554,6 +554,98 @@ bool test_module_apis()
 		  approx(attenuationI[0], 1.0) && approx(attenuationI[2], std::exp(-0.04)) &&
 		  attenuationX[3] == -1.0 && attenuationI[3] == -1.0,
 		  "Nuclear attenuation values and buffer boundary");
+	double nuclearX[502];
+	double nuclearY[502];
+	const auto resetNuclearArrays = [&]() {
+		std::fill_n(nuclearX, 502, -1.0);
+		std::fill_n(nuclearY, 502, -1.0);
+	};
+	resetNuclearArrays();
+	CHECK(np_compute_binding_curve(nuclear, nuclearX, nuclearY, 501) == 260,
+		  "Nuclear binding curve full length");
+	const double bindingHe4 = (15.56 * 4.0 - 17.23 * std::pow(4.0, 2.0 / 3.0) -
+		0.7 * 2.0 / std::cbrt(4.0) + 12.0 / 2.0) / 4.0;
+	CHECK(approx(nuclearX[3], 4.0) && approx(nuclearY[3], bindingHe4) &&
+		  approx(nuclearX[259], 260.0) && nuclearX[260] == -1.0 && nuclearY[260] == -1.0,
+		  "Nuclear binding curve values and full buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_binding_curve(nuclear, nuclearX, nuclearY, 3) == 3 &&
+		  approx(nuclearX[2], 3.0) && nuclearX[3] == -1.0 && nuclearY[3] == -1.0,
+		  "Nuclear binding curve truncated buffer");
+	resetNuclearArrays();
+	CHECK(np_compute_charge_density(nuclear, 8, nuclearX, nuclearY, 501) == 201,
+		  "Nuclear charge density full length");
+	const double chargeRadius = 2.4;
+	const double chargeMax = chargeRadius + 6.0 * 0.545;
+	CHECK(approx(nuclearX[0], 0.0) && approx(nuclearX[200], chargeMax) &&
+		  approx(nuclearY[0], 0.17 / (1.0 + std::exp(-chargeRadius / 0.545))) &&
+		  approx(nuclearY[200], 0.17 / (1.0 + std::exp(6.0))) &&
+		  nuclearX[201] == -1.0 && nuclearY[201] == -1.0,
+		  "Nuclear charge density endpoints and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_beta_spectrum(nuclear, 10, 2.0, nuclearX, nuclearY, 501) == 199,
+		  "Nuclear beta spectrum full length");
+	const double betaElectronMass = 0.510998950;
+	const double betaEnergy = 0.01 + betaElectronMass;
+	const double betaMomentum = std::sqrt(betaEnergy * betaEnergy - betaElectronMass * betaElectronMass) /
+		betaElectronMass;
+	const double betaW = betaEnergy / betaElectronMass;
+	const double betaEta = (1.0 / 137.035999084) * 10.0 * betaW / betaMomentum;
+	const double nuclearPi = 3.14159265358979323846;
+	const double betaFermi = 2.0 * nuclearPi * betaEta / (1.0 - std::exp(-2.0 * nuclearPi * betaEta));
+	CHECK(approx(nuclearX[0], 0.01) && approx(nuclearX[198], 1.99) &&
+		  approx(nuclearY[0], betaFermi * betaMomentum * betaW *
+				 std::pow((2.0 + betaElectronMass) / betaElectronMass - betaW, 2.0)) &&
+		  nuclearX[199] == -1.0 && nuclearY[199] == -1.0,
+		  "Nuclear beta spectrum values and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_rutherford(nuclear, 2, 10, 5.0, nuclearX, nuclearY, 3) == 3,
+		  "Rutherford truncated length");
+	const double firstTheta = nuclearPi * 4.0 / 200.0;
+	CHECK(approx(nuclearX[0], 3.6) &&
+		  approx(nuclearY[0], std::pow(2.0 * 10.0 * 1.4399764 / (4.0 * 5.0), 2.0) /
+				 std::pow(std::sin(firstTheta / 2.0), 4.0)) &&
+		  nuclearX[3] == -1.0 && nuclearY[3] == -1.0,
+		  "Rutherford scattering values and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_breit_wigner(nuclear, 10.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.0,
+								  nuclearX, nuclearY, 501) == 401,
+		  "Breit-Wigner full length");
+	CHECK(approx(nuclearX[0], 5.0) && approx(nuclearX[200], 10.0) &&
+		  approx(nuclearX[400], 15.0) &&
+		  approx(nuclearY[200], nuclearPi * 197.3269804 * 197.3269804 /
+				 (2.0 * 938.272046 * 10.0 * 100.0)) &&
+		  nuclearX[401] == -1.0 && nuclearY[401] == -1.0,
+		  "Breit-Wigner resonance and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_neutrino_osc(nuclear, 0.0025, 0.8, 295.0, 5.0,
+								 nuclearX, nuclearY, 501) == 500,
+		  "Neutrino oscillation full length");
+	const double neutrinoPhase = 1.27 * 0.0025 * 295.0 / 0.01;
+	CHECK(approx(nuclearX[0], 0.01) && approx(nuclearX[499], 5.0) &&
+		  approx(nuclearY[0], 1.0 - 0.8 * std::pow(std::sin(neutrinoPhase), 2.0)) &&
+		  nuclearX[500] == -1.0 && nuclearY[500] == -1.0,
+		  "Neutrino oscillation values and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_bethe_bloch(nuclear, 1, 938.272046, 13, 26.98, 166.0,
+							   nuclearX, nuclearY, 3) == 3,
+		  "Bethe-Bloch truncated length");
+	const double stoppingEnergy = 0.1 + 10000.0 / 300.0;
+	const double stoppingGamma = 1.0 + stoppingEnergy / 938.272046;
+	const double stoppingBeta2 = 1.0 - 1.0 / (stoppingGamma * stoppingGamma);
+	const double electronRatio = 0.510998950 / 938.272046;
+	const double stoppingTmax = 2.0 * 0.510998950 * stoppingBeta2 * stoppingGamma * stoppingGamma /
+		(1.0 + 2.0 * stoppingGamma * electronRatio + electronRatio * electronRatio);
+	const double stoppingArg = 2.0 * 0.510998950 * stoppingBeta2 * stoppingGamma * stoppingGamma *
+		stoppingTmax / std::pow(166.0e-6, 2.0);
+	const double expectedStopping = 0.307075 * 13.0 / (26.98 * stoppingBeta2) *
+		(0.5 * std::log(stoppingArg) - stoppingBeta2);
+	CHECK(approx(nuclearX[0], stoppingEnergy) && approx(nuclearY[0], expectedStopping) &&
+		  nuclearX[3] == -1.0 && nuclearY[3] == -1.0,
+		  "Bethe-Bloch stopping power and buffer boundary");
+	resetNuclearArrays();
+	CHECK(np_compute_charge_density(nuclear, 8, nuclearX, nuclearY, 0) == 0 &&
+		  nuclearX[0] == -1.0 && nuclearY[0] == -1.0, "Nuclear zero-capacity output");
 	np_destroy(nuclear);
 
 	OP_Handle optics = op_create("integration-optics", 632.8e-9, 1.0);
