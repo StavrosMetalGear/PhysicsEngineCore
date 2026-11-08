@@ -237,6 +237,46 @@ bool testExports(const fs::path& root)
 		const double component = std::sqrt(magnitudeSquared / 2.0);
 		return std::vector<double>{x, magnitudeSquared, component, -component};
 	});
+	qp_export_quantum_well_subbands_csv(quantum, filename("subbands.csv").c_str(), wellLength, mass, 1, 3);
+	verify("subbands.csv", "k_parallel,n,E", [&](int i) {
+		const double k = i * 2.5e9;
+		return std::vector<double>{k, 1.0, wellGround + hbar * hbar * k * k / (2.0 * mass)};
+	});
+	qp_export_effective_potential_csv(quantum, filename("effective-potential.csv").c_str(), 2, 3);
+	verify("effective-potential.csv", "r,V_eff,V_centrifugal", [&](int i) {
+		const double r = (i + 1) * 5.0e-10 / 3.0;
+		const double centrifugal = 3.0 * hbar * hbar / (mass * r * r);
+		return std::vector<double>{r, centrifugal, centrifugal};
+	});
+	qp_export_ladder_operator_action_csv(quantum, filename("orbital-ladder.csv").c_str(), 1);
+	verify("orbital-ladder.csv", "l,m,Lplus_coeff,Lplus_target_m,Lminus_coeff,Lminus_target_m", [&](int i) {
+		const int m = i - 1;
+		return std::vector<double>{1.0, static_cast<double>(m), m == 1 ? 0.0 : std::sqrt(2.0),
+			static_cast<double>(m == 1 ? m : m + 1), m == -1 ? 0.0 : std::sqrt(2.0),
+			static_cast<double>(m == -1 ? m : m - 1)};
+	});
+	const double oscillatorOmega = 1.0e14;
+	qp_export_ho_wavefunctions_csv(quantum, filename("ho-wavefunctions.csv").c_str(), 1, oscillatorOmega, 3);
+	verify("ho-wavefunctions.csv", "x,psi0,psi1", [&](int i) {
+		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;
+		const double alpha = mass * oscillatorOmega / hbar;
+		const double ground = std::pow(alpha / pi, 0.25) * std::exp(-alpha * x * x / 2.0);
+		return std::vector<double>{x, ground, std::sqrt(2.0 * alpha) * x * ground};
+	});
+	const double electricField = 1.0e8;
+	qp_export_stark_ho_csv(quantum, filename("stark-ho.csv").c_str(), oscillatorOmega, electricField, 2);
+	verify("stark-ho.csv", "n,E0,E1_correction,E2_correction,E_total", [&](int i) {
+		const double energy = hbar * oscillatorOmega * (i + 0.5);
+		const double shift = -charge * charge * electricField * electricField / (2.0 * mass * oscillatorOmega * oscillatorOmega);
+		return std::vector<double>{static_cast<double>(i), energy, 0.0, shift, energy + shift};
+	});
+	const double levelEnergy = hbar * 1.0e12;
+	qp_export_degenerate_two_level_csv(quantum, filename("degenerate.csv").c_str(), levelEnergy, 1.0e12, 2);
+	verify("degenerate.csv", "Omega,E_plus,E_minus,splitting", [&](int i) {
+		const double coupling = i * 5.0e11;
+		return std::vector<double>{coupling, levelEnergy + hbar * coupling / 2.0,
+			levelEnergy - hbar * coupling / 2.0, hbar * coupling};
+	});
 	return ok;
 }
 
