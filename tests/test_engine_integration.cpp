@@ -67,6 +67,10 @@ bool test_quantum_states()
 	const double hadamard[8] = {s, 0, s, 0, s, 0, -s, 0};
 	double gate[9] = {};
 	gate[8] = 123.0;
+	qp_pauli_y(gate);
+	CHECK(matches(gate, y, 8) && gate[8] == 123.0, "Pauli Y matrix and buffer boundary");
+	qp_pauli_z(gate);
+	CHECK(matches(gate, z, 8) && gate[8] == 123.0, "Pauli Z matrix and buffer boundary");
 	qp_gate_identity(gate);
 	CHECK(matches(gate, identity, 8) && gate[8] == 123.0, "Identity gate and buffer boundary");
 	qp_gate_pauli_x(gate);
@@ -191,6 +195,16 @@ bool test_quantum_states()
 	CHECK(matches(phi, phiExpected, 8) && matches(psi, psiExpected, 8), "Bell-state amplitudes");
 	CHECK(approx(qp_concurrence(phi), 1.0), "Bell-state concurrence");
 	CHECK(approx(qp_chsh_correlator(phi, 0.0, 0.0), 1.0), "Bell-state Z correlation");
+	CHECK(approx(qp_chsh_s(phi, 0.0, pi / 2.0, pi / 4.0, 3.0 * pi / 4.0),
+				  2.0 * std::sqrt(2.0)), "Bell-state CHSH maximum");
+	CHECK(approx(qp_measurement_prob_bell(phi, 1, 1, 0.0, 0.0), 0.5) &&
+		  approx(qp_measurement_prob_bell(phi, -1, -1, 0.0, 0.0), 0.5) &&
+		  qp_measurement_prob_bell(phi, 1, -1, 0.0, 0.0) == 0.0 &&
+		  approx(qp_measurement_prob_bell(phi, 1, 1, 0.0, pi / 2.0), 0.25),
+		  "Bell-state joint measurement probabilities");
+	CHECK(approx(qp_purity_2x2(0.0, 0.0, 0.0), 0.5) &&
+		  approx(qp_purity_2x2(0.0, 1.0, 0.0), 1.0) &&
+		  approx(qp_purity_2x2(0.3, 0.4, 0.0), 0.625), "Bloch-state purity");
 	CHECK(approx(qp_measure_qubit_prob(phi, 0, 0), 0.5) &&
 		  approx(qp_measure_qubit_prob(phi, 1, 1), 0.5), "Bell-state measurement probabilities");
 	double rho4[32] = {}, reducedA[8] = {}, reducedB[8] = {};
@@ -284,6 +298,29 @@ bool test_module_apis()
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
 	const double quantumLength = 1.0e-9;
+	CHECK(approx(qp_associated_legendre(2, 0, 0.5), -0.125) &&
+		  approx(qp_associated_legendre(2, 1, 0.5), -3.0 * std::sqrt(3.0) / 4.0) &&
+		  qp_associated_legendre(1, 2, 0.5) == 0.0,
+		  "Associated Legendre polynomials and invalid order");
+	CHECK(approx(qp_associated_laguerre(0, 2, 1.0), 1.0) &&
+		  approx(qp_associated_laguerre(1, 2, 1.0), 2.0) &&
+		  approx(qp_associated_laguerre(2, 2, 1.0), 2.5),
+		  "Associated Laguerre polynomials");
+	CHECK(qp_spherical_bessel_j(0, 0.0) == 1.0 && qp_spherical_bessel_j(1, 0.0) == 0.0 &&
+		  approx(qp_spherical_bessel_j(0, quantumPi / 2.0), 2.0 / quantumPi) &&
+		  approx(qp_spherical_bessel_j(1, quantumPi / 2.0), 4.0 / (quantumPi * quantumPi)),
+		  "Spherical Bessel functions");
+	double harmonicReal = 0.0, harmonicImaginary = 0.0;
+	qp_spherical_harmonic(1, 1, quantumPi / 2.0, quantumPi / 2.0, &harmonicReal, &harmonicImaginary);
+	CHECK(std::abs(harmonicReal) < 1.0e-12 && approx(harmonicImaginary, -std::sqrt(3.0 / (8.0 * quantumPi))),
+		  "Complex spherical harmonic");
+	qp_spherical_harmonic(1, -1, quantumPi / 2.0, quantumPi / 2.0, nullptr, &harmonicImaginary);
+	CHECK(approx(harmonicImaginary, -std::sqrt(3.0 / (8.0 * quantumPi))),
+		  "Negative-order spherical harmonic and optional output");
+	CHECK(approx(qp_clebsch_gordan(0.5, 0.5, 0.5, 0.5, 1.0, 1.0), 1.0) &&
+		  approx(qp_clebsch_gordan(0.5, 0.5, 0.5, -0.5, 0.0, 0.0), 1.0 / std::sqrt(2.0)) &&
+		  qp_clebsch_gordan(0.5, 0.5, 0.5, 0.5, 0.0, 0.0) == 0.0,
+		  "Clebsch-Gordan coefficients and selection rule");
 	CHECK(approx(qp_reduced_mass(2.0, 6.0), 1.5) && approx(qp_reduced_mass(6.0, 2.0), 1.5),
 		  "Quantum two-body reduced mass");
 	CHECK(approx(qp_ladder_coefficient(2, 0, 1), std::sqrt(6.0)) &&

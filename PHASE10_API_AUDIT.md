@@ -138,7 +138,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-557 APIs with exact current test references and 254 APIs still requiring
+567 APIs with exact current test references and 244 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -168,6 +168,9 @@ Spin operator layouts, eigenstates, expectation values, two-level energies,
 Hermitian diagonalization and hydrogen expectation arrays now have reference checks.
 Additional references cover reduced mass, angular momentum ladder coefficients,
 factorials, helium variational energy, Stark shifts, WKB and transition rates.
+Special-function references now include Legendre and Laguerre polynomials,
+spherical harmonics and Bessel functions, and Clebsch-Gordan coefficients;
+additional state checks cover Pauli matrices, purity and Bell correlations.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Electrodynamics coverage also checks electric fields and potentials,
