@@ -284,6 +284,39 @@ bool test_module_apis()
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
 	const double quantumLength = 1.0e-9;
+	CHECK(approx(qp_reduced_mass(2.0, 6.0), 1.5) && approx(qp_reduced_mass(6.0, 2.0), 1.5),
+		  "Quantum two-body reduced mass");
+	CHECK(approx(qp_ladder_coefficient(2, 0, 1), std::sqrt(6.0)) &&
+		  approx(qp_ladder_coefficient(2, 1, 0), std::sqrt(6.0)) &&
+		  qp_ladder_coefficient(2, 2, 1) == 0.0 && qp_ladder_coefficient(2, -2, 0) == 0.0,
+		  "Quantum angular momentum ladder coefficients");
+	CHECK(qp_factorial(0) == 1.0 && qp_factorial(5) == 120.0 && qp_factorial(10) == 3628800.0,
+		  "Quantum factorial values");
+	const double optimalLambda = 27.0 / 16.0;
+	const double hartreeEnergy = 4.3597447222071e-18;
+	CHECK(approx(qp_helium_optimal_lambda(), optimalLambda) &&
+		  approx(qp_helium_variational_energy(optimalLambda), -optimalLambda * optimalLambda * hartreeEnergy) &&
+		  qp_helium_variational_energy(optimalLambda + 0.1) > qp_helium_variational_energy(optimalLambda),
+		  "Helium variational energy minimum");
+	CHECK(approx(qp_stark_isw_first_order(quantum, 1, 2.0e5), quantumCharge * 2.0e5 * 0.5e-10) &&
+		  approx(qp_wkb_energy_harmonic_oscillator(quantum, 2, 4.0), 10.0 * hbar),
+		  "Quantum Stark shift and WKB oscillator energy");
+	const double barrierHeight = 2.0e-19;
+	const double barrierEnergy = 1.0e-19;
+	const double barrierHalfWidth = 1.0e-10;
+	const double barrierDecay = std::sqrt(2.0 * quantumMass * (barrierHeight - barrierEnergy)) / hbar;
+	CHECK(approx(qp_wkb_tunneling_barrier(quantum, barrierEnergy, barrierHeight, barrierHalfWidth),
+				  std::exp(-4.0 * barrierHalfWidth * barrierDecay)) &&
+		  qp_wkb_tunneling_barrier(quantum, barrierHeight, barrierHeight, barrierHalfWidth) == 1.0,
+		  "WKB rectangular barrier and threshold");
+	CHECK(approx(qp_transition_prob_sinusoidal(0.1 * hbar, 2.0, 2.0, 2.0), 0.04) &&
+		  approx(qp_transition_prob_sinusoidal(0.1 * hbar, 1.0, 3.0, quantumPi / 2.0), 0.01) &&
+		  approx(qp_fermi_golden_rule_rate(hbar, 2.0 / hbar), 4.0 * quantumPi),
+		  "Quantum transition probability and golden rule");
+	CHECK(approx(qp_rabi_probability(2.0, 0.0, quantumPi / 2.0), 1.0) &&
+		  approx(qp_rabi_probability(3.0, 4.0, quantumPi / 5.0), 9.0 / 25.0) &&
+		  qp_rabi_probability(2.0, 1.0, 0.0) == 0.0,
+		  "Resonant and detuned Rabi oscillations");
 	const double boxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * quantumLength * quantumLength);
 	CHECK(approx(qp_get_length(quantum), 1.0e-10) && qp_get_dimension(quantum) == 1,
