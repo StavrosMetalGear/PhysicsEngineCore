@@ -205,6 +205,19 @@ bool test_quantum_states()
 	CHECK(approx(qp_purity_2x2(0.0, 0.0, 0.0), 0.5) &&
 		  approx(qp_purity_2x2(0.0, 1.0, 0.0), 1.0) &&
 		  approx(qp_purity_2x2(0.3, 0.4, 0.0), 0.625), "Bloch-state purity");
+	double times[4] = {0, 0, 0, 123}, blochX[4] = {0, 0, 0, 123};
+	double blochY[4] = {0, 0, 0, 123}, blochZ[4] = {0, 0, 0, 123};
+	double purity[4] = {0, 0, 0, 123};
+	CHECK(qp_bloch_evolution(0.4, 0.2, 0.2, 2.0, 4.0, 0.8, 2.0, 2,
+							 times, blochX, blochY, blochZ, purity) == 3 &&
+		  approx(times[2], 2.0) && approx(blochX[1], 0.3) && approx(blochX[2], 0.225) &&
+		  approx(blochY[2], 0.1125) && approx(blochZ[1], 0.5) && approx(blochZ[2], 0.65) &&
+		  approx(purity[2], (1.0 + 0.225 * 0.225 + 0.1125 * 0.1125 + 0.65 * 0.65) / 2.0) &&
+		  times[3] == 123 && blochX[3] == 123 && blochY[3] == 123 &&
+		  blochZ[3] == 123 && purity[3] == 123, "Bloch Euler evolution and buffer boundaries");
+	CHECK(qp_bloch_evolution(0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1,
+							 nullptr, nullptr, nullptr, nullptr, nullptr) == 2,
+		  "Bloch evolution optional output arrays");
 	CHECK(approx(qp_measure_qubit_prob(phi, 0, 0), 0.5) &&
 		  approx(qp_measure_qubit_prob(phi, 1, 1), 0.5), "Bell-state measurement probabilities");
 	double rho4[32] = {}, reducedA[8] = {}, reducedB[8] = {};
@@ -298,6 +311,48 @@ bool test_module_apis()
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
 	const double quantumLength = 1.0e-9;
+	double reflection = 0.0, transmission = 0.0;
+	const double scatteringEnergy = 1.0e-19;
+	const double scatteringK = std::sqrt(2.0 * quantumMass * scatteringEnergy) / hbar;
+	const double deltaStrength = hbar * hbar * scatteringK / quantumMass;
+	qp_delta_scattering_rt(quantum, scatteringEnergy, deltaStrength, &reflection, &transmission);
+	CHECK(approx(reflection, 0.5) && approx(transmission, 0.5), "Delta scattering probabilities");
+	qp_delta_scattering_rt(quantum, scatteringEnergy, 0.0, nullptr, &transmission);
+	CHECK(approx(transmission, 1.0), "Zero-strength delta scattering and optional reflection");
+	qp_delta_scattering_rt(quantum, 0.0, deltaStrength, &reflection, &transmission);
+	CHECK(reflection == 1.0 && transmission == 0.0, "Delta scattering nonpositive energy");
+	qp_step_potential_rt(quantum, 4.0 * scatteringEnergy, 0.0, 3.0 * scatteringEnergy,
+						 quantumMass, quantumMass, &reflection, &transmission);
+	CHECK(approx(reflection, 1.0 / 9.0) && approx(transmission, 8.0 / 9.0),
+		  "Potential step reflection and transmission");
+	qp_step_potential_rt(quantum, scatteringEnergy, 0.0, 2.0 * scatteringEnergy,
+						 quantumMass, quantumMass, nullptr, &transmission);
+	CHECK(transmission == 0.0, "Evanescent potential step and optional reflection");
+	const double scatteringHalfWidth = 1.0e-10;
+	const double belowBarrierT = 1.0 / (1.0 + std::pow(std::sinh(2.0 * scatteringK * scatteringHalfWidth), 2.0));
+	qp_barrier_rt(quantum, scatteringEnergy, 2.0 * scatteringEnergy, scatteringHalfWidth,
+				  &reflection, &transmission);
+	CHECK(approx(transmission, belowBarrierT) && approx(reflection, 1.0 - belowBarrierT),
+		  "Rectangular barrier tunneling");
+	const double resonantHalfWidth = quantumPi / (2.0 * scatteringK);
+	qp_barrier_rt(quantum, 2.0 * scatteringEnergy, scatteringEnergy, resonantHalfWidth,
+				  nullptr, &transmission);
+	CHECK(approx(transmission, 1.0), "Above-barrier resonant transmission");
+	const double bornRadius = 1.0e-10;
+	const double bornDepth = 1.0e-19;
+	const double bornQ = 1.0 / bornRadius;
+	CHECK(approx(qp_born_amplitude_spherical_well(0.0, bornDepth, bornRadius, quantumMass),
+				  2.0 * quantumMass * bornDepth * std::pow(bornRadius, 3.0) / (3.0 * hbar * hbar)) &&
+		  approx(qp_born_amplitude_spherical_well(bornQ, bornDepth, bornRadius, quantumMass),
+				  2.0 * quantumMass * bornDepth * std::pow(bornRadius, 3.0) *
+				  (std::sin(1.0) - std::cos(1.0)) / (hbar * hbar)),
+		  "Spherical-well Born amplitude and forward limit");
+	CHECK(approx(qp_born_amplitude_yukawa(bornQ, bornDepth, bornQ, quantumMass),
+				  quantumMass * bornDepth / (hbar * hbar * bornQ * bornQ * bornQ)) &&
+		  approx(qp_born_amplitude_coulomb(bornQ, 1.0, quantumMass, bornQ),
+				  -quantumMass * quantumCharge * quantumCharge /
+				  (4.0 * quantumPi * 8.854187817e-12 * hbar * hbar * bornQ * bornQ)),
+		  "Yukawa and screened Coulomb Born amplitudes");
 	CHECK(approx(qp_associated_legendre(2, 0, 0.5), -0.125) &&
 		  approx(qp_associated_legendre(2, 1, 0.5), -3.0 * std::sqrt(3.0) / 4.0) &&
 		  qp_associated_legendre(1, 2, 0.5) == 0.0,
@@ -387,6 +442,42 @@ bool test_module_apis()
 		  "Zero-time path API implementation sentinels");
 	const double boxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * quantumLength * quantumLength);
+	QP_EnergyLevel2D levels2d[3] = {};
+	levels2d[2].nx = 123;
+	CHECK(qp_list_energy_levels_2d_box(quantum, quantumLength, 2, levels2d, 2) == 4 &&
+		  levels2d[0].nx == 1 && levels2d[0].ny == 1 && approx(levels2d[0].energy, 2.0 * boxEnergy) &&
+		  levels2d[1].nx + levels2d[1].ny == 3 && approx(levels2d[1].energy, 5.0 * boxEnergy) &&
+		  levels2d[2].nx == 123 && qp_list_energy_levels_2d_box(quantum, quantumLength, 2, nullptr, 0) == 4,
+		  "2D box level count, truncation and degeneracy");
+	QP_EnergyLevel3D levels3d[3] = {};
+	levels3d[2].nx = 123;
+	CHECK(qp_list_energy_levels_3d_box(quantum, quantumLength, 2, levels3d, 2) == 8 &&
+		  levels3d[0].nx == 1 && levels3d[0].ny == 1 && levels3d[0].nz == 1 &&
+		  approx(levels3d[0].energy, 3.0 * boxEnergy) &&
+		  levels3d[1].nx + levels3d[1].ny + levels3d[1].nz == 4 &&
+		  approx(levels3d[1].energy, 6.0 * boxEnergy) && levels3d[2].nx == 123 &&
+		  qp_list_energy_levels_3d_box(quantum, quantumLength, 2, nullptr, 0) == 8,
+		  "3D box level count, truncation and degeneracy");
+	QP_HyperfineLevel hyperfineLevels[3] = {};
+	hyperfineLevels[2].F = 123.0;
+	CHECK(qp_compute_hyperfine_levels(quantum, 0.5, 0.5, 4.0e-24, 2.0, 0.0, 0.0,
+									 hyperfineLevels, 2) == 4 &&
+		  hyperfineLevels[0].F == 0.0 && hyperfineLevels[0].mF == 0.0 &&
+		  approx(hyperfineLevels[0].E, -3.0e-24) && hyperfineLevels[1].F == 1.0 &&
+		  hyperfineLevels[1].mF == -1.0 && approx(hyperfineLevels[1].E, 1.0e-24) &&
+		  hyperfineLevels[2].F == 123.0 &&
+		  qp_compute_hyperfine_levels(quantum, 0.5, 0.5, 4.0e-24, 2.0, 0.0, 0.0, nullptr, 0) == 4,
+		  "Hyperfine level count, truncation and zero-field energies");
+	const double determinantMatrix[9] = {1, 2, 3, 0, 1, 4, 5, 6, 0};
+	const double singularMatrix[4] = {1, 2, 2, 4};
+	CHECK(approx(qp_determinant_nxn(determinantMatrix, 3), 1.0) &&
+		  qp_determinant_nxn(singularMatrix, 2) == 0.0, "Quantum matrix determinants");
+	const int orbitals[2] = {1, 2};
+	const double positions[2] = {0.25e-10, 0.5e-10};
+	const double swappedPositions[2] = {0.5e-10, 0.25e-10};
+	CHECK(approx(qp_slater_determinant_isw(quantum, orbitals, 2, positions, 2), -std::sqrt(2.0) / 1.0e-10) &&
+		  approx(qp_slater_determinant_isw(quantum, orbitals, 2, swappedPositions, 2), std::sqrt(2.0) / 1.0e-10),
+		  "Square-well Slater determinant and antisymmetry");
 	CHECK(approx(qp_get_length(quantum), 1.0e-10) && qp_get_dimension(quantum) == 1,
 		  "Quantum length and dimension getters");
 	CHECK(approx(qp_energy_2d_box(quantum, 1, 2, quantumLength, quantumLength), 5.0 * boxEnergy) &&

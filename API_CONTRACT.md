@@ -107,7 +107,7 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
-The generated Phase 10 test plan currently records 573 referenced declarations out
+The generated Phase 10 test plan currently records 585 referenced declarations out
 of 811; this is measured exact-symbol coverage, not proof that every API domain,
 buffer contract, numerical solver, or export path is fully validated.
 
@@ -121,6 +121,12 @@ allocate caller buffers. Use nonnegative capacities and provide valid pointers
 for both outputs when capacity is positive. Quantum `qp_list_allowed_j` and `qp_list_allowed_f`
 return the total available count even when the supplied buffer is shorter;
 they write at most the specified capacity and support a null buffer for count queries.
+The Quantum `qp_list_energy_levels_2d_box`, `qp_list_energy_levels_3d_box`,
+and `qp_compute_hyperfine_levels` wrappers have the same total-count and
+bounded-write behavior. For `qp_bloch_evolution`, use positive `numSteps` and
+allocate at least `numSteps + 1` doubles for each non-null output array; the
+implementation uses explicit Euler steps. `qp_slater_determinant_isw` requires
+at least as many valid position entries as orbital entries.
 
 ### Nuclear
 
