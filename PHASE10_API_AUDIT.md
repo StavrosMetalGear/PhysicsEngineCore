@@ -128,6 +128,11 @@ or version the API deliberately rather than silently changing the output order.
 non-finite result when both drive and detuning are zero. Review and correct
 the zero-drive limit in QuantumCore; the expected transition probability is zero.
 
+At zero time the pinned free and harmonic propagator magnitude APIs return
+zero as an implementation sentinel. The harmonic propagator also returns zero
+when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
+documented distributional interpretation rather than a physical zero claim.
+
 ## Phase 10.1 status
 
 Complete: all 811 declarations are categorized reproducibly, with category
@@ -138,7 +143,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-567 APIs with exact current test references and 244 APIs still requiring
+573 APIs with exact current test references and 238 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -171,6 +176,8 @@ factorials, helium variational energy, Stark shifts, WKB and transition rates.
 Special-function references now include Legendre and Laguerre polynomials,
 spherical harmonics and Bessel functions, and Clebsch-Gordan coefficients;
 additional state checks cover Pauli matrices, purity and Bell correlations.
+Free-particle and harmonic path, action and propagator magnitudes have analytic
+reference checks away from singular times and checks of their zero-time sentinels.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Electrodynamics coverage also checks electric fields and potentials,

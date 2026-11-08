@@ -354,6 +354,37 @@ bool test_module_apis()
 		  approx(qp_rabi_probability(3.0, 4.0, quantumPi / 5.0), 9.0 / 25.0) &&
 		  qp_rabi_probability(2.0, 1.0, 0.0) == 0.0,
 		  "Resonant and detuned Rabi oscillations");
+	const double pathStart = 1.0e-10;
+	const double pathEnd = 3.0e-10;
+	const double pathTime = 2.0e-15;
+	const double pathOmega = quantumPi / (2.0 * pathTime);
+	CHECK(approx(qp_free_particle_propagator_mod2(quantum, pathStart, pathEnd, pathTime),
+				  quantumMass / (2.0 * quantumPi * hbar * pathTime)) &&
+		  approx(qp_ho_propagator_mod2(quantum, pathStart, pathEnd, pathTime, pathOmega),
+				  quantumMass * pathOmega / (2.0 * quantumPi * hbar)),
+		  "Free and harmonic propagator magnitudes");
+	CHECK(approx(qp_classical_action_free_particle(quantum, pathStart, pathEnd, pathTime),
+				  quantumMass * (pathEnd - pathStart) * (pathEnd - pathStart) / (2.0 * pathTime)) &&
+		  approx(qp_classical_action_ho(quantum, pathStart, pathEnd, pathTime, pathOmega),
+				  -quantumMass * pathOmega * pathStart * pathEnd),
+		  "Free and harmonic classical actions");
+	CHECK(approx(qp_classical_path_free_particle(quantum, pathStart, pathEnd, pathTime, 0.0), pathStart) &&
+		  approx(qp_classical_path_free_particle(quantum, pathStart, pathEnd, pathTime, pathTime / 2.0),
+				  (pathStart + pathEnd) / 2.0) &&
+		  approx(qp_classical_path_free_particle(quantum, pathStart, pathEnd, pathTime, pathTime), pathEnd),
+		  "Free-particle classical path endpoints and midpoint");
+	CHECK(approx(qp_classical_path_ho(quantum, pathStart, pathEnd, pathTime, pathOmega, 0.0), pathStart) &&
+		  approx(qp_classical_path_ho(quantum, pathStart, pathEnd, pathTime, pathOmega, pathTime / 2.0),
+				  (pathStart + pathEnd) / std::sqrt(2.0)) &&
+		  approx(qp_classical_path_ho(quantum, pathStart, pathEnd, pathTime, pathOmega, pathTime), pathEnd),
+		  "Harmonic classical path endpoints and midpoint");
+	CHECK(qp_free_particle_propagator_mod2(quantum, pathStart, pathEnd, 0.0) == 0.0 &&
+		  qp_ho_propagator_mod2(quantum, pathStart, pathEnd, 0.0, pathOmega) == 0.0 &&
+		  qp_classical_action_free_particle(quantum, pathStart, pathEnd, 0.0) == 0.0 &&
+		  qp_classical_action_ho(quantum, pathStart, pathEnd, 0.0, pathOmega) == 0.0 &&
+		  qp_classical_path_free_particle(quantum, pathStart, pathEnd, 0.0, 0.0) == pathStart &&
+		  qp_classical_path_ho(quantum, pathStart, pathEnd, 0.0, pathOmega, 0.0) == pathStart,
+		  "Zero-time path API implementation sentinels");
 	const double boxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * quantumLength * quantumLength);
 	CHECK(approx(qp_get_length(quantum), 1.0e-10) && qp_get_dimension(quantum) == 1,
