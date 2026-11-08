@@ -132,6 +132,10 @@ the zero-drive limit in QuantumCore; the expected transition probability is zero
 producing non-finite coefficients rather than the finite rectangular-barrier
 limit. Correct the threshold calculation in QuantumCore.
 
+`qp_breit_rabi_energy` uses a zero-field offset of `-DeltaHF/[4(2I+1)]`;
+the standard Breit-Rabi expression uses `-DeltaHF/[2(2I+1)]`. Review the
+energy convention and correct the offset in QuantumCore if appropriate.
+
 At zero time the pinned free and harmonic propagator magnitude APIs return
 zero as an implementation sentinel. The harmonic propagator also returns zero
 when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
@@ -147,7 +151,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-585 APIs with exact current test references and 226 APIs still requiring
+587 APIs with exact current test references and 224 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -184,6 +188,8 @@ Free-particle and harmonic path, action and propagator magnitudes have analytic
 reference checks away from singular times and checks of their zero-time sentinels.
 Bounded box and hyperfine levels, Bloch Euler steps, matrix determinants and
 square-well Slater antisymmetry also have reference checks.
+Zeeman and Paschen-Back level checks cover magnetic shifts, total counts and
+caller-buffer truncation.
 Scattering references cover potential steps, delta and rectangular barriers,
 and spherical-well, Yukawa and screened Coulomb Born amplitudes.
 Classical property updates and coupled-oscillator normal modes, including optional

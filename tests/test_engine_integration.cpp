@@ -468,6 +468,31 @@ bool test_module_apis()
 		  hyperfineLevels[2].F == 123.0 &&
 		  qp_compute_hyperfine_levels(quantum, 0.5, 0.5, 4.0e-24, 2.0, 0.0, 0.0, nullptr, 0) == 4,
 		  "Hyperfine level count, truncation and zero-field energies");
+	const double zeemanMagneton = 9.2740100783e-24;
+	const double magneticField = 2.0;
+	QP_ZeemanLevel zeemanLevels[3] = {};
+	zeemanLevels[1].n = 123;
+	CHECK(qp_compute_zeeman_levels(quantum, 1, 1.0, magneticField, zeemanLevels, 1) == 2 &&
+		  zeemanLevels[0].n == 1 && zeemanLevels[0].l == 0 && zeemanLevels[0].j == 0.5 &&
+		  zeemanLevels[0].mj == -0.5 && approx(zeemanLevels[0].g_j, 2.0) &&
+		  approx(zeemanLevels[0].E_withField - zeemanLevels[0].E_noField, -zeemanMagneton * magneticField) &&
+		  zeemanLevels[1].n == 123 && qp_compute_zeeman_levels(quantum, 1, 1.0, magneticField, nullptr, 0) == 2,
+		  "Zeeman levels, field shift and truncated output");
+	CHECK(qp_compute_zeeman_levels(quantum, 1, 1.0, magneticField, zeemanLevels, 2) == 2 &&
+		  zeemanLevels[1].mj == 0.5 &&
+		  approx(zeemanLevels[1].E_withField - zeemanLevels[0].E_withField, 2.0 * zeemanMagneton * magneticField),
+		  "Zeeman spin doublet splitting");
+	QP_ZeemanLevel paschenLevels[3] = {};
+	paschenLevels[2].n = 123;
+	CHECK(qp_compute_paschen_back_levels(quantum, 1, 1.0, magneticField, paschenLevels, 2) == 2 &&
+		  paschenLevels[0].n == 1 && paschenLevels[0].l == 0 && paschenLevels[0].mj == -0.5 &&
+		  paschenLevels[1].mj == 0.5 && paschenLevels[0].j == 0.0 && paschenLevels[0].g_j == 0.0 &&
+		  approx(paschenLevels[0].E_noField, -13.6057 * quantumCharge) &&
+		  approx(paschenLevels[0].E_withField - paschenLevels[0].E_noField, -zeemanMagneton * magneticField) &&
+		  approx(paschenLevels[1].E_withField - paschenLevels[1].E_noField, zeemanMagneton * magneticField) &&
+		  paschenLevels[2].n == 123 &&
+		  qp_compute_paschen_back_levels(quantum, 1, 1.0, magneticField, nullptr, 0) == 2,
+		  "Paschen-Back spin doublet and buffer boundary");
 	const double determinantMatrix[9] = {1, 2, 3, 0, 1, 4, 5, 6, 0};
 	const double singularMatrix[4] = {1, 2, 2, 4};
 	CHECK(approx(qp_determinant_nxn(determinantMatrix, 3), 1.0) &&
