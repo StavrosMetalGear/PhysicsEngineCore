@@ -440,6 +440,18 @@ bool test_module_apis()
 	CP_Handle classical = cp_create("integration-classical", 2.0, 1.0, 3);
 	CHECK(classical != nullptr, "Classical handle creation");
 	CHECK(approx(cp_getMass(classical), 2.0), "Classical mass");
+	CHECK(std::string(cp_getName(classical)) == "integration-classical" &&
+		  approx(cp_getLength(classical), 1.0) && cp_getDimension(classical) == 3,
+		  "Classical initial properties");
+	cp_setMass(classical, 4.0);
+	cp_setLength(classical, 2.5);
+	cp_setDimension(classical, 2);
+	CHECK(approx(cp_getMass(classical), 4.0) && approx(cp_getLength(classical), 2.5) &&
+		  cp_getDimension(classical) == 2 && approx(cp_freeParticleMomentum(classical, 3.0), 12.0),
+		  "Classical property updates");
+	cp_setMass(classical, 2.0);
+	cp_setLength(classical, 1.0);
+	cp_setDimension(classical, 3);
 	CHECK(approx(cp_projectileX(classical, 20.0, 0.5, 2.0), 20.0 * std::cos(0.5) * 2.0),
 		  "Classical projectile position");
 	CHECK(approx(cp_freeParticlePosition(classical, 1.0, 3.0, 2.0), 7.0),
@@ -498,6 +510,18 @@ bool test_module_apis()
 		  "Driven oscillator resonance frequency");
 	CHECK(approx(cp_drivenHOPowerAbsorbed(classical, 4.0, 3.0, 2.0, 0.5), 8.0 / 29.0),
 		  "Driven oscillator absorbed power");
+	double modeFrequency = 0.0;
+	double modeRatio = 0.0;
+	cp_coupledOscillatorMode1(classical, 8.0, 8.0, 3.0, 2.0, 2.0, &modeFrequency, &modeRatio);
+	CHECK(approx(modeFrequency, 2.0) && approx(modeRatio, 1.0), "Coupled oscillator in-phase mode");
+	cp_coupledOscillatorMode2(classical, 8.0, 8.0, 3.0, 2.0, 2.0, &modeFrequency, &modeRatio);
+	CHECK(approx(modeFrequency, std::sqrt(7.0)) && approx(modeRatio, -1.0),
+		  "Coupled oscillator out-of-phase mode");
+	cp_coupledOscillatorMode1(classical, 2.0, 5.0, 1.0, 1.0, 2.0, &modeFrequency, nullptr);
+	CHECK(approx(modeFrequency, std::sqrt(3.0 - 1.0 / std::sqrt(2.0))),
+		  "Coupled oscillator optional ratio");
+	cp_coupledOscillatorMode2(classical, 2.0, 5.0, 1.0, 1.0, 2.0, nullptr, &modeRatio);
+	CHECK(approx(modeRatio, -1.0 / std::sqrt(2.0)), "Coupled oscillator optional frequency");
 	CHECK(approx(cp_keplerEnergy(classical, 2.0, 4.0, 2.0, 1.0, 8.0), -2.0),
 		  "Kepler energy");
 	CHECK(approx(cp_keplerEffectivePotential(classical, 4.0, 2.0, 8.0, 2.0), -3.0),
