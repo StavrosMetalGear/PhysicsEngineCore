@@ -442,6 +442,63 @@ bool test_module_apis()
 		  "Zero-time path API implementation sentinels");
 	const double boxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * quantumLength * quantumLength);
+	const double confinementOmega = 2.0e15;
+	CHECK(approx(qp_parabolic_well_energy(quantum, 0, confinementOmega), 0.5 * hbar * confinementOmega) &&
+		  approx(qp_parabolic_well_energy(quantum, 2, confinementOmega), 2.5 * hbar * confinementOmega),
+		  "Parabolic well oscillator energies in SI units");
+	const double parabolicAlpha = quantumMass * confinementOmega / hbar;
+	const double oscillatorLength = 1.0 / std::sqrt(parabolicAlpha);
+	const double groundAmplitude = std::pow(parabolicAlpha / quantumPi, 0.25);
+	CHECK(approx(qp_parabolic_well_wavefunction(quantum, 0, 0.0, confinementOmega), groundAmplitude) &&
+		  approx(qp_parabolic_well_wavefunction(quantum, 1, oscillatorLength, confinementOmega),
+				  groundAmplitude * std::sqrt(2.0) * std::exp(-0.5)) &&
+		  approx(qp_parabolic_well_wavefunction(quantum, 1, -oscillatorLength, confinementOmega),
+				  -groundAmplitude * std::sqrt(2.0) * std::exp(-0.5)),
+		  "Parabolic wavefunction normalization and parity");
+	const double deltaKappa = quantumMass * deltaPotential / (hbar * hbar);
+	CHECK(approx(qp_delta_potential_wavefunction(quantum, 0, 0.0, deltaPotential), std::sqrt(deltaKappa)) &&
+		  approx(qp_delta_potential_wavefunction(quantum, 0, 1.0 / deltaKappa, deltaPotential),
+				  std::sqrt(deltaKappa) * std::exp(-1.0)) &&
+		  approx(qp_delta_potential_wavefunction(quantum, 0, -1.0 / deltaKappa, deltaPotential),
+				  std::sqrt(deltaKappa) * std::exp(-1.0)),
+		  "Attractive delta bound-state wavefunction");
+	const double actualBoxLength = 1.0e-10;
+	const double groundBoxEnergy = hbar * hbar * quantumPi * quantumPi /
+		(2.0 * quantumMass * actualBoxLength * actualBoxLength);
+	const double quarterPhaseTime = quantumPi * hbar / (2.0 * groundBoxEnergy);
+	const double boxAmplitude = std::sqrt(2.0 / actualBoxLength);
+	double psiReal = 0.0, psiImaginary = 0.0;
+	qp_time_dependent_psi_1d_box(quantum, 1, actualBoxLength / 2.0, 0.0, &psiReal, &psiImaginary);
+	CHECK(approx(psiReal, boxAmplitude) && psiImaginary == 0.0, "Square-well wavefunction initial phase");
+	qp_time_dependent_psi_1d_box(quantum, 1, actualBoxLength / 2.0, quarterPhaseTime, &psiReal, &psiImaginary);
+	CHECK(std::abs(psiReal) < 1.0e-9 * boxAmplitude && approx(psiImaginary, -boxAmplitude),
+		  "Square-well wavefunction quarter-period phase");
+	qp_time_dependent_psi_1d_box(quantum, 1, actualBoxLength / 2.0, quarterPhaseTime, nullptr, &psiImaginary);
+	CHECK(approx(psiImaginary, -boxAmplitude), "Square-well wavefunction optional real output");
+	CHECK(approx(qp_effective_potential(quantum, quantumLength, 0, 1.0e-19), 1.0e-19) &&
+		  approx(qp_effective_potential(quantum, quantumLength, 1, 0.0),
+				  hbar * hbar / (quantumMass * quantumLength * quantumLength)),
+		  "Central effective potential centrifugal term");
+	CHECK(approx(qp_find_bessel_zero(0, 1), quantumPi) &&
+		  approx(qp_find_bessel_zero(0, 2), 2.0 * quantumPi) &&
+		  approx(qp_spherical_well_energy(quantum, 1, 0, quantumLength), boxEnergy),
+		  "Spherical Bessel zeros and spherical-well ground energy");
+	CHECK(approx(qp_quantum_wire_energy(1, 1, quantumLength, quantumLength, quantumMass, 0.0),
+				  2.0 * boxEnergy) &&
+		  approx(qp_quantum_wire_energy(1, 2, quantumLength, quantumLength, quantumMass, quantumPi / quantumLength),
+				  6.0 * boxEnergy), "Quantum wire confinement and longitudinal energy");
+	CHECK(approx(qp_quantum_dot_ho_energy(1, 1, 1, confinementOmega, confinementOmega, confinementOmega, quantumMass),
+				  4.5 * hbar * confinementOmega) &&
+		  approx(qp_quantum_dot_ho_energy(0, 1, 2, confinementOmega, 2.0 * confinementOmega,
+										  3.0 * confinementOmega, quantumMass), 11.0 * hbar * confinementOmega),
+		  "Anisotropic harmonic quantum dot energies");
+	const double periodicWaveNumber = quantumPi / (2.0 * quantumLength);
+	const double periodicEnergy = hbar * hbar * periodicWaveNumber * periodicWaveNumber / (2.0 * quantumMass);
+	CHECK(approx(qp_kronig_penney_delta_dispersion(quantum, 0.0, 2.0, quantumLength), 3.0) &&
+		  approx(qp_kronig_penney_delta_dispersion(quantum, periodicEnergy, 2.0, quantumLength),
+				  4.0 / quantumPi) &&
+		  approx(qp_kronig_penney_delta_dispersion(quantum, 4.0 * periodicEnergy, 0.0, quantumLength), -1.0),
+		  "Kronig-Penney delta dispersion and zero-energy limit");
 	QP_EnergyLevel2D levels2d[3] = {};
 	levels2d[2].nx = 123;
 	CHECK(qp_list_energy_levels_2d_box(quantum, quantumLength, 2, levels2d, 2) == 4 &&

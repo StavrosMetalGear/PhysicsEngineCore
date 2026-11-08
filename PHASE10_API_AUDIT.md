@@ -136,6 +136,16 @@ limit. Correct the threshold calculation in QuantumCore.
 the standard Breit-Rabi expression uses `-DeltaHF/[2(2I+1)]`. Review the
 energy convention and correct the offset in QuantumCore if appropriate.
 
+`qp_coulomb_energy` uses a prefactor proportional to `e^2/epsilon0^2/hbar^2`,
+which differs dimensionally and numerically from the hydrogenic `e^4` formula.
+Verify and correct the QuantumCore implementation before scientific validation.
+`qp_double_delta_energy` ignores the separation `a` and returns a single-delta
+energy under a simplified approximation; review its validity and document its
+applicable domain before treating it as a double-delta reference.
+The compatibility implementation of `qp_delta_potential_wavefunction` ignores
+`n` and computes the single attractive-delta bound state for positive strength;
+clarify the supported state and numeric domain in the public API.
+
 At zero time the pinned free and harmonic propagator magnitude APIs return
 zero as an implementation sentinel. The harmonic propagator also returns zero
 when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
@@ -151,7 +161,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-587 APIs with exact current test references and 224 APIs still requiring
+597 APIs with exact current test references and 214 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -175,6 +185,10 @@ angular-momentum enumerations.
 Additional Quantum reference checks cover confinement and density-of-states
 formulas, coherent and squeezed states, phase and Landau-level quantities,
 and relativistic energies and wave propagation.
+Additional confinement checks cover parabolic wells, wires, anisotropic harmonic
+dots and the delta-barrier Kronig-Penney dispersion.
+Additional references cover delta and parabolic wavefunctions, square-well time
+evolution, effective central potentials, Bessel roots and spherical-well energy.
 Additional references cover oscillator wavefunctions, hyperfine and Landau
 quantities, Aharonov-Bohm scattering, Gamow tunneling, and relativistic density.
 Spin operator layouts, eigenstates, expectation values, two-level energies,
