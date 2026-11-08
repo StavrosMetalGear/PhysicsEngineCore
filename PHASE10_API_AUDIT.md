@@ -161,7 +161,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-611 APIs with exact current test references and 200 APIs still requiring
+617 APIs with exact current test references and 194 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -217,10 +217,11 @@ image charges, and induction.
 Twenty-five Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values; failure reporting and other
 export variants remain to be reviewed.
-Fourteen Quantum CSV exports have isolated filesystem checks for headers, sample
+Twenty Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
-Landau spectrum, adiabatic and classical-path outputs.
+Landau spectrum, adiabatic, classical-path, free-electron, helium variational,
+quantum-channel, Born scattering and propagator outputs.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.

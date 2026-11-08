@@ -192,6 +192,51 @@ bool testExports(const fs::path& root)
 		const double harmonic = std::sin((2.0 - tau) * pi / 4.0) + 3.0 * std::sin(tau * pi / 4.0);
 		return std::vector<double>{tau, 1.0 + tau, harmonic};
 	});
+	qp_export_free_electron_model_csv(quantum, filename("free-electron.csv").c_str(), 2);
+	verify("free-electron.csv", "n,energy_J,energy_eV,occupancy", [&](int i) {
+		const double n = i + 1.0;
+		const double energy = hbar * hbar * pi * pi * n * n / (2.0 * mass * 1.0e-20);
+		return std::vector<double>{n, energy, energy / charge, i == 0 ? 2.0 : 0.0};
+	});
+	qp_export_helium_variational_csv(quantum, filename("helium.csv").c_str(), 2);
+	verify("helium.csv", "lambda,energy_J,energy_eV", [&](int i) {
+		const double lambda = 1.0 + 0.75 * i;
+		const double energy = (lambda * lambda - 27.0 * lambda / 8.0) * 4.3597447222071e-18;
+		return std::vector<double>{lambda, energy, energy / charge};
+	});
+	qp_export_quantum_channels_csv(quantum, filename("channels.csv").c_str(), 1.0, 0.0, 0.0, 2);
+	verify("channels.csv", "param,purity_ampDamp,purity_phaseDamp,purity_depol,rz_ampDamp,rz_phaseDamp,rz_depol", [&](int i) {
+		const double p = i / 2.0;
+		return std::vector<double>{p, (2.0 - p + p * p) / 2.0, (2.0 - p) / 2.0,
+			(1.0 + (1.0 - p) * (1.0 - p)) / 2.0, p, 0.0, 0.0};
+	});
+	const double incidentEnergy = 1.0e-19;
+	const double potential = 2.0e-20;
+	const double radius = 1.0e-10;
+	qp_export_born_differential_csv(quantum, filename("born.csv").c_str(), incidentEnergy, potential, radius, 2);
+	verify("born.csv", "theta,q,f_born,dsigma_born", [&](int i) {
+		const double theta = i * pi / 2.0;
+		const double q = 2.0 * std::sqrt(2.0 * mass * incidentEnergy) / hbar * std::sin(theta / 2.0);
+		const double amplitude = i == 0 ? 2.0 * mass * potential * radius * radius * radius / (3.0 * hbar * hbar)
+			: 2.0 * mass * potential / (hbar * hbar * q * q * q) * (std::sin(q * radius) - q * radius * std::cos(q * radius));
+		return std::vector<double>{theta, q, amplitude, amplitude * amplitude};
+	});
+	const double freeTime = 1.0e-15;
+	qp_export_free_particle_propagator_csv(quantum, filename("free-propagator.csv").c_str(), 0.0, freeTime, 3);
+	verify("free-propagator.csv", "xb,K_mod2,Re_K,Im_K", [&](int i) {
+		const double x = (i - 1) * 5.0e-9;
+		const double magnitudeSquared = mass / (2.0 * pi * hbar * freeTime);
+		const double phase = mass * x * x / (2.0 * hbar * freeTime) - pi / 4.0;
+		return std::vector<double>{x, magnitudeSquared, std::sqrt(magnitudeSquared) * std::cos(phase), std::sqrt(magnitudeSquared) * std::sin(phase)};
+	});
+	const double omega = 1.0e12;
+	qp_export_ho_propagator_csv(quantum, filename("ho-propagator.csv").c_str(), 0.0, pi / (2.0 * omega), omega, 3);
+	verify("ho-propagator.csv", "xb,K_mod2,Re_K,Im_K", [&](int i) {
+		const double x = (i - 1) * 5.0e-9;
+		const double magnitudeSquared = mass * omega / (2.0 * pi * hbar);
+		const double component = std::sqrt(magnitudeSquared / 2.0);
+		return std::vector<double>{x, magnitudeSquared, component, -component};
+	});
 	return ok;
 }
 
