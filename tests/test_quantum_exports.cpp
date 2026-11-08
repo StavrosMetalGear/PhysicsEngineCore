@@ -148,6 +148,50 @@ bool testExports(const fs::path& root)
 		const double kinetic = p * p / 2.0;
 		return std::vector<double>{p, relativistic, rest + kinetic, relativistic - rest, kinetic};
 	});
+	qp_export_ab_interference_csv(quantum, filename("ab-interference.csv").c_str(), 0.0, 1.0, 0.0, 3);
+	verify("ab-interference.csv", "theta,I_with_flux,I_no_flux", [&](int i) {
+		return std::vector<double>{(i - 1) * pi / 4.0, 1.0, 1.0};
+	});
+	qp_export_ab_scattering_csv(quantum, filename("ab-scattering.csv").c_str(), 2.0, 0.5, 4);
+	verify("ab-scattering.csv", "theta,dsigma", [&](int i) {
+		const double theta = (i + 1) * pi / 4.0;
+		return std::vector<double>{theta, 1.0 / (4.0 * pi * std::pow(std::sin(theta / 2.0), 2.0))};
+	});
+	qp_export_ab_flux_sweep_csv(quantum, filename("ab-flux.csv").c_str(), 0.0, 1.0, 0.0, 2);
+	verify("ab-flux.csv", "flux_ratio,I,phase_rad", [&](int i) {
+		return std::vector<double>{static_cast<double>(i), 1.0, 2.0 * pi * i};
+	});
+	const double mass = 9.1093837015e-31;
+	qp_export_dos_free_csv(quantum, filename("dos-free.csv").c_str(), 3.0e-19, 3);
+	verify("dos-free.csv", "E,g1D,g2D,g3D", [&](int i) {
+		const double energy = (i + 1) * 1.0e-19;
+		return std::vector<double>{energy, std::sqrt(2.0 * mass / (hbar * hbar * energy)) / pi,
+			mass / (pi * hbar * hbar), std::pow(2.0 * mass / (hbar * hbar), 1.5) * std::sqrt(energy) / (2.0 * pi * pi)};
+	});
+	const double wellLength = 1.0e-9;
+	const double wellGround = hbar * hbar * pi * pi / (2.0 * mass * wellLength * wellLength);
+	qp_export_dos_quantum_well_csv(quantum, filename("dos-well.csv").c_str(), wellLength, 6.75 * wellGround, 2, 3);
+	verify("dos-well.csv", "E,g_2DEG", [&](int i) {
+		return std::vector<double>{2.25 * (i + 1) * wellGround, (i == 0 ? 1.0 : 2.0) * mass / (pi * hbar * hbar)};
+	});
+	const double charge = 1.602176634e-19;
+	qp_export_landau_spectrum_csv(quantum, filename("landau.csv").c_str(), mass, 3.0, 0, 3);
+	verify("landau.csv", "B,n,E", [&](int i) {
+		const double field = i + 1.0;
+		return std::vector<double>{field, 0.0, hbar * charge * field / (2.0 * mass)};
+	});
+	qp_export_adiabatic_sweep_csv(quantum, filename("adiabatic.csv").c_str(), 1.0e-19, 3.0e-5, 3);
+	verify("adiabatic.csv", "rate,Q,is_adiabatic", [&](int i) {
+		const double rate = (i + 1) * 1.0e-5;
+		const double q = hbar * rate / 1.0e-38;
+		return std::vector<double>{rate, q, q < 0.1 ? 1.0 : 0.0};
+	});
+	qp_export_classical_paths_csv(quantum, filename("paths.csv").c_str(), 1.0, 3.0, 2.0, pi / 4.0, 2);
+	verify("paths.csv", "tau,x_free,x_ho", [&](int i) {
+		const double tau = static_cast<double>(i);
+		const double harmonic = std::sin((2.0 - tau) * pi / 4.0) + 3.0 * std::sin(tau * pi / 4.0);
+		return std::vector<double>{tau, 1.0 + tau, harmonic};
+	});
 	return ok;
 }
 
