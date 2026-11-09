@@ -255,6 +255,42 @@ bool testExports(const fs::path& root)
 		const double group = std::sqrt(1.0 - 1.0 / (ratio * ratio));
 		return std::vector<double>{ratio, 1.0 / group, group};
 	});
+	em_export_transmission_line_csv(em, filename("transmission-line.csv").c_str(), 50.0, 75.0, 3);
+	verify("transmission-line.csv", "ZL,Gamma,VSWR", [](int i) {
+		const double load = 1.0 + 100.0 * i;
+		return std::vector<double>{load, (load - 50.0) / (load + 50.0),
+			std::max(load, 50.0) / std::min(load, 50.0)};
+	});
+	em_export_polarization_csv(em, filename("polarization.csv").c_str(), 1.0, 3);
+	verify("polarization.csv", "theta,I", [&](int i) {
+		const double theta = i * pi / 2.0;
+		return std::vector<double>{theta, std::pow(std::cos(theta), 2)};
+	});
+	em_export_magnetization_csv(em, filename("magnetization.csv").c_str(), 0.5, 3);
+	verify("magnetization.csv", "x,Langevin,Brillouin", [](int i) {
+		const double x = 0.01 + 5.0 * i;
+		return std::vector<double>{x, 1.0 / std::tanh(x) - 1.0 / x, std::tanh(x)};
+	});
+	em_export_total_reflection_csv(em, filename("total-reflection.csv").c_str(), 1.5, 1.0, 3);
+	verify("total-reflection.csv", "y,E_evanescent", [&](int i) {
+		const double theta = std::asin(1.0 / 1.5) + 0.1;
+		const double decay = 2.0 * pi / 500.0e-9 * std::sqrt(2.25 * std::pow(std::sin(theta), 2) - 1.0);
+		return std::vector<double>{2.5 * i / decay, std::exp(-2.5 * i)};
+	});
+	em_export_fresnel_csv(em, filename("fresnel.csv").c_str(), 1.0, 1.5, 3);
+	verify("fresnel.csv", "theta_i,Rs,Rp,Ts,Tp", [&](int i) {
+		const double theta = (pi / 2.0 - 0.001) * i / 2.0;
+		const double incidentCosine = std::cos(theta);
+		const double transmittedCosine = std::sqrt(1.0 - std::pow(std::sin(theta) / 1.5, 2));
+		const double rs = std::pow((incidentCosine - 1.5 * transmittedCosine) / (incidentCosine + 1.5 * transmittedCosine), 2);
+		const double rp = std::pow((1.5 * incidentCosine - transmittedCosine) / (1.5 * incidentCosine + transmittedCosine), 2);
+		return std::vector<double>{theta, rs, rp, 1.0 - rs, 1.0 - rp};
+	});
+	em_export_antenna_csv(em, filename("antenna.csv").c_str(), 3);
+	verify("antenna.csv", "theta,pattern", [&](int i) {
+		const double theta = 0.01 + (pi - 0.02) * i / 2.0;
+		return std::vector<double>{theta, std::pow(std::cos(pi * std::cos(theta) / 2.0) / std::sin(theta), 2)};
+	});
 	return ok;
 }
 

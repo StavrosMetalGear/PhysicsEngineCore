@@ -134,6 +134,10 @@ in NuclearCore. `np_export_bethe_bloch_csv` fixes the excitation energy at
 78 eV regardless of target and omits density-effect corrections; clarify the
 applicable approximation and allow target-specific input where needed.
 
+`em_export_transmission_line_csv` accepts `ZL` but ignores it and sweeps a
+fixed 1–201 ohm load range instead. Clarify or revise this argument in
+ElectrodynamicsCore; the CSV reference checks the current sweep behavior.
+
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
@@ -181,7 +185,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-648 APIs with exact current test references and 163 APIs still requiring
+654 APIs with exact current test references and 157 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -241,9 +245,10 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Twenty-five Electrodynamics CSV exports have isolated filesystem tests checking their
-headers, sample counts, grids, and numeric values; failure reporting and other
-export variants remain to be reviewed.
+Thirty-one Electrodynamics CSV exports have isolated filesystem tests checking their
+headers, sample counts, grids, and numeric values, including transmission-line,
+polarization, magnetization, total-reflection, Fresnel and antenna outputs;
+failure reporting and other export variants remain to be reviewed.
 Twenty-six Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
