@@ -911,6 +911,14 @@ bool test_module_apis()
 	const double emMu0 = 1.2566370614e-6;
 	const double coulombConstant = 8.9875517873681764e9;
 	const double mediumSpeed = 299792458.0 / std::sqrt(2.5);
+	CHECK(approx(em_larmor_power(electromagnetic, 1.0e-6, 2.0e8),
+			  1.0e-12 * 4.0e16 / (6.0 * emPi * eps0 * std::pow(299792458.0, 3))),
+		  "Larmor radiation power");
+	CHECK(approx(em_radiation_pattern_dipole(electromagnetic, emPi / 6.0), 0.25),
+		  "Dipole radiation angular pattern");
+	CHECK(approx(em_paramagnetic_susceptibility(electromagnetic, 1.0e28, 9.2740100783e-24, 300.0),
+			  emMu0 * 1.0e28 * std::pow(9.2740100783e-24, 2) / (3.0 * 1.380649e-23 * 300.0)),
+		  "Curie paramagnetic susceptibility");
 	CHECK(approx(em_get_mu_r(electromagnetic), 1.0) &&
 		  approx(em_get_sigma(electromagnetic), 5.8e7), "Electromagnetic material getters");
 	CHECK(approx(em_coulomb_energy(electromagnetic, 2.0e-6, -3.0e-6, 0.5),
@@ -1288,6 +1296,14 @@ bool test_module_apis()
 		  "Acousto-optic Bragg angle");
 	CHECK(op_fresnel_number(optics, 1.0e-3, 500.0e-9, 0.10) == 20,
 		  "Fresnel number");
+	CHECK(approx(op_fresnel_diffraction_edge(optics, 0.0, 500.0e-9, 1.0), 0.25),
+		  "Fresnel straight-edge intensity at the boundary");
+	CHECK(approx(op_temporal_coherence_length(optics, 600.0e-9, 2.0e-9),
+			  600.0e-9 * 600.0e-9 / 2.0e-9), "Temporal coherence length");
+	CHECK(approx(op_spatial_coherence_width(optics, 600.0e-9, 0.01), 600.0e-9 / 0.01),
+		  "Spatial coherence width");
+	CHECK(approx(op_thin_film_reflectance(optics, 1.0, 1.25, 1.5, 0.0, 600.0e-9, 0.0), 0.04),
+		  "Zero-thickness normal-incidence film reflectance");
 	CHECK(approx(op_cavity_stability(optics, 0.10, 0.20, 0.30),
 				  (1.0 - 0.10 / 0.20) * (1.0 - 0.10 / 0.30)),
 		  "Optical cavity stability");
@@ -1475,6 +1491,23 @@ bool test_module_apis()
 		  "Tight-binding one-dimensional energy");
 	CHECK(approx(ss_diode_current(1.0e-12, 0.0, 300.0, 1.0), 0.0),
 		  "Ideal diode zero-bias current");
+	const double solidBoltzmann = 1.380649e-23;
+	const double solidCharge = 1.602176634e-19;
+	const double electronMass = 9.1093837015e-31;
+	const double solidPi = 3.14159265358979323846;
+	CHECK(approx(ss_einstein_specific_heat(300.0, 300.0),
+			  3.0 * solidBoltzmann * 6.02214076e23 * std::exp(1.0) / std::pow(std::exp(1.0) - 1.0, 2)),
+		  "Einstein solid specific heat");
+	CHECK(ss_einstein_specific_heat(0.0, 300.0) == 0.0, "Einstein solid zero-temperature limit");
+	CHECK(approx(ss_intrinsic_carrier_conc(2.0 * solidBoltzmann * 300.0, 300.0, electronMass, electronMass),
+			  2.0 * std::pow(electronMass * solidBoltzmann * 300.0 /
+			  (2.0 * solidPi * solidStateHbar * solidStateHbar), 1.5) * std::exp(-1.0)),
+		  "Intrinsic carrier concentration");
+	CHECK(ss_intrinsic_carrier_conc(1.0e-19, 0.0, electronMass, electronMass) == 0.0,
+		  "Intrinsic carrier zero-temperature limit");
+	CHECK(approx(ss_built_in_voltage(1.0e22, 1.0e22, 1.0e20, 300.0),
+			  solidBoltzmann * 300.0 / solidCharge * std::log(1.0e4)),
+		  "Semiconductor junction built-in voltage");
 	CHECK(approx(ss_hall_coefficient(1.0e28, 1.602176634e-19),
 			  -1.0 / (1.0e28 * 1.602176634e-19)),
 		  "Hall coefficient");
@@ -1555,6 +1588,22 @@ bool test_module_apis()
 	CHECK(approx(td_maxwell_rms_speed(thermo, 4.65e-26, 300.0),
 			  std::sqrt(3.0 * boltzmann * 300.0 / 4.65e-26)),
 		  "Maxwell RMS speed");
+	const double thermalPi = 3.14159265358979323846;
+	const double thermalMass = 4.65e-26;
+	const double mostProbableSpeed = std::sqrt(2.0 * boltzmann * 300.0 / thermalMass);
+	CHECK(approx(td_maxwell_speed_dist(thermo, mostProbableSpeed, thermalMass, 300.0),
+			  4.0 * std::exp(-1.0) / (std::sqrt(thermalPi) * mostProbableSpeed)),
+		  "Maxwell speed distribution at the most probable speed");
+	CHECK(td_maxwell_speed_dist(thermo, 0.0, thermalMass, 300.0) == 0.0,
+		  "Maxwell speed distribution at zero speed");
+	const double planckConstant = 6.62607015e-34;
+	const double frequency = boltzmann * 300.0 / planckConstant;
+	CHECK(approx(td_planck_spectral_radiance(thermo, frequency, 300.0),
+			  2.0 * planckConstant * std::pow(frequency, 3) /
+			  (std::pow(299792458.0, 2) * (std::exp(1.0) - 1.0))),
+		  "Planck spectral radiance");
+	CHECK(approx(td_vapor_pressure_antoine(thermo, 5.0, 1000.0, 200.0, 300.0), 1000.0),
+		  "Antoine vapor-pressure equation");
 	CHECK(approx(td_diesel_efficiency(thermo, 8.0, 2.0, 1.4),
 			  1.0 - (std::pow(2.0, 1.4) - 1.0) /
 			  (1.4 * (2.0 - 1.0) * std::pow(8.0, 0.4))),
