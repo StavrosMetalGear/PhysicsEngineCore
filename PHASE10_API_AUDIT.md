@@ -123,6 +123,11 @@ claiming `ss_debye_specific_heat` is scientifically validated.
 the infinite-chain magnetization per spin. Clarify that contract or implement
 the finite-chain result in ThermodynamicsCore before validating this API.
 
+`ClassicalParticle::drivenHOPowerAbsorbed` uses half the mean power expected
+for the oscillator's `2*gamma` damping convention. Review the factor of two
+in ClassicalMechanicsCore. Its driven-time CSV also labels `F0/mass` as
+`driving_force`; clarify the units or correct the exported value.
+
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
@@ -170,7 +175,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-636 APIs with exact current test references and 175 APIs still requiring
+643 APIs with exact current test references and 168 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -217,6 +222,10 @@ Scattering references cover potential steps, delta and rectangular barriers,
 and spherical-well, Yukawa and screened Coulomb Born amplitudes.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
+Seven Classical CSV exports have isolated filesystem checks for headers, row
+counts, grids and numeric references covering free motion, projectile motion,
+oscillator trajectories and Kepler effective potential. The zero-drag test
+checks the export's discrete stepping, not the exact continuous trajectory.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.
