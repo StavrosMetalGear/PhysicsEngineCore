@@ -314,6 +314,11 @@ target_link_libraries(test_classical_exports PRIVATE PhysicsEngine)
 target_include_directories(test_classical_exports PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME test_classical_exports COMMAND test_classical_exports)
 
+add_executable(test_nuclear_exports tests/test_nuclear_exports.cpp)
+target_link_libraries(test_nuclear_exports PRIVATE PhysicsEngine)
+target_include_directories(test_nuclear_exports PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME test_nuclear_exports COMMAND test_nuclear_exports)
+
 add_executable(test_fluid_api tests/test_fluid_api.cpp)
 target_link_libraries(test_fluid_api PRIVATE PhysicsEngine)
 target_include_directories(test_fluid_api PRIVATE

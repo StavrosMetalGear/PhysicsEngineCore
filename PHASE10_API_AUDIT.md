@@ -128,6 +128,12 @@ for the oscillator's `2*gamma` damping convention. Review the factor of two
 in ClassicalMechanicsCore. Its driven-time CSV also labels `F0/mass` as
 `driving_force`; clarify the units or correct the exported value.
 
+`NuclearSystem::computeBetaSpectrum` evaluates its Fermi factor as 0/0 for
+`Z == 0`, although the zero-charge limit is 1. Review and correct this case
+in NuclearCore. `np_export_bethe_bloch_csv` fixes the excitation energy at
+78 eV regardless of target and omits density-effect corrections; clarify the
+applicable approximation and allow target-specific input where needed.
+
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
@@ -175,7 +181,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-643 APIs with exact current test references and 168 APIs still requiring
+648 APIs with exact current test references and 163 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -247,6 +253,10 @@ orbital ladder, oscillator wavefunction, Stark and degenerate-level outputs.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.
+Five Nuclear CSV exports have isolated filesystem checks for headers, full row
+counts, grids and numeric references for SEMF, binding curves, beta spectra,
+Rutherford scattering and Bethe-Bloch stopping power. These check the documented
+model approximations, not every correction needed for physical applications.
 Optics coverage now also includes Gaussian beams, optical activity, laser and
 nonlinear optics, photon statistics, quantum optics, and material responses.
 Thermodynamics reference checks also cover quantum gases, Einstein and Ising
