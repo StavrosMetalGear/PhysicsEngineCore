@@ -291,6 +291,18 @@ bool testExports(const fs::path& root)
 		const double theta = 0.01 + (pi - 0.02) * i / 2.0;
 		return std::vector<double>{theta, std::pow(std::cos(pi * std::cos(theta) / 2.0) / std::sin(theta), 2)};
 	});
+	const double frequency = 1.0e9;
+	em_export_em_wave_csv(em, filename("em-wave.csv").c_str(), 2.0, frequency, 3);
+	verify("em-wave.csv", "z,E,B", [&](int i) {
+		const double z = 1.5 * speed * i / frequency;
+		const double electric = i == 1 ? -2.0 : 2.0;
+		return std::vector<double>{z, electric, electric / speed};
+	});
+	const double penetration = 2.0e-7;
+	em_export_meissner_csv(em, filename("meissner.csv").c_str(), 0.5, penetration, 3);
+	verify("meissner.csv", "x,B", [&](int i) {
+		return std::vector<double>{2.5 * penetration * i, 0.5 * std::exp(-2.5 * i)};
+	});
 	return ok;
 }
 

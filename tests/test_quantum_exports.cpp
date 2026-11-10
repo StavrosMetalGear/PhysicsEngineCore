@@ -277,6 +277,26 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{coupling, levelEnergy + hbar * coupling / 2.0,
 			levelEnergy - hbar * coupling / 2.0, hbar * coupling};
 	});
+	const double deltaStrength = 1.0e-29;
+	qp_export_delta_potential_wavefunction_csv(quantum, filename("delta-wavefunction.csv").c_str(), deltaStrength, 3);
+	verify("delta-wavefunction.csv", "x,psi", [&](int i) {
+		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;
+		const double kappa = mass * deltaStrength / (hbar * hbar);
+		return std::vector<double>{x, std::sqrt(kappa) * std::exp(-kappa * std::abs(x))};
+	});
+	qp_export_parabolic_well_wavefunction_csv(quantum, filename("parabolic-wavefunction.csv").c_str(), 1, oscillatorOmega, 3);
+	verify("parabolic-wavefunction.csv", "x,psi", [&](int i) {
+		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;
+		const double alpha = mass * oscillatorOmega / hbar;
+		return std::vector<double>{x, std::sqrt(2.0 * alpha) * x * std::pow(alpha / pi, 0.25) * std::exp(-alpha * x * x / 2.0)};
+	});
+	const double bohrRadius = 5.29177210903e-11;
+	qp_export_hydrogen_radial_csv(quantum, filename("hydrogen-1s.csv").c_str(), 1, 0, 1.0, 3);
+	verify("hydrogen-1s.csv", "r,R_nl,r2_R2", [&](int i) {
+		const double r = 4.0 * bohrRadius * (i + 1) / 3.0;
+		const double radial = 2.0 * std::pow(bohrRadius, -1.5) * std::exp(-r / bohrRadius);
+		return std::vector<double>{r, radial, r * r * radial * radial};
+	});
 	return ok;
 }
 

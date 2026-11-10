@@ -163,6 +163,10 @@ energy convention and correct the offset in QuantumCore if appropriate.
 `qp_coulomb_energy` uses a prefactor proportional to `e^2/epsilon0^2/hbar^2`,
 which differs dimensionally and numerically from the hydrogenic `e^4` formula.
 Verify and correct the QuantumCore implementation before scientific validation.
+`QuantumParticle::hydrogenRadialWavefunction` uses a cubic `(n+l)!` factor in
+its normalization while its associated Laguerre polynomial uses the standard
+recurrence. Review the normalization for excited states in QuantumCore; the
+CSV reference test covers only the unaffected 1s state.
 `qp_double_delta_energy` ignores the separation `a` and returns a single-delta
 energy under a simplified approximation; review its validity and document its
 applicable domain before treating it as a double-delta reference.
@@ -185,7 +189,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-654 APIs with exact current test references and 157 APIs still requiring
+659 APIs with exact current test references and 152 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -245,16 +249,18 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Thirty-one Electrodynamics CSV exports have isolated filesystem tests checking their
+Thirty-three Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
-polarization, magnetization, total-reflection, Fresnel and antenna outputs;
+polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
+Meissner outputs;
 failure reporting and other export variants remain to be reviewed.
-Twenty-six Quantum CSV exports have isolated filesystem checks for headers, sample
+Twenty-nine Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
 Landau spectrum, adiabatic, classical-path, free-electron, helium variational,
 quantum-channel, Born scattering, propagator, well subband, effective potential,
-orbital ladder, oscillator wavefunction, Stark and degenerate-level outputs.
+orbital ladder, oscillator wavefunction, Stark, degenerate-level, attractive-delta
+and hydrogen 1s radial outputs.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.
