@@ -148,6 +148,10 @@ outputs as E_minus then E_plus, but their pinned implementations return the
 positive branch first and negative branch second. Correct the sibling header
 or version the API deliberately rather than silently changing the output order.
 
+`qp_free_electron_transition` labels its second output `outDeltaE` and calls it
+transition energy, but the implementation writes the wavelength `h*c/gap`.
+Clarify or version the sibling contract before changing that output's units.
+
 `qp_rabi_probability` divides by the effective frequency and returns a
 non-finite result when both drive and detuning are zero. Review and correct
 the zero-drive limit in QuantumCore; the expected transition probability is zero.
@@ -189,7 +193,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-659 APIs with exact current test references and 152 APIs still requiring
+671 APIs with exact current test references and 140 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -223,6 +227,9 @@ Spin operator layouts, eigenstates, expectation values, two-level energies,
 Hermitian diagonalization and hydrogen expectation arrays now have reference checks.
 Additional references cover reduced mass, angular momentum ladder coefficients,
 factorials, helium variational energy, Stark shifts, WKB and transition rates.
+Additional references cover free-electron filling and current transition output
+semantics, helium perturbation energies, oscillator field shifts, hydrogen 1s
+density, Landé factors, spherical Neumann functions and partial-wave scattering.
 Special-function references now include Legendre and Laguerre polynomials,
 spherical harmonics and Bessel functions, and Clebsch-Gordan coefficients;
 additional state checks cover Pauli matrices, purity and Bell correlations.

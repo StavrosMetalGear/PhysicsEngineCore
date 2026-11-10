@@ -311,6 +311,46 @@ bool test_module_apis()
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
 	const double quantumLength = 1.0e-9;
+	const double electronBoxEnergy = hbar * hbar * quantumPi * quantumPi /
+		(2.0 * quantumMass * 1.0e-20);
+	CHECK(approx(qp_free_electron_ground_state_energy(quantum, 3), 6.0 * electronBoxEnergy) &&
+		  qp_free_electron_ground_state_energy(quantum, 0) == 0.0,
+		  "Spin-degenerate free-electron ground-state energy");
+	double transitionGap = 0.0, transitionWavelength = 0.0;
+	qp_free_electron_transition(quantum, 2, &transitionGap, &transitionWavelength);
+	CHECK(approx(transitionGap, 3.0 * electronBoxEnergy) &&
+		  approx(transitionWavelength, quantumPlanck * quantumC / (3.0 * electronBoxEnergy)),
+		  "Free-electron transition gap and current wavelength output");
+	qp_free_electron_transition(quantum, 2, nullptr, &transitionWavelength);
+	CHECK(approx(transitionWavelength, quantumPlanck * quantumC / (3.0 * electronBoxEnergy)),
+		  "Free-electron transition optional first output");
+	const double hartree = 4.3597447222071e-18;
+	CHECK(approx(qp_helium_unperturbed_energy(), -4.0 * hartree) &&
+		  approx(qp_helium_first_order_correction(), 1.25 * hartree),
+		  "Helium unperturbed and first-order energies");
+	const double oscillatorFrequency = 1.0e14;
+	const double oscillatorField = 1.0e8;
+	const double oscillatorShift = quantumCharge * quantumCharge * oscillatorField * oscillatorField /
+		(2.0 * quantumMass * oscillatorFrequency * oscillatorFrequency);
+	CHECK(approx(qp_ho_energy_in_field(quantum, 1, oscillatorFrequency, oscillatorField),
+			  1.5 * hbar * oscillatorFrequency - oscillatorShift) &&
+		  approx(qp_ho_shift_in_field(quantum, oscillatorFrequency, oscillatorField),
+			  quantumCharge * oscillatorField / (quantumMass * oscillatorFrequency * oscillatorFrequency)) &&
+		  approx(qp_stark_ho_second_order(oscillatorField, quantumMass, oscillatorFrequency), -oscillatorShift),
+		  "Oscillator electric-field energy and displacement");
+	const double hydrogen1sRadial = 2.0 * std::pow(bohrRadius, -1.5) * std::exp(-1.0);
+	CHECK(approx(qp_hydrogen_radial_wavefunction(quantum, 1, 0, bohrRadius, 1.0), hydrogen1sRadial) &&
+		  approx(qp_hydrogen_probability_density(quantum, 1, 0, 0, bohrRadius, 0.7, 1.0),
+			  hydrogen1sRadial * hydrogen1sRadial / (4.0 * quantumPi)),
+		  "Hydrogen 1s radial wavefunction and probability density");
+	CHECK(approx(qp_lande_g_factor(1, 0.5, 1.5), 4.0 / 3.0) &&
+		  qp_lande_g_factor(0, 0.0, 0.0) == 0.0, "Lande g factor and zero-j sentinel");
+	CHECK(approx(qp_spherical_neumann_n(0, 1.0), -std::cos(1.0)) &&
+		  approx(qp_spherical_neumann_n(1, 1.0), -std::cos(1.0) - std::sin(1.0)),
+		  "Spherical Neumann functions");
+	CHECK(approx(qp_partial_wave_cross_section(1, 2.0, quantumPi / 2.0), 3.0 * quantumPi) &&
+		  qp_partial_wave_cross_section(1, 2.0, 0.0) == 0.0,
+		  "Partial-wave scattering cross section");
 	double reflection = 0.0, transmission = 0.0;
 	const double scatteringEnergy = 1.0e-19;
 	const double scatteringK = std::sqrt(2.0 * quantumMass * scatteringEnergy) / hbar;
