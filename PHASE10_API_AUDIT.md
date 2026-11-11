@@ -147,6 +147,12 @@ denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
 before claiming the exposed API is scientifically validated.
 
+For positive electron density, `em_export_plasma_csv` sweeps frequencies below
+the plasma frequency, where `plasmaGroupVelocity` takes the square root of a
+negative value. Those CSV rows can contain non-finite group velocities. Review
+the evanescent-wave representation and export contract in ElectrodynamicsCore
+before validating this export; this finding is based on source inspection.
+
 The Quantum header labels `qp_two_level_perturbation` and `qp_two_level_exact`
 outputs as E_minus then E_plus, but their pinned implementations return the
 positive branch first and negative branch second. Correct the sibling header
@@ -197,7 +203,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-695 APIs with exact current test references and 116 APIs still requiring
+700 APIs with exact current test references and 111 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -276,10 +282,11 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Thirty-four Electrodynamics CSV exports have isolated filesystem tests checking their
+Thirty-nine Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
-Meissner outputs, and wire and solenoid vector potentials. The vector-potential
+Meissner outputs, electric and magnetic dipoles, radiation, Rayleigh scattering,
+and wire and solenoid vector potentials. The vector-potential
 export uses a fixed solenoid field of 0.5 T;
 failure reporting and other export variants remain to be reviewed.
 Thirty-eight Quantum CSV exports have isolated filesystem checks for headers, sample

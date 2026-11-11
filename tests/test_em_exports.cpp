@@ -120,6 +120,43 @@ bool testExports(const fs::path& root)
 		const double r = 0.01 + i;
 		return std::vector<double>{r, ke * charge / (r * r), ke * charge / r, ke * charge * charge / r};
 	});
+	const double dipoleMoment = 1.0e-9;
+	em_export_dipole_csv(em, filename("dipole.csv").c_str(), dipoleMoment, 3);
+	verify("dipole.csv", "theta,V,Er,Etheta", [&](int i) {
+		const double theta = pi * i / 2.0;
+		const double potential = ke * dipoleMoment * std::cos(theta) / 0.01;
+		const double radial = 2.0 * ke * dipoleMoment * std::cos(theta) / 0.001;
+		const double tangential = ke * dipoleMoment * std::sin(theta) / 0.001;
+		return std::vector<double>{theta, potential, radial, tangential};
+	});
+	const double magneticMoment = 2.0;
+	const auto magneticReference = [&](int i) {
+		const double theta = pi * i / 2.0;
+		const double coefficient = mu0 * magneticMoment / (4.0 * pi * 0.001);
+		return std::vector<double>{theta, 2.0 * coefficient * std::cos(theta), coefficient * std::sin(theta)};
+	};
+	em_export_magnetic_dipole_csv(em, filename("magnetic-dipole.csv").c_str(), magneticMoment, 3);
+	verify("magnetic-dipole.csv", "theta,Br,Btheta", magneticReference);
+	em_export_magnetic_multipole_csv(em, filename("magnetic-multipole.csv").c_str(), magneticMoment, 3);
+	verify("magnetic-multipole.csv", "theta,Br,Btheta", magneticReference);
+	const double angularFrequency = 1.0e9;
+	em_export_dipole_radiation_csv(em, filename("dipole-radiation.csv").c_str(), dipoleMoment, angularFrequency, 3);
+	verify("dipole-radiation.csv", "theta,pattern,E_rad", [&](int i) {
+		const double theta = pi * i / 2.0;
+		const double field = -mu0 * dipoleMoment * angularFrequency * angularFrequency * std::sin(theta) /
+			(4.0 * pi) * std::cos(angularFrequency / 299792458.0);
+		return std::vector<double>{theta, std::sin(theta) * std::sin(theta), field};
+	});
+	const double sphereRadius = 1.0e-8;
+	const double relativeIndex = 1.5;
+	em_export_scattering_csv(em, filename("scattering.csv").c_str(), sphereRadius, relativeIndex, 3);
+	verify("scattering.csv", "lambda_nm,sigma_rayleigh", [&](int i) {
+		const double wavelength = (200.0 + 300.0 * i) * 1.0e-9;
+		const double contrast = (relativeIndex * relativeIndex - 1.0) / (relativeIndex * relativeIndex + 2.0);
+		const double crossSection = 128.0 * std::pow(pi, 5) * std::pow(sphereRadius, 6) * contrast * contrast /
+			(3.0 * std::pow(wavelength, 4));
+		return std::vector<double>{wavelength * 1.0e9, crossSection};
+	});
 	em_export_gauss_csv(em, filename("gauss.csv").c_str(), charge, 0.2, 3);
 	verify("gauss.csv", "r,E", [&](int i) {
 		const double r = 0.001 + 0.2 * i;
