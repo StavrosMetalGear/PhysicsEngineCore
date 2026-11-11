@@ -197,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-689 APIs with exact current test references and 122 APIs still requiring
+694 APIs with exact current test references and 117 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -282,13 +282,15 @@ polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
 Meissner outputs, and wire and solenoid vector potentials. The vector-potential
 export uses a fixed solenoid field of 0.5 T;
 failure reporting and other export variants remain to be reviewed.
-Thirty-three Quantum CSV exports have isolated filesystem checks for headers, sample
+Thirty-eight Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
 Landau spectrum, adiabatic, classical-path, free-electron, helium variational,
 quantum-channel, Born scattering, propagator, well subband, effective potential,
 orbital ladder, oscillator wavefunction, Stark, degenerate-level, attractive-delta,
-harmonic WKB, Gamow peak, and hydrogen 1s radial and probability outputs.
+harmonic WKB, Gamow peak, hydrogen 1s radial and probability outputs, 2D and 3D
+box ground-state grids and single-level energies, and two-level comparisons.
+The box energy export cases do not yet test degeneracies or energy ordering.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.

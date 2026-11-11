@@ -47,7 +47,7 @@ public:
 	fs::path path;
 };
 
-bool verifyCsv(const fs::path& path, const std::string& header,
+bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 			   const std::function<std::vector<double>(int)>& expected)
 {
 	std::ifstream input(path);
@@ -57,7 +57,7 @@ bool verifyCsv(const fs::path& path, const std::string& header,
 		std::cerr << "FAIL: missing file or unexpected CSV header: " << path << "\n";
 		return false;
 	}
-	for (int row = 0; row < 3; ++row) {
+	for (int row = 0; row < rowCount; ++row) {
 		if (!std::getline(input, line)) {
 			std::cerr << "FAIL: missing CSV row " << row << ": " << path << "\n";
 			return false;
@@ -109,8 +109,8 @@ bool testExports(const fs::path& root)
 	} owner{quantum};
 	bool ok = true;
 	auto filename = [&](const char* name) { return (root / name).string(); };
-	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected) {
-		if (!verifyCsv(root / name, header, expected)) ok = false;
+	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected, int rows = 3) {
+		if (!verifyCsv(root / name, header, rows, expected)) ok = false;
 	};
 
 	qp_export_rabi_csv(quantum, filename("rabi.csv").c_str(), 2.0, 0.0, pi / 2.0, 2);
@@ -162,6 +162,37 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{static_cast<double>(i), 1.0, 2.0 * pi * i};
 	});
 	const double mass = 9.1093837015e-31;
+	qp_export_wavefunction_2d_box_csv(quantum, filename("box-2d-wave.csv").c_str(), 1, 1, 2.0, 2.0, 2);
+	verify("box-2d-wave.csv", "x,y,psi", [&](int row) {
+		const double x = static_cast<double>(row / 3);
+		const double y = static_cast<double>(row % 3);
+		return std::vector<double>{x, y, std::sin(pi * x / 2.0) * std::sin(pi * y / 2.0)};
+	}, 9);
+	qp_export_wavefunction_3d_box_slice_csv(quantum, filename("box-3d-wave.csv").c_str(),
+		1, 1, 1, 2.0, 2.0, 2.0, 1.0, 2);
+	verify("box-3d-wave.csv", "x,y,psi", [&](int row) {
+		const double x = static_cast<double>(row / 3);
+		const double y = static_cast<double>(row % 3);
+		return std::vector<double>{x, y, std::sin(pi * x / 2.0) * std::sin(pi * y / 2.0)};
+	}, 9);
+	const double boxLength = 1.0e-9;
+	const double boxEnergy = hbar * hbar * pi * pi / (2.0 * mass * boxLength * boxLength);
+	qp_export_energy_levels_2d_box_csv(quantum, filename("box-2d-levels.csv").c_str(), boxLength, 1);
+	verify("box-2d-levels.csv", "nx,ny,E,nx2_plus_ny2", [&](int) {
+		return std::vector<double>{1.0, 1.0, 2.0 * boxEnergy, 2.0};
+	}, 1);
+	qp_export_energy_levels_3d_box_csv(quantum, filename("box-3d-levels.csv").c_str(), boxLength, 1);
+	verify("box-3d-levels.csv", "nx,ny,nz,E,n2_sum", [&](int) {
+		return std::vector<double>{1.0, 1.0, 1.0, 3.0 * boxEnergy, 3.0};
+	}, 1);
+	const double levelDelta = 2.0e12;
+	qp_export_two_level_comparison_csv(quantum, filename("two-level.csv").c_str(), levelDelta, 3);
+	verify("two-level.csv", "Omega_over_delta,E1_pert,E2_pert,E1_exact,E2_exact", [&](int row) {
+		const double ratio = 2.0 * (row + 1) / 3.0;
+		const double perturbative = hbar * levelDelta * (0.5 + ratio * ratio / 4.0);
+		const double exact = hbar * levelDelta * std::sqrt(1.0 + ratio * ratio) / 2.0;
+		return std::vector<double>{ratio, perturbative, -perturbative, exact, -exact};
+	});
 	qp_export_dos_free_csv(quantum, filename("dos-free.csv").c_str(), 3.0e-19, 3);
 	verify("dos-free.csv", "E,g1D,g2D,g3D", [&](int i) {
 		const double energy = (i + 1) * 1.0e-19;
