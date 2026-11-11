@@ -47,7 +47,7 @@ public:
 	fs::path path;
 };
 
-bool verifyCsv(const fs::path& path, const std::string& header,
+bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 			   const std::function<std::vector<double>(int)>& expected)
 {
 	std::ifstream input(path);
@@ -57,7 +57,7 @@ bool verifyCsv(const fs::path& path, const std::string& header,
 		std::cerr << "FAIL: missing file or unexpected CSV header: " << path << "\n";
 		return false;
 	}
-	for (int row = 0; row < 3; ++row) {
+	for (int row = 0; row < rowCount; ++row) {
 		if (!std::getline(input, line)) {
 			std::cerr << "FAIL: missing CSV row " << row << ": " << path << "\n";
 			return false;
@@ -110,8 +110,8 @@ bool testExports(const fs::path& root)
 		~HandleOwner() { em_destroy(handle); }
 	} owner{em};
 	bool ok = true;
-	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected) {
-		if (!verifyCsv(root / name, header, expected)) ok = false;
+	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected, int rows = 3) {
+		if (!verifyCsv(root / name, header, rows, expected)) ok = false;
 	};
 	auto filename = [&](const char* name) { return (root / name).string(); };
 
@@ -157,6 +157,51 @@ bool testExports(const fs::path& root)
 			(3.0 * std::pow(wavelength, 4));
 		return std::vector<double>{wavelength * 1.0e9, crossSection};
 	});
+	const double filmIndex = std::sqrt(1.5);
+	const double filmThickness = 550.0e-9 / (4.0 * filmIndex);
+	em_export_thin_film_csv(em, filename("thin-film.csv").c_str(), 1.0, filmIndex, 1.5, filmThickness, 3);
+	verify("thin-film.csv", "lambda_nm,R", [&](int i) {
+		const double wavelength = 300.0e-9 + 250.0e-9 * i;
+		const double r01 = (1.0 - filmIndex) / (1.0 + filmIndex);
+		const double r12 = (filmIndex - 1.5) / (filmIndex + 1.5);
+		const double phase = 4.0 * pi * filmIndex * filmThickness / wavelength;
+		const double interference = 2.0 * r01 * r12 * std::cos(phase);
+		const double reflectance = (r01 * r01 + r12 * r12 + interference) /
+			(1.0 + r01 * r01 * r12 * r12 + interference);
+		return std::vector<double>{wavelength * 1.0e9, reflectance};
+	});
+	const double teZeros[3][5] = {
+		{3.8317, 7.0156, 10.1735, 13.3237, 16.4706},
+		{1.8412, 5.3314, 8.5363, 11.7060, 14.8636},
+		{3.0542, 6.7061, 9.9695, 13.1704, 16.3475}
+	};
+	const double tmZeros[3][5] = {
+		{2.4048, 5.5201, 8.6537, 11.7915, 14.9309},
+		{3.8317, 7.0156, 10.1735, 13.3237, 16.4706},
+		{5.1356, 8.4172, 11.6198, 14.7960, 17.9598}
+	};
+	const auto circularReference = [&](int row) {
+		const int m = row / 5;
+		const int n = row % 5;
+		const double factor = 299792458.0 / (std::sqrt(2.5) * 2.0 * pi * 0.1);
+		return std::vector<double>{static_cast<double>(m), static_cast<double>(n + 1), teZeros[m][n] * factor, tmZeros[m][n] * factor};
+	};
+	em_export_circ_waveguide_csv(em, filename("circular.csv").c_str(), 0.1, 3);
+	verify("circular.csv", "m,n,fc_TE,fc_TM", circularReference, 15);
+	em_export_circ_waveguide_csv(em, filename("circular-other-count.csv").c_str(), 0.1, 20);
+	verify("circular-other-count.csv", "m,n,fc_TE,fc_TM", circularReference, 15);
+	em_export_field_transform_csv(em, filename("field-transform.csv").c_str(), 100.0, 0.01, 3);
+	verify("field-transform.csv", "beta,gamma,Ey_prime,Bz_prime", [&](int i) {
+		const double beta = 0.495 * i;
+		const double gamma = 1.0 / std::sqrt(1.0 - beta * beta);
+		return std::vector<double>{beta, gamma, -gamma * beta * 299792458.0 * 0.01, gamma * 0.01};
+	});
+	const double inductionOmega = 4.0;
+	em_export_induction_csv(em, filename("induction.csv").c_str(), 0.5, inductionOmega, 5);
+	verify("induction.csv", "t,EMF_generator", [&](int i) {
+		const double t = 3.0 * (2.0 * pi / inductionOmega) * i / 4.0;
+		return std::vector<double>{t, 0.5 * inductionOmega * std::sin(inductionOmega * t)};
+	}, 5);
 	em_export_gauss_csv(em, filename("gauss.csv").c_str(), charge, 0.2, 3);
 	verify("gauss.csv", "r,E", [&](int i) {
 		const double r = 0.001 + 0.2 * i;

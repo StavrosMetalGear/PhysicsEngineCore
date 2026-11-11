@@ -137,6 +137,9 @@ applicable approximation and allow target-specific input where needed.
 `em_export_transmission_line_csv` accepts `ZL` but ignores it and sweeps a
 fixed 1–201 ohm load range instead. Clarify or revise this argument in
 ElectrodynamicsCore; the CSV reference checks the current sweep behavior.
+`em_export_circ_waveguide_csv` ignores its point-count argument and always
+exports 15 modes. Its reference checks this observed behavior at two counts;
+clarify or revise the argument in ElectrodynamicsCore.
 
 `EMField::eddyCurrentDensity` computes `B0*omega*delta*exp(-z/delta)/2`,
 which has electric-field units in SI rather than current-density units.
@@ -152,6 +155,12 @@ the plasma frequency, where `plasmaGroupVelocity` takes the square root of a
 negative value. Those CSV rows can contain non-finite group velocities. Review
 the evanescent-wave representation and export contract in ElectrodynamicsCore
 before validating this export; this finding is based on source inspection.
+
+`EMField::synchrotronPower` uses a charge-squared, gamma-to-the-fourth and
+inverse-cubed-speed expression for a magnetic field input. Its dependence on
+charge, gamma and speed of light differs from the Lienard formula with magnetic
+acceleration substituted. Review the intended units and expression in
+ElectrodynamicsCore before validating its scalar wrapper or CSV export.
 
 The Quantum header labels `qp_two_level_perturbation` and `qp_two_level_exact`
 outputs as E_minus then E_plus, but their pinned implementations return the
@@ -203,7 +212,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-700 APIs with exact current test references and 111 APIs still requiring
+704 APIs with exact current test references and 107 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -282,11 +291,13 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Thirty-nine Electrodynamics CSV exports have isolated filesystem tests checking their
+Forty-three Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
 Meissner outputs, electric and magnetic dipoles, radiation, Rayleigh scattering,
-and wire and solenoid vector potentials. The vector-potential
+thin-film interference, circular-waveguide modes, field transformations,
+induction, and wire and solenoid vector potentials. The field-transform case
+uses the implementation's electric field parallel to the boost. The vector-potential
 export uses a fixed solenoid field of 0.5 T;
 failure reporting and other export variants remain to be reviewed.
 Thirty-eight Quantum CSV exports have isolated filesystem checks for headers, sample
