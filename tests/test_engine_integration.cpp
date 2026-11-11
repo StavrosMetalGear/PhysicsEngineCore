@@ -313,6 +313,17 @@ bool test_module_apis()
 	const double quantumLength = 1.0e-9;
 	const double electronBoxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * 1.0e-20);
+	const double broadening = electronBoxEnergy / 2.0;
+	CHECK(approx(qp_dos_box_1d(quantum, electronBoxEnergy, 1.0e-10, 2, broadening),
+			  1.0 / (quantumPi * broadening) + broadening /
+			  (quantumPi * (9.0 * electronBoxEnergy * electronBoxEnergy + broadening * broadening))) &&
+		  qp_dos_box_1d(quantum, electronBoxEnergy, 1.0e-10, 0, broadening) == 0.0,
+		  "Lorentzian-broadened one-dimensional box levels");
+	const double spinBohrMagneton = 9.2740100783e-24;
+	CHECK(approx(qp_total_phase_spin_half(quantum, 2.0, quantumPi / 2.0, 1.0e-10),
+			  -2.0 * spinBohrMagneton * 1.0e-10 / hbar - quantumPi) &&
+		  approx(qp_total_phase_spin_half(quantum, 0.0, quantumPi, 1.0e-10), -2.0 * quantumPi),
+		  "Spin-half dynamic and geometric phases");
 	CHECK(approx(qp_free_electron_ground_state_energy(quantum, 3), 6.0 * electronBoxEnergy) &&
 		  qp_free_electron_ground_state_energy(quantum, 0) == 0.0,
 		  "Spin-degenerate free-electron ground-state energy");
@@ -348,6 +359,9 @@ bool test_module_apis()
 	CHECK(approx(qp_spherical_neumann_n(0, 1.0), -std::cos(1.0)) &&
 		  approx(qp_spherical_neumann_n(1, 1.0), -std::cos(1.0) - std::sin(1.0)),
 		  "Spherical Neumann functions");
+	CHECK(approx(qp_phase_shift_hard_sphere(0, 1.0, 0.7), quantumPi - 0.7) &&
+		  qp_phase_shift_hard_sphere(0, 0.0, 0.7) == 0.0,
+		  "Hard-sphere s-wave phase branch and zero-wave-number sentinel");
 	CHECK(approx(qp_partial_wave_cross_section(1, 2.0, quantumPi / 2.0), 3.0 * quantumPi) &&
 		  qp_partial_wave_cross_section(1, 2.0, 0.0) == 0.0,
 		  "Partial-wave scattering cross section");
