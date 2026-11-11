@@ -1,6 +1,7 @@
 #include "PhysicsEngine.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <locale>
 #include <random>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -88,6 +90,52 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 	}
 	if (std::getline(input, line) || input.bad()) {
 		std::cerr << "FAIL: extra row or read error: " << path << "\n";
+		return false;
+	}
+	return true;
+}
+
+bool verifyBoxLevels(const fs::path& path, int dimensions, double groundUnit)
+{
+	std::ifstream input(path);
+	input.imbue(std::locale::classic());
+	std::string line;
+	const char* header = dimensions == 2 ? "nx,ny,E,nx2_plus_ny2" : "nx,ny,nz,E,n2_sum";
+	if (!std::getline(input, line) || line != header) {
+		std::cerr << "FAIL: missing file or unexpected box-level header: " << path << "\n";
+		return false;
+	}
+	std::set<std::array<int, 3>> states;
+	const int expectedRows = dimensions == 2 ? 4 : 8;
+	int previousSum = 0;
+	for (int row = 0; row < expectedRows; ++row) {
+		if (!std::getline(input, line)) {
+			std::cerr << "FAIL: missing box-level row: " << path << "\n";
+			return false;
+		}
+		std::istringstream fields(line);
+		fields.imbue(std::locale::classic());
+		std::array<int, 3> state{};
+		char separator = 0;
+		for (int axis = 0; axis < dimensions; ++axis) {
+			if (!(fields >> state[axis] >> separator) || separator != ',' || state[axis] < 1 || state[axis] > 2) {
+				std::cerr << "FAIL: invalid box-level state: " << path << "\n";
+				return false;
+			}
+		}
+		double energy = 0.0;
+		int sum = 0;
+		const int expectedSum = state[0] * state[0] + state[1] * state[1] + state[2] * state[2];
+		if (!(fields >> energy >> separator >> sum) || separator != ',' || !(fields >> std::ws).eof() ||
+			!std::isfinite(energy) || sum != expectedSum || sum < previousSum ||
+			std::abs(energy - groundUnit * sum) > 1.0e-5 * groundUnit * sum || !states.insert(state).second) {
+			std::cerr << "FAIL: invalid, unordered or duplicate box level: " << path << "\n";
+			return false;
+		}
+		previousSum = sum;
+	}
+	if (std::getline(input, line) || input.bad()) {
+		std::cerr << "FAIL: extra box-level row or read error: " << path << "\n";
 		return false;
 	}
 	return true;
@@ -185,6 +233,10 @@ bool testExports(const fs::path& root)
 	verify("box-3d-levels.csv", "nx,ny,nz,E,n2_sum", [&](int) {
 		return std::vector<double>{1.0, 1.0, 1.0, 3.0 * boxEnergy, 3.0};
 	}, 1);
+	qp_export_energy_levels_2d_box_csv(quantum, filename("box-2d-degenerate.csv").c_str(), boxLength, 2);
+	if (!verifyBoxLevels(root / "box-2d-degenerate.csv", 2, boxEnergy)) ok = false;
+	qp_export_energy_levels_3d_box_csv(quantum, filename("box-3d-degenerate.csv").c_str(), boxLength, 2);
+	if (!verifyBoxLevels(root / "box-3d-degenerate.csv", 3, boxEnergy)) ok = false;
 	const double levelDelta = 2.0e12;
 	qp_export_two_level_comparison_csv(quantum, filename("two-level.csv").c_str(), levelDelta, 3);
 	verify("two-level.csv", "Omega_over_delta,E1_pert,E2_pert,E1_exact,E2_exact", [&](int row) {

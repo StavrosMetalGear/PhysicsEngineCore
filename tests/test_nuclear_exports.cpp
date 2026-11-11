@@ -126,6 +126,24 @@ bool testExports(const fs::path& root)
 	verify("semf.csv", "A,B_per_A_MeV", 56, bindingReference);
 	np_export_binding_curve_csv(nuclear, filename("binding.csv").c_str());
 	verify("binding.csv", "A,B_per_A_MeV", 260, bindingReference);
+	np_export_alpha_decay_csv(nuclear, filename("alpha.csv").c_str(), 50);
+	verify("alpha.csv", "Q_MeV,log10_t_half_s", 100, [&](int row) {
+		const double q = 3.0 + 7.0 * (row + 1) / 100.0;
+		const double reducedMass = 4.0 * 96.0 / 100.0 * 931.494;
+		const double radius = 1.2 * (std::cbrt(96.0) + std::cbrt(4.0));
+		const double turningPoint = 2.0 * 48.0 * 1.4399764 / q;
+		const double ratio = radius / turningPoint;
+		const double action = 2.0 * 48.0 * std::sqrt(2.0 * reducedMass) / 197.3269804 *
+			std::sqrt(1.4399764 / q) *
+			(std::acos(std::sqrt(ratio)) - std::sqrt(ratio * (1.0 - ratio)));
+		const double frequency = std::sqrt(2.0 * q / reducedMass) * 2.99792458e23 / (2.0 * radius);
+		const double logHalfLife = std::log10(std::log(2.0) / frequency) + 2.0 * action / std::log(10.0);
+		return std::vector<double>{q, logHalfLife};
+	});
+	np_export_alpha_decay_csv(nuclear, filename("alpha-invalid.csv").c_str(), 2);
+	verify("alpha-invalid.csv", "Q_MeV,log10_t_half_s", 0, [&](int) {
+		return std::vector<double>{};
+	});
 
 	np_export_rutherford_csv(nuclear, filename("rutherford.csv").c_str(), 2, 79, 5.0);
 	verify("rutherford.csv", "theta_deg,dSigma_dOmega_fm2", 197, [&](int row) {

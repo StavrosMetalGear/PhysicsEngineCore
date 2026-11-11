@@ -56,12 +56,12 @@ Tested status is a planning signal only; it does not prove reference correctness
 |---|---:|---:|---:|---|
 | array-matrix-state | 6 | 6 | 0 | review evidence |
 | buffer-or-enumeration | 4 | 4 | 0 | review evidence |
-| export-file | 6 | 5 | 1 | design safe reference tests |
+| export-file | 6 | 6 | 0 | review evidence |
 | lifecycle-state | 2 | 2 | 0 | review evidence |
 | scalar-domain | 15 | 15 | 0 | review evidence |
 
-- Tested APIs: np_alpha_half_life, np_binding_energy_semf, np_cherenkov_angle, np_compute_beta_spectrum, np_compute_bethe_bloch, np_compute_binding_curve, np_compute_breit_wigner, np_compute_charge_density, np_compute_exponential_atten, np_compute_neutrino_osc, np_compute_rutherford, np_compute_semf_curve, np_create, np_destroy, np_export_beta_decay_csv, np_export_bethe_bloch_csv, np_export_binding_curve_csv, np_export_rutherford_csv, np_export_semf_csv, np_fermi_energy, np_four_factor, np_internal_conversion, np_level_density_bethe, np_mass_excess, np_moderation_xi, np_nuclear_radius, np_pairing_delta, np_q_value, np_quadrupole_moment, np_radiocarbon_age, np_symmetry_energy, np_threshold_energy
-- Untested APIs: np_export_alpha_decay_csv
+- Tested APIs: np_alpha_half_life, np_binding_energy_semf, np_cherenkov_angle, np_compute_beta_spectrum, np_compute_bethe_bloch, np_compute_binding_curve, np_compute_breit_wigner, np_compute_charge_density, np_compute_exponential_atten, np_compute_neutrino_osc, np_compute_rutherford, np_compute_semf_curve, np_create, np_destroy, np_export_alpha_decay_csv, np_export_beta_decay_csv, np_export_bethe_bloch_csv, np_export_binding_curve_csv, np_export_rutherford_csv, np_export_semf_csv, np_fermi_energy, np_four_factor, np_internal_conversion, np_level_density_bethe, np_mass_excess, np_moderation_xi, np_nuclear_radius, np_pairing_delta, np_q_value, np_quadrupole_moment, np_radiocarbon_age, np_symmetry_energy, np_threshold_energy
+- Untested APIs: none
 
 ## OpticsCore
 

@@ -197,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-694 APIs with exact current test references and 117 APIs still requiring
+695 APIs with exact current test references and 116 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -289,15 +289,18 @@ Landau spectrum, adiabatic, classical-path, free-electron, helium variational,
 quantum-channel, Born scattering, propagator, well subband, effective potential,
 orbital ladder, oscillator wavefunction, Stark, degenerate-level, attractive-delta,
 harmonic WKB, Gamow peak, hydrogen 1s radial and probability outputs, 2D and 3D
-box ground-state grids and single-level energies, and two-level comparisons.
-The box energy export cases do not yet test degeneracies or energy ordering.
+box ground-state grids, degenerate energy levels and energy ordering, and
+two-level comparisons. The box-level checks cover quantum numbers one and two
+without assuming an order for equal-energy states.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.
-Five Nuclear CSV exports have isolated filesystem checks for headers, full row
-counts, grids and numeric references for SEMF, binding curves, beta spectra,
-Rutherford scattering and Bethe-Bloch stopping power. These check the documented
-model approximations, not every correction needed for physical applications.
+Six Nuclear CSV exports have isolated filesystem checks for headers, full row
+counts, grids and numeric references for SEMF, binding curves, alpha and beta
+decay, Rutherford scattering and Bethe-Bloch stopping power. The alpha test
+checks the current tunneling model with `A = 2Z` and its invalid-charge empty
+output; it does not establish scientific validity. These checks cover model
+approximations, not every correction needed for physical applications.
 Optics coverage now also includes Gaussian beams, optical activity, laser and
 nonlinear optics, photon statistics, quantum optics, and material responses.
 Thermodynamics reference checks also cover quantum gases, Einstein and Ising
