@@ -1339,6 +1339,11 @@ bool test_module_apis()
 		  "Airy disk radius");
 	CHECK(approx(op_chromatic_aberration(optics, 0.20, 50.0), -0.20 / 50.0),
 		  "Chromatic aberration");
+	CHECK(approx(op_spherical_aberration(optics, 1.5, 0.2, 0.1), 0.00625) &&
+		  approx(op_spherical_aberration(optics, 1.5, 0.2, 0.2), 0.05) &&
+		  op_spherical_aberration(optics, 1.5, 0.2, 0.0) == 0.0 &&
+		  op_spherical_aberration(optics, 1.0, 0.2, 0.1) == 0.0,
+		  "Spherical aberration coefficient model and limiting cases");
 	CHECK(approx(op_anti_reflection_thickness(optics, 1.5, 600.0e-9),
 				  600.0e-9 / (4.0 * 1.5)),
 		  "Anti-reflection film thickness");

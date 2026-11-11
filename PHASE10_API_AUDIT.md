@@ -197,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-685 APIs with exact current test references and 126 APIs still requiring
+686 APIs with exact current test references and 125 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -215,6 +215,9 @@ Solid State energy, and thermal-wavelength reference expectations were corrected
 The latest batch adds Classical gravity, inertia, relativity and elasticity,
 Nuclear deformation, reaction and bounded attenuation output, and Optics
 diffraction and interferometry reference checks.
+Optics now also has a check of the current spherical-aberration coefficient
+model, including zero-height and matched-index limits. Its physical validity
+and applicable approximation require separate review.
 Quantum coverage includes complex gate matrices, density and decoherence
 channels, Bell-state entanglement, partial traces, measurement, and truncated
 angular-momentum enumerations.
