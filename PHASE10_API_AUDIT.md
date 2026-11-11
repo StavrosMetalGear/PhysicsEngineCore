@@ -197,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-676 APIs with exact current test references and 135 APIs still requiring
+678 APIs with exact current test references and 133 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -247,6 +247,10 @@ Scattering references cover potential steps, delta and rectangular barriers,
 and spherical-well, Yukawa and screened Coulomb Born amplitudes.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
+Classical N-body checks cover three-dimensional kinetic energy, pairwise
+gravitational potential energy, and angular momentum about the Z axis. The
+wrappers currently copy body data into a vector on each call; these correctness
+checks do not establish allocation or performance characteristics.
 Seven Classical CSV exports have isolated filesystem checks for headers, row
 counts, grids and numeric references covering free motion, projectile motion,
 oscillator trajectories and Kepler effective potential. The zero-drag test

@@ -861,6 +861,19 @@ bool test_module_apis()
 		  "Cyclotron frequency with negative charge");
 	CHECK(approx(cp_cyclotronRadius(classical, 12.0, -2.0, 3.0), 4.0),
 		  "Cyclotron radius with negative charge");
+	const double bodies[] = {
+		0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0,
+		3.0, 4.0, 0.0, -2.0, 1.0, 0.0, 3.0,
+		0.0, 0.0, 12.0, 0.0, 0.0, 3.0, 4.0
+	};
+	CHECK(approx(cp_nBodyTotalEnergy(classical, bodies, 3, 5.0),
+			  34.5 - 5.0 * (6.0 / 5.0 + 8.0 / 12.0 + 12.0 / 13.0)) &&
+		  approx(cp_nBodyTotalEnergy(classical, bodies, 3, 0.0), 34.5) &&
+		  approx(cp_nBodyTotalEnergy(classical, bodies, 1, 5.0), 9.0),
+		  "N-body kinetic and pairwise gravitational energy");
+	CHECK(approx(cp_nBodyTotalAngularMomentumZ(classical, bodies, 3), 33.0) &&
+		  cp_nBodyTotalAngularMomentumZ(classical, bodies, 1) == 0.0,
+		  "N-body angular momentum about Z");
 	cp_destroy(classical);
 
 	CHECK(approx(cp_momentOfInertiaSphere(3.0, 2.0), 4.8), "Solid sphere inertia");
