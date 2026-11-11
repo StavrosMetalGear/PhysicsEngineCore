@@ -155,8 +155,8 @@ foreach ($module in $modules) {
 		$testPlanReport.Add("| $category | $($categoryNames.Count) | $($categoryTested.Count) | $($categoryNames.Count - $categoryTested.Count) | $nextAction |")
 	}
 	$testPlanReport.Add('')
-	$testPlanReport.Add("- Tested APIs: $($tested -join ', ')")
-	$testPlanReport.Add("- Untested APIs: $($untested -join ', ')")
+	$testPlanReport.Add("- Tested APIs: $(if ($tested.Count) { $tested -join ', ' } else { 'none' })")
+	$testPlanReport.Add("- Untested APIs: $(if ($untested.Count) { $untested -join ', ' } else { 'none' })")
 	$testPlanReport.Add('')
 }
 

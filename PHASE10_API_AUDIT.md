@@ -197,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-678 APIs with exact current test references and 133 APIs still requiring
+685 APIs with exact current test references and 126 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -251,10 +251,16 @@ Classical N-body checks cover three-dimensional kinetic energy, pairwise
 gravitational potential energy, and angular momentum about the Z axis. The
 wrappers currently copy body data into a vector on each call; these correctness
 checks do not establish allocation or performance characteristics.
-Seven Classical CSV exports have isolated filesystem checks for headers, row
-counts, grids and numeric references covering free motion, projectile motion,
-oscillator trajectories and Kepler effective potential. The zero-drag test
-checks the export's discrete stepping, not the exact continuous trajectory.
+All fourteen Classical CSV exports have isolated filesystem checks for headers,
+row counts, grids and numeric references. The added cases cover driven and
+coupled oscillators, an eccentric Kepler orbit, radial two-body motion, a
+charged particle in an electric field, and a two-body N-body system. The
+driven exports preserve the power and force-label discrepancies noted above;
+their tests check current behavior rather than validating those quantities.
+The zero-drag, two-body, charged-particle and N-body cases check selected
+discrete steps, not general integration accuracy. The N-body update advances
+velocity before position using the old acceleration, despite its leapfrog
+comment; it should not be assumed to be velocity Verlet.
 Electrodynamics coverage also checks electric fields and potentials,
 dielectrics, RC transients, magnetic fields, Fresnel amplitudes, waveguides,
 and transmission-line quantities.

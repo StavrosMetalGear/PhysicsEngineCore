@@ -47,7 +47,7 @@ public:
 	fs::path path;
 };
 
-bool verifyCsv(const fs::path& path, const std::string& header,
+bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 			   const std::function<std::vector<double>(int)>& expected)
 {
 	std::ifstream input(path);
@@ -57,7 +57,7 @@ bool verifyCsv(const fs::path& path, const std::string& header,
 		std::cerr << "FAIL: missing file or unexpected CSV header: " << path << "\n";
 		return false;
 	}
-	for (int row = 0; row < 3; ++row) {
+	for (int row = 0; row < rowCount; ++row) {
 		if (!std::getline(input, line)) {
 			std::cerr << "FAIL: missing CSV row " << row << ": " << path << "\n";
 			return false;
@@ -108,8 +108,8 @@ bool testExports(const fs::path& root)
 	} owner{classical};
 	bool ok = true;
 	auto filename = [&](const char* name) { return (root / name).string(); };
-	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected) {
-		if (!verifyCsv(root / name, header, expected)) ok = false;
+	auto verify = [&](const char* name, const char* header, const std::function<std::vector<double>(int)>& expected, int rows = 3) {
+		if (!verifyCsv(root / name, header, rows, expected)) ok = false;
 	};
 
 	cp_exportFreeParticleCSV(classical, filename("free.csv").c_str(), 2.0, 3.0, 2.0, 2);
@@ -151,6 +151,70 @@ bool testExports(const fs::path& root)
 		const double r = i + 2.0;
 		return std::vector<double>{r, 2.0 / (r * r) - 1.0 / r};
 	});
+	cp_exportDrivenHOResonanceCSV(classical, filename("driven-resonance.csv").c_str(), 4.0, 2.0, 0.5, 0.0, 2.0, 2);
+	verify("driven-resonance.csv", "omega,amplitude,phase,power", [&](int i) {
+		const double omega = static_cast<double>(i);
+		const double difference = 4.0 - omega * omega;
+		const double denominator = difference * difference + omega * omega;
+		return std::vector<double>{omega, 2.0 / std::sqrt(denominator),
+			std::atan2(omega, difference), 2.0 * omega * omega / denominator};
+	});
+	cp_exportDrivenHOTimeCSV(classical, filename("driven-time.csv").c_str(), 4.0, 2.0, 1.0, 0.5, 2.0, 2);
+	verify("driven-time.csv", "t,x_steady,driving_force", [&](int i) {
+		const double t = static_cast<double>(i);
+		return std::vector<double>{t, 2.0 / std::sqrt(10.0) * std::cos(t - std::atan2(1.0, 3.0)),
+			2.0 * std::cos(t)};
+	});
+	cp_exportCoupledOscillatorsCSV(classical, filename("coupled.csv").c_str(), 2.0, 2.0, 1.0, 2.0, 2.0,
+		1.0, -1.0, 0.0, 0.0, 0.2, 2);
+	verify("coupled.csv", "t,x1,x2,v1,v2", [&](int i) {
+		const double t = i * 0.1;
+		const double x = std::cos(std::sqrt(2.0) * t);
+		const double v = -std::sqrt(2.0) * std::sin(std::sqrt(2.0) * t);
+		return std::vector<double>{t, x, -x, v, -v};
+	});
+	cp_exportKeplerOrbitCSV(classical, filename("kepler-orbit.csv").c_str(), -0.375, 1.0, 1.0, 1.0, 2);
+	verify("kepler-orbit.csv", "theta,r,x,y", [&](int i) {
+		const double theta = pi * i;
+		const double r = 1.0 / (1.0 + 0.5 * std::cos(theta));
+		return std::vector<double>{theta, r, r * std::cos(theta), r * std::sin(theta)};
+	});
+	const double gravitationalConstant = 6.67430e-11;
+	const double bodyMass = 1.0 / (2.0 * gravitationalConstant);
+	cp_exportTwoBodyOrbitCSV(classical, filename("two-body.csv").c_str(), bodyMass, bodyMass, 1.0, 0.0, 0.2, 2);
+	verify("two-body.csv", "t,x,y,vx,vy,r,E", [&](int i) {
+		const double x1 = 0.995;
+		const double v1 = -0.05 * (1.0 + 1.0 / (x1 * x1));
+		const double x2 = x1 + 0.1 * v1 - 0.005 / (x1 * x1);
+		const double v2 = v1 - 0.05 * (1.0 / (x1 * x1) + 1.0 / (x2 * x2));
+		const double x = i == 0 ? 1.0 : (i == 1 ? x1 : x2);
+		const double v = i == 0 ? 0.0 : (i == 1 ? v1 : v2);
+		const double energy = bodyMass / 4.0 * v * v - gravitationalConstant * bodyMass * bodyMass / x;
+		return std::vector<double>{i * 0.1, x, 0.0, v, 0.0, x, energy};
+	});
+	cp_exportChargedParticleTrajectoryCSV(classical, filename("charged.csv").c_str(), 2.0, 2.0,
+		1.0, 2.0, 3.0, 1.0, -2.0, 3.0, 2.0, -1.0, 0.5, 0.0, 0.0, 0.0, 1.0, 2);
+	verify("charged.csv", "t,x,y,z,vx,vy,vz", [&](int i) {
+		const double t = i * 0.5;
+		const double displacementFactor = 0.125 * i * (i + 1);
+		return std::vector<double>{t, 1.0 + t + 2.0 * displacementFactor,
+			2.0 - 2.0 * t - displacementFactor, 3.0 + 3.0 * t + 0.5 * displacementFactor,
+			1.0 + 2.0 * t, -2.0 - t, 3.0 + 0.5 * t};
+	});
+	const double bodies[] = {
+		-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+		0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+	};
+	cp_exportNBodyCSV(classical, filename("nbody.csv").c_str(), bodies, 2, 1.0, 0.1, 2);
+	verify("nbody.csv", "step,body,x,y,z,vx,vy,vz", [&](int row) {
+		const int step = row / 2;
+		const int body = row % 2;
+		const double sign = body == 0 ? 1.0 : -1.0;
+		const double velocity = step == 0 ? 0.0 : (step == 1 ? 0.1 : 0.1 + 0.1 / (0.98 * 0.98));
+		const double position = step == 0 ? -0.5 : (step == 1 ? -0.49 : -0.49 + 0.1 * velocity);
+		return std::vector<double>{static_cast<double>(step), static_cast<double>(body), sign * position,
+			0.0, 0.0, sign * velocity, 0.0, 0.0};
+	}, 6);
 	return ok;
 }
 
