@@ -297,6 +297,32 @@ bool testExports(const fs::path& root)
 		const double radial = 2.0 * std::pow(bohrRadius, -1.5) * std::exp(-r / bohrRadius);
 		return std::vector<double>{r, radial, r * r * radial * radial};
 	});
+	qp_export_ho_wavefunction_csv(quantum, filename("ho-ground.csv").c_str(), 0, oscillatorOmega, 3);
+	verify("ho-ground.csv", "x,psi", [&](int i) {
+		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;
+		const double alpha = mass * oscillatorOmega / hbar;
+		return std::vector<double>{x, std::pow(alpha / pi, 0.25) * std::exp(-alpha * x * x / 2.0)};
+	});
+	qp_export_wkb_comparison_csv(quantum, filename("wkb-ho.csv").c_str(), oscillatorOmega, 2);
+	verify("wkb-ho.csv", "n,E_exact,E_wkb,error_percent", [&](int i) {
+		const double energy = hbar * oscillatorOmega * (i + 0.5);
+		return std::vector<double>{static_cast<double>(i), energy, energy, 0.0};
+	});
+	qp_export_hydrogen_probability_csv(quantum, filename("hydrogen-probability.csv").c_str(), 1, 0, 0, 1.0, 1, 2);
+	verify("hydrogen-probability.csv", "r,theta,prob_density", [&](int i) {
+		const double r = 4.0 * bohrRadius;
+		return std::vector<double>{r, pi * i / 2.0, std::exp(-2.0 * r / bohrRadius) / (pi * std::pow(bohrRadius, 3))};
+	});
+	const double reducedMass = 1.66053906660e-27 / 2.0;
+	qp_export_gamow_peak_csv(quantum, filename("gamow-peak.csv").c_str(), 1.0, 1.0, reducedMass, 1.0e7, 4.0e7, 3);
+	verify("gamow-peak.csv", "T_K,E0_keV,Delta_keV,EG_keV", [&](int i) {
+		const double temperature = 1.0e7 + (i + 1) * 1.0e7;
+		const double thermalEnergy = 1.380649e-23 * temperature;
+		const double gamowEnergy = 2.0 * reducedMass * std::pow(2.99792458e8 * pi / 137.035999084, 2);
+		const double peak = std::cbrt(gamowEnergy * thermalEnergy * thermalEnergy / 4.0);
+		const double keV = 1.602176634e-16;
+		return std::vector<double>{temperature, peak / keV, 4.0 * std::sqrt(peak * thermalEnergy / 3.0) / keV, gamowEnergy / keV};
+	});
 	return ok;
 }
 

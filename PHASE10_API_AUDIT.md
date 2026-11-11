@@ -138,6 +138,10 @@ applicable approximation and allow target-specific input where needed.
 fixed 1–201 ohm load range instead. Clarify or revise this argument in
 ElectrodynamicsCore; the CSV reference checks the current sweep behavior.
 
+`EMField::eddyCurrentDensity` computes `B0*omega*delta*exp(-z/delta)/2`,
+which has electric-field units in SI rather than current-density units.
+Review the intended quantity and conductivity dependence in ElectrodynamicsCore.
+
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
@@ -193,7 +197,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-671 APIs with exact current test references and 140 APIs still requiring
+676 APIs with exact current test references and 135 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -256,18 +260,19 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Thirty-three Electrodynamics CSV exports have isolated filesystem tests checking their
+Thirty-four Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
-Meissner outputs;
+Meissner outputs, and wire and solenoid vector potentials. The vector-potential
+export uses a fixed solenoid field of 0.5 T;
 failure reporting and other export variants remain to be reviewed.
-Twenty-nine Quantum CSV exports have isolated filesystem checks for headers, sample
+Thirty-three Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
 Landau spectrum, adiabatic, classical-path, free-electron, helium variational,
 quantum-channel, Born scattering, propagator, well subband, effective potential,
-orbital ladder, oscillator wavefunction, Stark, degenerate-level, attractive-delta
-and hydrogen 1s radial outputs.
+orbital ladder, oscillator wavefunction, Stark, degenerate-level, attractive-delta,
+harmonic WKB, Gamow peak, and hydrogen 1s radial and probability outputs.
 Nuclear array tests now also cover binding and charge-density curves, beta
 spectra, Rutherford and Breit-Wigner scattering, Bethe-Bloch stopping power,
 and neutrino oscillations, including representative buffer boundaries.

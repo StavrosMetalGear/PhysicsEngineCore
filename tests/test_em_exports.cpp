@@ -166,6 +166,12 @@ bool testExports(const fs::path& root)
 								  : mu0 * 4.0 / (2.0 * pi * r);
 		return std::vector<double>{r, b};
 	});
+	em_export_vector_potential_csv(em, filename("vector-potential.csv").c_str(), 4.0, 0.2, 3);
+	verify("vector-potential.csv", "r,A_wire,A_phi_solenoid", [&](int i) {
+		const double r = 0.001 + 0.3 * i;
+		const double solenoid = r < 0.2 ? 0.25 * r : 0.25 * 0.04 / r;
+		return std::vector<double>{r, -mu0 * 4.0 * std::log(r) / (2.0 * pi), solenoid};
+	});
 	em_export_faraday_csv(em, filename("faraday.csv").c_str(), 2.0, 0.5, 3);
 	verify("faraday.csv", "v,EMF", [](int i) {
 		const double v = 50.0 * i;
