@@ -212,6 +212,11 @@ does not normalize the reported spin expectation values. A zero spinor also
 causes division by zero. Clarify or correct the contract in QuantumCore; the
 CSV reference uses a normalized nonzero spinor.
 
+`qp_coherent_state_photon_prob` evaluates `0 * log(0)` for zero coherent-state
+amplitude and photon number zero, producing a non-finite result instead of the
+vacuum probability one. `qp_export_coherent_state_csv` calls the same function;
+review the zero-amplitude limit in QuantumCore. This is a source-based finding.
+
 At zero time the pinned free and harmonic propagator magnitude APIs return
 zero as an implementation sentinel. The harmonic propagator also returns zero
 when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
@@ -227,7 +232,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-724 APIs with exact current test references and 87 APIs still requiring
+726 APIs with exact current test references and 85 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -301,6 +306,9 @@ the constant spherical harmonic, singlet/triplet coefficients, a normalized
 spin analysis, and every entry of the exported Pauli and gate matrices. These
 are selected cases rather than complete validation of all spinor inputs or
 spherical-harmonic orders.
+Additional CSV references cover Fock-basis harmonic-oscillator ladder matrices
+and a displaced coherent-state Wigner grid. They do not establish numerical
+accuracy across all grid sizes and parameter ranges.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Classical N-body checks cover three-dimensional kinetic energy, pairwise

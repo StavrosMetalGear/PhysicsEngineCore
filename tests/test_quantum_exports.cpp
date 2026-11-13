@@ -499,7 +499,23 @@ bool testExports(const fs::path& root)
 	}
 	qp_export_gate_matrices_csv(quantum, filename("gates.csv").c_str());
 	if (!verifyLabeledCsv(root / "gates.csv", "gate,row,col,Re,Im", matrixRows)) ok = false;
+	qp_export_ho_ladder_matrix_csv(quantum, filename("ho-ladder.csv").c_str(), 3);
+	if (!verifyLabeledCsv(root / "ho-ladder.csv", "operator,row,col,value", {
+		{"a", {0, 1, 1}}, {"a_dag", {1, 0, 1}}, {"N", {0, 0, 0}},
+		{"a", {1, 2, std::sqrt(2.0)}}, {"a_dag", {2, 1, std::sqrt(2.0)}},
+		{"N", {1, 1, 1}}, {"N", {2, 2, 2}}
+	})) ok = false;
 	const double oscillatorOmega = 1.0e14;
+	const double positionScale = std::sqrt(hbar / (mass * oscillatorOmega));
+	const double momentumScale = std::sqrt(mass * hbar * oscillatorOmega);
+	qp_export_wigner_csv(quantum, filename("wigner.csv").c_str(), 0.25, -0.5, oscillatorOmega, 2, 2);
+	verify("wigner.csv", "x,p,W", [&](int i) {
+		const double x = (i / 2 - 1) * 5.0 * positionScale;
+		const double p = (i % 2 - 1) * 5.0 * momentumScale;
+		const double dx = x / positionScale - std::sqrt(2.0) * 0.25;
+		const double dp = p / momentumScale + std::sqrt(2.0) * 0.5;
+		return std::vector<double>{x, p, std::exp(-dx * dx - dp * dp) / (pi * hbar)};
+	}, 4);
 	qp_export_ho_wavefunctions_csv(quantum, filename("ho-wavefunctions.csv").c_str(), 1, oscillatorOmega, 3);
 	verify("ho-wavefunctions.csv", "x,psi0,psi1", [&](int i) {
 		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;
