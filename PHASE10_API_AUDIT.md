@@ -197,6 +197,10 @@ The compatibility implementation of `qp_delta_potential_wavefunction` ignores
 `n` and computes the single attractive-delta bound state for positive strength;
 clarify the supported state and numeric domain in the public API.
 
+For `qp_two_particle_isw` with equal quantum numbers, the symmetric expression
+has a factor of `sqrt(2)` relative to the normalized product state. Review its
+normalization in QuantumCore; the added exchange checks use distinct levels.
+
 At zero time the pinned free and harmonic propagator magnitude APIs return
 zero as an implementation sentinel. The harmonic propagator also returns zero
 when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
@@ -212,7 +216,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-704 APIs with exact current test references and 107 APIs still requiring
+709 APIs with exact current test references and 102 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -265,7 +269,11 @@ square-well Slater antisymmetry also have reference checks.
 Zeeman and Paschen-Back level checks cover magnetic shifts, total counts and
 caller-buffer truncation.
 Scattering references cover potential steps, delta and rectangular barriers,
-and spherical-well, Yukawa and screened Coulomb Born amplitudes.
+and spherical-well, Yukawa and screened Coulomb Born amplitudes. Additional
+checks cover the analytic finite-well s-wave phase and cross sections, the
+low-wave-number Born total-cross-section limit, and exchange symmetry for
+distinct two-particle square-well states. These are representative cases, not
+full validation of scattering domains or numerical integration accuracy.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Classical N-body checks cover three-dimensional kinetic energy, pairwise

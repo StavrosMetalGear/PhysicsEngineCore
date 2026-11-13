@@ -313,6 +313,15 @@ bool test_module_apis()
 	const double quantumLength = 1.0e-9;
 	const double electronBoxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * 1.0e-20);
+	const double exchangeX1 = 1.0e-10 / 4.0;
+	const double exchangeX2 = 1.0e-10 / 2.0;
+	const double exchangeAmplitude = std::sqrt(2.0) * 1.0e10;
+	CHECK(approx(qp_two_particle_isw(quantum, 1, 2, exchangeX1, exchangeX2, 1), exchangeAmplitude) &&
+		  approx(qp_two_particle_isw(quantum, 1, 2, exchangeX2, exchangeX1, 1), exchangeAmplitude) &&
+		  approx(qp_two_particle_isw(quantum, 1, 2, exchangeX1, exchangeX2, 0), -exchangeAmplitude) &&
+		  approx(qp_two_particle_isw(quantum, 1, 2, exchangeX2, exchangeX1, 0), exchangeAmplitude) &&
+		  qp_two_particle_isw(quantum, 1, 2, exchangeX1, exchangeX1, 0) == 0.0,
+		  "Two-particle square-well exchange symmetry for distinct levels");
 	const double broadening = electronBoxEnergy / 2.0;
 	CHECK(approx(qp_dos_box_1d(quantum, electronBoxEnergy, 1.0e-10, 2, broadening),
 			  1.0 / (quantumPi * broadening) + broadening /
@@ -368,6 +377,22 @@ bool test_module_apis()
 	double reflection = 0.0, transmission = 0.0;
 	const double scatteringEnergy = 1.0e-19;
 	const double scatteringK = std::sqrt(2.0 * quantumMass * scatteringEnergy) / hbar;
+	const double wellRadius = 0.7 / scatteringK;
+	const double finiteWellPhase = std::atan2(std::sin(1.4), 2.0 * std::cos(1.4)) - 0.7;
+	const double sWaveDifferential = std::pow(std::sin(finiteWellPhase) / scatteringK, 2.0);
+	CHECK(approx(qp_phase_shift_finite_well(quantum, 0, scatteringEnergy, 3.0 * scatteringEnergy, wellRadius),
+			  finiteWellPhase, 1.0e-8) &&
+		  qp_phase_shift_finite_well(quantum, 0, 0.0, scatteringEnergy, wellRadius) == 0.0,
+		  "Finite-well s-wave phase and nonpositive-energy sentinel");
+	CHECK(approx(qp_differential_cross_section(quantum, scatteringEnergy, 3.0 * scatteringEnergy, wellRadius, 0, 0.0),
+			  sWaveDifferential, 1.0e-8) &&
+		  approx(qp_differential_cross_section(quantum, scatteringEnergy, 3.0 * scatteringEnergy, wellRadius, 0, quantumPi / 2.0),
+			  sWaveDifferential, 1.0e-8) &&
+		  approx(qp_total_cross_section(quantum, scatteringEnergy, 3.0 * scatteringEnergy, wellRadius, 0),
+			  4.0 * quantumPi * sWaveDifferential, 1.0e-8) &&
+		  qp_total_cross_section(quantum, 0.0, scatteringEnergy, wellRadius, 0) == 0.0 &&
+		  qp_differential_cross_section(quantum, 0.0, scatteringEnergy, wellRadius, 0, 0.0) == 0.0,
+		  "Isotropic s-wave scattering and nonpositive-energy sentinels");
 	const double deltaStrength = hbar * hbar * scatteringK / quantumMass;
 	qp_delta_scattering_rt(quantum, scatteringEnergy, deltaStrength, &reflection, &transmission);
 	CHECK(approx(reflection, 0.5) && approx(transmission, 0.5), "Delta scattering probabilities");
@@ -401,6 +426,13 @@ bool test_module_apis()
 				  2.0 * quantumMass * bornDepth * std::pow(bornRadius, 3.0) *
 				  (std::sin(1.0) - std::cos(1.0)) / (hbar * hbar)),
 		  "Spherical-well Born amplitude and forward limit");
+	const double forwardBornAmplitude = 2.0 * quantumMass * bornDepth * std::pow(bornRadius, 3.0) /
+		(3.0 * hbar * hbar);
+	CHECK(approx(qp_born_total_cross_section_sw(0.005 / bornRadius, bornDepth, bornRadius, quantumMass),
+			  4.0 * quantumPi * forwardBornAmplitude * forwardBornAmplitude, 1.0e-4) &&
+		  qp_born_total_cross_section_sw(0.0, bornDepth, bornRadius, quantumMass) == 0.0 &&
+		  qp_born_total_cross_section_sw(1.0 / bornRadius, 0.0, bornRadius, quantumMass) == 0.0,
+		  "Born total cross section near the isotropic limit and zero sentinels");
 	CHECK(approx(qp_born_amplitude_yukawa(bornQ, bornDepth, bornQ, quantumMass),
 				  quantumMass * bornDepth / (hbar * hbar * bornQ * bornQ * bornQ)) &&
 		  approx(qp_born_amplitude_coulomb(bornQ, 1.0, quantumMass, bornQ),
