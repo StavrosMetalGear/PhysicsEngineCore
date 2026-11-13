@@ -417,6 +417,44 @@ bool test_module_apis()
 	qp_barrier_rt(quantum, 2.0 * scatteringEnergy, scatteringEnergy, resonantHalfWidth,
 				  nullptr, &transmission);
 	CHECK(approx(transmission, 1.0), "Above-barrier resonant transmission");
+	double layerMatrix[5] = {0.0, 0.0, 0.0, 0.0, 123.0};
+	qp_transfer_matrix_layer(2.0, 2.0, quantumPi / 4.0, layerMatrix);
+	CHECK(std::abs(layerMatrix[0]) < 1.0e-14 && approx(layerMatrix[1], 0.5) &&
+		  approx(layerMatrix[2], -2.0) && std::abs(layerMatrix[3]) < 1.0e-14 && layerMatrix[4] == 123.0,
+		  "Single-layer transfer matrix and output boundary");
+	qp_transfer_matrix_layer(2.0, 0.0, 0.75, layerMatrix);
+	CHECK(approx(layerMatrix[0], 1.0) && approx(layerMatrix[1], 0.75) &&
+		  layerMatrix[2] == 0.0 && approx(layerMatrix[3], 1.0) && layerMatrix[4] == 123.0,
+		  "Zero-wave-number transfer-matrix limit");
+	qp_transfer_matrix_layer(2.0, 2.0, 0.25, nullptr);
+	const double layerWidths[] = {scatteringHalfWidth, scatteringHalfWidth};
+	const double freeHeights[] = {0.0, 0.0};
+	const double barrierHeights[] = {2.0 * scatteringEnergy, 2.0 * scatteringEnergy};
+	qp_transfer_matrix_multilayer(quantum, scatteringEnergy, layerWidths, freeHeights, 2, &transmission, &reflection);
+	CHECK(approx(transmission, 1.0) && std::abs(reflection) < 1.0e-12, "Free multilayer transmission");
+	qp_transfer_matrix_multilayer(quantum, scatteringEnergy, layerWidths, barrierHeights, 2, &transmission, &reflection);
+	CHECK(approx(transmission, belowBarrierT) && approx(reflection, 1.0 - belowBarrierT),
+		  "Adjacent evanescent barriers and flux conservation");
+	qp_transfer_matrix_multilayer(quantum, 0.0, layerWidths, barrierHeights, 2, nullptr, &reflection);
+	CHECK(reflection == 1.0, "Multilayer nonpositive-energy sentinel and optional transmission");
+	qp_resonant_tunneling(quantum, scatteringEnergy, 2.0 * scatteringEnergy,
+						  scatteringHalfWidth, 0.0, &transmission, &reflection);
+	CHECK(approx(transmission, belowBarrierT) && approx(reflection, 1.0 - belowBarrierT),
+		  "Zero-gap double barrier transmission");
+	qp_resonant_tunneling(quantum, scatteringEnergy, 2.0 * scatteringEnergy,
+						  scatteringHalfWidth, 0.0, nullptr, &reflection);
+	CHECK(approx(reflection, 1.0 - belowBarrierT), "Double barrier optional transmission");
+	double momentumWavefunction[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 123.0};
+	CHECK(qp_momentum_space_wavefunction_1d_box(quantum, 1, 4, momentumWavefunction) == 4 &&
+		  momentumWavefunction[8] == 123.0 &&
+		  approx(momentumWavefunction[2], momentumWavefunction[6]) &&
+		  approx(momentumWavefunction[3], -momentumWavefunction[7]) &&
+		  approx(momentumWavefunction[4], 2.0 * std::sqrt(2.0e-10) /
+				 (quantumPi * std::sqrt(2.0 * quantumPi * hbar)), 3.0e-5) &&
+		  momentumWavefunction[5] == 0.0,
+		  "Momentum-space wavefunction symmetry, zero-momentum limit and output boundary");
+	CHECK(qp_momentum_space_wavefunction_1d_box(quantum, 1, 4, nullptr) == 4,
+		  "Momentum-space wavefunction count with null output");
 	const double bornRadius = 1.0e-10;
 	const double bornDepth = 1.0e-19;
 	const double bornQ = 1.0 / bornRadius;

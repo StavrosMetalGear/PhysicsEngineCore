@@ -179,6 +179,12 @@ the zero-drive limit in QuantumCore; the expected transition probability is zero
 producing non-finite coefficients rather than the finite rectangular-barrier
 limit. Correct the threshold calculation in QuantumCore.
 
+`qp_transfer_matrix_multilayer` also divides by zero when a layer height equals
+positive incident energy: its evanescent branch evaluates `sinh(0)/0` instead
+of the finite zero-wave-number limit. This also affects
+`qp_resonant_tunneling` when its barrier height equals the energy. Review and
+correct these threshold cases in QuantumCore; the added tests avoid them.
+
 `qp_breit_rabi_energy` uses a zero-field offset of `-DeltaHF/[4(2I+1)]`;
 the standard Breit-Rabi expression uses `-DeltaHF/[2(2I+1)]`. Review the
 energy convention and correct the offset in QuantumCore if appropriate.
@@ -216,7 +222,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-709 APIs with exact current test references and 102 APIs still requiring
+713 APIs with exact current test references and 98 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -274,6 +280,12 @@ checks cover the analytic finite-well s-wave phase and cross sections, the
 low-wave-number Born total-cross-section limit, and exchange symmetry for
 distinct two-particle square-well states. These are representative cases, not
 full validation of scattering domains or numerical integration accuracy.
+Transfer-matrix checks cover free layers, adjacent evanescent barriers,
+zero-wave-number single-layer propagation, a zero-gap double barrier and
+selected optional outputs. Momentum-space checks cover conjugate symmetry,
+the analytic zero-momentum limit with numerical-integration tolerance, output
+boundaries and null-output count queries. These checks do not validate the
+threshold cases noted above or establish allocation-free behavior.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Classical N-body checks cover three-dimensional kinetic energy, pairwise
