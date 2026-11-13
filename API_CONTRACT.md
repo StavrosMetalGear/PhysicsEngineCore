@@ -36,7 +36,7 @@ not expand the behavioral guarantees of an API.
 `PHASE10_API_TEST_PLAN.md` records exact references from the current C++ tests.
 An API marked tested there has a call-site reference, but callers must still
 consult the module-specific domain and ownership rules before relying on it.
-The current plan records 719 referenced declarations out of 811; this is active
+The current plan records 724 referenced declarations out of 811; this is active
 validation progress, not an assertion that every exported equation is complete.
 
 ## Naming and linkage
@@ -127,7 +127,9 @@ implementation and the integral uses 200 position samples.
 `qp_transfer_matrix_multilayer` requires valid width and height arrays with
 at least `numLayers` entries for positive counts. At positive energy, avoid
 layers with height exactly equal to the energy: the implementation divides by
-zero at that threshold. The pinned Quantum two-level exact and
+zero at that threshold. `qp_export_transfer_matrix_csv` has the same array
+requirements and threshold issue; its wrapper copies the arrays into internal
+vectors. The pinned Quantum two-level exact and
 perturbative wrappers write the positive energy branch to the first output and
 the negative branch to the second, despite the sibling header's reversed labels.
 The Quantum `qp_free_electron_transition` wrapper writes the energy gap to its

@@ -343,6 +343,33 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{p, (2.0 - p + p * p) / 2.0, (2.0 - p) / 2.0,
 			(1.0 + (1.0 - p) * (1.0 - p)) / 2.0, p, 0.0, 0.0};
 	});
+	qp_export_bloch_evolution_csv(quantum, filename("bloch.csv").c_str(), 0.5, -0.5, 0.0, 2.0, 2.0, 1.0, 2.0, 2);
+	verify("bloch.csv", "t,rx,ry,rz,r_mag,purity", [&](int i) {
+		const double decay = std::pow(0.5, i);
+		const double rx = 0.5 * decay;
+		const double ry = -rx;
+		const double rz = 1.0 - decay;
+		const double magnitudeSquared = rx * rx + ry * ry + rz * rz;
+		return std::vector<double>{static_cast<double>(i), rx, ry, rz, std::sqrt(magnitudeSquared),
+			(1.0 + magnitudeSquared) / 2.0};
+	});
+	const double transferWidth = 1.0e-10;
+	const double transferHeight = 6.0e-19;
+	const double transferWidths[] = {transferWidth, transferWidth};
+	const double transferHeights[] = {transferHeight, transferHeight};
+	const auto transferReference = [&](int i) {
+		const double energy = (i + 1) * 1.0e-19;
+		const double kappa = std::sqrt(2.0 * mass * (transferHeight - energy)) / hbar;
+		const double s = std::sinh(2.0 * transferWidth * kappa);
+		const double transmission = 1.0 / (1.0 + transferHeight * transferHeight * s * s /
+			(4.0 * energy * (transferHeight - energy)));
+		return std::vector<double>{energy, transmission, 1.0 - transmission};
+	};
+	qp_export_transfer_matrix_csv(quantum, filename("transfer.csv").c_str(), transferWidths, transferHeights, 2, 3.0e-19, 3);
+	verify("transfer.csv", "E,T,R", transferReference);
+	qp_export_resonant_tunneling_csv(quantum, filename("double-barrier.csv").c_str(),
+		transferHeight, transferWidth, 0.0, 3.0e-19, 3);
+	verify("double-barrier.csv", "E,T,R", transferReference);
 	const double incidentEnergy = 1.0e-19;
 	const double potential = 2.0e-20;
 	const double radius = 1.0e-10;
@@ -353,6 +380,25 @@ bool testExports(const fs::path& root)
 		const double amplitude = i == 0 ? 2.0 * mass * potential * radius * radius * radius / (3.0 * hbar * hbar)
 			: 2.0 * mass * potential / (hbar * hbar * q * q * q) * (std::sin(q * radius) - q * radius * std::cos(q * radius));
 		return std::vector<double>{theta, q, amplitude, amplitude * amplitude};
+	});
+	const double scatteringK = std::sqrt(2.0 * mass * incidentEnergy) / hbar;
+	const double scatteringRadius = 0.7 / scatteringK;
+	const double scatteringDepth = 3.0 * incidentEnergy;
+	const auto sWave = [&](double energy) {
+		const double k = std::sqrt(2.0 * mass * energy) / hbar;
+		const double K = std::sqrt(2.0 * mass * (energy + scatteringDepth)) / hbar;
+		const double phase = std::atan2(k * std::sin(K * scatteringRadius), K * std::cos(K * scatteringRadius)) - k * scatteringRadius;
+		return std::array<double, 3>{k, phase, 4.0 * pi * std::pow(std::sin(phase) / k, 2.0)};
+	};
+	qp_export_partial_wave_csv(quantum, filename("partial-wave.csv").c_str(), scatteringDepth, scatteringRadius, 0, incidentEnergy, 3);
+	verify("partial-wave.csv", "E,k,sigma_total,delta_0,sigma_0", [&](int i) {
+		const double energy = (i + 1) * incidentEnergy / 3.0;
+		const auto result = sWave(energy);
+		return std::vector<double>{energy, result[0], result[2], result[1], result[2]};
+	});
+	qp_export_differential_csv(quantum, filename("differential.csv").c_str(), incidentEnergy, scatteringDepth, scatteringRadius, 0, 2);
+	verify("differential.csv", "theta,dsigma_dOmega", [&](int i) {
+		return std::vector<double>{i * pi / 2.0, sWave(incidentEnergy)[2] / (4.0 * pi)};
 	});
 	const double freeTime = 1.0e-15;
 	qp_export_free_particle_propagator_csv(quantum, filename("free-propagator.csv").c_str(), 0.0, freeTime, 3);

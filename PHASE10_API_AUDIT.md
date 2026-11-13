@@ -227,7 +227,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-719 APIs with exact current test references and 92 APIs still requiring
+724 APIs with exact current test references and 87 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -291,6 +291,11 @@ selected optional outputs. Momentum-space checks cover conjugate symmetry,
 the analytic zero-momentum limit with numerical-integration tolerance, output
 boundaries and null-output count queries. These checks do not validate the
 threshold cases noted above or establish allocation-free behavior.
+CSV references additionally check s-wave partial and differential cross sections,
+two adjacent evanescent layers and a zero-gap double barrier over an energy grid,
+and Bloch evolution's discrete Euler steps, magnitude and purity. The barrier
+grid avoids the known energy threshold; these cases do not establish general
+scattering accuracy or continuous-time integration accuracy.
 Quantum CSV references now also check orbital-angular-momentum enumeration,
 the constant spherical harmonic, singlet/triplet coefficients, a normalized
 spin analysis, and every entry of the exported Pauli and gate matrices. These
