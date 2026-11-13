@@ -36,7 +36,7 @@ not expand the behavioral guarantees of an API.
 `PHASE10_API_TEST_PLAN.md` records exact references from the current C++ tests.
 An API marked tested there has a call-site reference, but callers must still
 consult the module-specific domain and ownership rules before relying on it.
-The current plan records 713 referenced declarations out of 811; this is active
+The current plan records 719 referenced declarations out of 811; this is active
 validation progress, not an assertion that every exported equation is complete.
 
 ## Naming and linkage
@@ -107,7 +107,7 @@ harmonic-oscillator energy helper currently follows the pinned implementation's
 dimensionless `hbar = 1` convention; callers should not assume SI energy units
 for that function without a future API clarification.
 
-The generated Phase 10 test plan currently records 713 referenced declarations out
+The generated Phase 10 test plan currently records 719 referenced declarations out
 of 811; this is measured exact-symbol coverage, not proof that every API domain,
 buffer contract, numerical solver, or export path is fully validated.
 
@@ -134,6 +134,9 @@ The Quantum `qp_free_electron_transition` wrapper writes the energy gap to its
 first non-null output and wavelength `h*c/gap` to its second, although the sibling
 header labels the second output as transition energy. Use positive electron counts
 and nonzero mass and length; the output labeling requires an API correction.
+For `qp_export_spin_analysis_csv`, use a normalized nonzero spinor: the current
+implementation normalizes probabilities but not the spin expectation values,
+and a zero spinor leads to division by zero.
 Nuclear paired-vector wrappers return the
 number of entries written, capped by the supplied buffer length; they do not
 allocate caller buffers. Use nonnegative capacities and provide valid pointers

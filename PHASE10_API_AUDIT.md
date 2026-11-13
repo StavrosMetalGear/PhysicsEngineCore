@@ -207,6 +207,11 @@ For `qp_two_particle_isw` with equal quantum numbers, the symmetric expression
 has a factor of `sqrt(2)` relative to the normalized product state. Review its
 normalization in QuantumCore; the added exchange checks use distinct levels.
 
+`qp_export_spin_analysis_csv` divides probabilities by the spinor norm but
+does not normalize the reported spin expectation values. A zero spinor also
+causes division by zero. Clarify or correct the contract in QuantumCore; the
+CSV reference uses a normalized nonzero spinor.
+
 At zero time the pinned free and harmonic propagator magnitude APIs return
 zero as an implementation sentinel. The harmonic propagator also returns zero
 when `abs(sin(omega*t)) < 1e-30`. These singular kernel values require a
@@ -222,7 +227,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-713 APIs with exact current test references and 98 APIs still requiring
+719 APIs with exact current test references and 92 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -286,6 +291,11 @@ selected optional outputs. Momentum-space checks cover conjugate symmetry,
 the analytic zero-momentum limit with numerical-integration tolerance, output
 boundaries and null-output count queries. These checks do not validate the
 threshold cases noted above or establish allocation-free behavior.
+Quantum CSV references now also check orbital-angular-momentum enumeration,
+the constant spherical harmonic, singlet/triplet coefficients, a normalized
+spin analysis, and every entry of the exported Pauli and gate matrices. These
+are selected cases rather than complete validation of all spinor inputs or
+spherical-harmonic orders.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Classical N-body checks cover three-dimensional kinetic energy, pairwise

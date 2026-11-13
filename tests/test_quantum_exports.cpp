@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -90,6 +91,55 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 	}
 	if (std::getline(input, line) || input.bad()) {
 		std::cerr << "FAIL: extra row or read error: " << path << "\n";
+		return false;
+	}
+	return true;
+}
+
+bool verifyLabeledCsv(const fs::path& path, const std::string& header,
+					  const std::vector<std::pair<std::string, std::vector<double>>>& expected)
+{
+	std::ifstream input(path);
+	input.imbue(std::locale::classic());
+	std::string line;
+	if (!std::getline(input, line) || line != header) {
+		std::cerr << "FAIL: missing file or unexpected CSV header: " << path << "\n";
+		return false;
+	}
+	for (const auto& row : expected) {
+		if (!std::getline(input, line)) {
+			std::cerr << "FAIL: missing labeled CSV row: " << path << "\n";
+			return false;
+		}
+		std::istringstream fields(line);
+		fields.imbue(std::locale::classic());
+		std::string field;
+		if (!std::getline(fields, field, ',') || field != row.first) {
+			std::cerr << "FAIL: unexpected CSV label: " << path << "\n";
+			return false;
+		}
+		for (double value : row.second) {
+			if (!std::getline(fields, field, ',')) {
+				std::cerr << "FAIL: missing labeled CSV column: " << path << "\n";
+				return false;
+			}
+			std::istringstream number(field);
+			number.imbue(std::locale::classic());
+			double actual = 0.0;
+			if (!(number >> actual) || !(number >> std::ws).eof() || !std::isfinite(actual) ||
+				std::abs(actual - value) > 1.0e-5 * std::max(std::abs(value), 1.0e-300)) {
+				std::cerr << "FAIL: invalid labeled CSV value: " << path << " label " << row.first
+						  << " value " << field << " expected " << value << "\n";
+				return false;
+			}
+		}
+		if (std::getline(fields, field, ',') || (!line.empty() && line.back() == ',')) {
+			std::cerr << "FAIL: extra labeled CSV column: " << path << "\n";
+			return false;
+		}
+	}
+	if (std::getline(input, line) || input.bad()) {
+		std::cerr << "FAIL: extra labeled CSV row or read error: " << path << "\n";
 		return false;
 	}
 	return true;
@@ -338,6 +388,71 @@ bool testExports(const fs::path& root)
 			static_cast<double>(m == 1 ? m : m + 1), m == -1 ? 0.0 : std::sqrt(2.0),
 			static_cast<double>(m == -1 ? m : m - 1)};
 	});
+	qp_export_orbital_angular_momentum_csv(quantum, filename("orbital.csv").c_str(), 2);
+	verify("orbital.csv", "l,m,L2_over_hbar2,Lz_over_hbar,degeneracy", [&](int i) {
+		const int l = i == 0 ? 0 : (i < 4 ? 1 : 2);
+		const int m = i - l * l - l;
+		return std::vector<double>{static_cast<double>(l), static_cast<double>(m),
+			static_cast<double>(l * (l + 1)), static_cast<double>(m), static_cast<double>(2 * l + 1)};
+	}, 9);
+	qp_export_orbital_angular_momentum_csv(quantum, filename("orbital-empty.csv").c_str(), -1);
+	verify("orbital-empty.csv", "l,m,L2_over_hbar2,Lz_over_hbar,degeneracy", [](int) {
+		return std::vector<double>{};
+	}, 0);
+	qp_export_spherical_harmonics_csv(quantum, filename("spherical-harmonics.csv").c_str(), 0, 3);
+	verify("spherical-harmonics.csv", "theta,phi,m,ReY,ImY,absY2", [&](int i) {
+		return std::vector<double>{(i / 3) * pi / 2.0, (i % 3) * pi, 0.0,
+			1.0 / std::sqrt(4.0 * pi), 0.0, 1.0 / (4.0 * pi)};
+	}, 9);
+	const double invSqrt2 = 1.0 / std::sqrt(2.0);
+	qp_export_singlet_triplet_csv(quantum, filename("singlet-triplet.csv").c_str());
+	if (!verifyLabeledCsv(root / "singlet-triplet.csv", "state_name,S,M_S,c_upup,c_updown,c_downup,c_downdown", {
+		{"triplet_+1", {1, 1, 1, 0, 0, 0}},
+		{"triplet_0", {1, 0, 0, invSqrt2, invSqrt2, 0}},
+		{"triplet_-1", {1, -1, 0, 0, 0, 1}},
+		{"singlet", {0, 0, 0, invSqrt2, -invSqrt2, 0}}
+	})) ok = false;
+	qp_export_spin_analysis_csv(quantum, filename("spin-analysis.csv").c_str(), invSqrt2, 0.0, 0.0, invSqrt2);
+	if (!verifyLabeledCsv(root / "spin-analysis.csv", "quantity,value", {
+		{"P_up", {0.5}}, {"P_down", {0.5}}, {"Sx", {0.0}}, {"Sy", {hbar / 2.0}}, {"Sz", {0.0}}
+	})) ok = false;
+	const std::vector<std::pair<std::string, std::array<double, 8>>> pauliMatrices = {
+		{"sigma_x", {0, 0, 1, 0, 1, 0, 0, 0}},
+		{"sigma_y", {0, 0, 0, -1, 0, 1, 0, 0}},
+		{"sigma_z", {1, 0, 0, 0, 0, 0, -1, 0}},
+		{"S_plus", {0, 0, hbar, 0, 0, 0, 0, 0}},
+		{"S_minus", {0, 0, 0, 0, hbar, 0, 0, 0}}
+	};
+	std::vector<std::pair<std::string, std::vector<double>>> matrixRows;
+	for (const auto& matrix : pauliMatrices) {
+		for (int element = 0; element < 4; ++element) {
+			matrixRows.push_back({matrix.first, {static_cast<double>(element / 2), static_cast<double>(element % 2),
+				matrix.second[2 * element], matrix.second[2 * element + 1]}});
+		}
+	}
+	qp_export_pauli_matrices_csv(quantum, filename("pauli.csv").c_str());
+	if (!verifyLabeledCsv(root / "pauli.csv", "matrix,row,col,Re,Im", matrixRows)) ok = false;
+	const std::vector<std::pair<std::string, std::array<double, 8>>> gates = {
+		{"I", {1, 0, 0, 0, 0, 0, 1, 0}},
+		{"X", {0, 0, 1, 0, 1, 0, 0, 0}},
+		{"Y", {0, 0, 0, -1, 0, 1, 0, 0}},
+		{"Z", {1, 0, 0, 0, 0, 0, -1, 0}},
+		{"H", {invSqrt2, 0, invSqrt2, 0, invSqrt2, 0, -invSqrt2, 0}},
+		{"S", {1, 0, 0, 0, 0, 0, 0, 1}},
+		{"T", {1, 0, 0, 0, 0, 0, invSqrt2, invSqrt2}},
+		{"Rx_pi2", {invSqrt2, 0, 0, -invSqrt2, 0, -invSqrt2, invSqrt2, 0}},
+		{"Ry_pi2", {invSqrt2, 0, -invSqrt2, 0, invSqrt2, 0, invSqrt2, 0}},
+		{"Rz_pi2", {invSqrt2, -invSqrt2, 0, 0, 0, 0, invSqrt2, invSqrt2}}
+	};
+	matrixRows.clear();
+	for (const auto& gate : gates) {
+		for (int element = 0; element < 4; ++element) {
+			matrixRows.push_back({gate.first, {static_cast<double>(element / 2), static_cast<double>(element % 2),
+				gate.second[2 * element], gate.second[2 * element + 1]}});
+		}
+	}
+	qp_export_gate_matrices_csv(quantum, filename("gates.csv").c_str());
+	if (!verifyLabeledCsv(root / "gates.csv", "gate,row,col,Re,Im", matrixRows)) ok = false;
 	const double oscillatorOmega = 1.0e14;
 	qp_export_ho_wavefunctions_csv(quantum, filename("ho-wavefunctions.csv").c_str(), 1, oscillatorOmega, 3);
 	verify("ho-wavefunctions.csv", "x,psi0,psi1", [&](int i) {
