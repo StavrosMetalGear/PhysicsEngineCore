@@ -279,6 +279,15 @@ bool testExports(const fs::path& root)
 		if (!verifyCsv(root / name, header, rows, expected)) ok = false;
 	};
 
+	const double variationalMass = 9.1093837015e-31;
+	const double variationalOmega = 2.0 * hbar / variationalMass;
+	qp_export_variational_sweep_csv(quantum, filename("variational.csv").c_str(), 0, variationalOmega, 0.0, 3);
+	verify("variational.csv", "alpha,E", [&](int i) {
+		const double alpha = 0.01 * std::pow(1000.0, i);
+		const double energy = hbar * hbar * alpha / (2.0 * variationalMass) +
+			variationalMass * variationalOmega * variationalOmega / (8.0 * alpha);
+		return std::vector<double>{alpha, energy};
+	});
 	qp_export_rabi_csv(quantum, filename("rabi.csv").c_str(), 2.0, 0.0, pi / 2.0, 2);
 	verify("rabi.csv", "t,P_rabi", [&](int i) {
 		const double t = i * pi / 4.0;

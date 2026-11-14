@@ -232,7 +232,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-747 APIs with exact current test references and 64 APIs still requiring
+750 APIs with exact current test references and 61 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -286,7 +286,12 @@ two-particle square-well CSV grids. These selected cases do not establish WKB
 integration accuracy or convergence of the Stark perturbation sum in general.
 The Gaussian variational energy and default search are checked against the exact
 harmonic-oscillator ground state with its optimum inside the search interval;
-this does not validate other potentials or optima outside that interval.
+the Gaussian harmonic variational CSV sweep also has grid and energy checks.
+These do not validate other potentials or optima outside that interval.
+Additional references cover the half-line linear-potential WKB approximation
+and Sackur-Tetrode entropy with isothermal volume scaling for a classical gas;
+they do not establish exact linear-potential energies or validity outside the
+dilute ideal-gas domain.
 Electromagnetic checks cover the eddy-braking model's signed velocity, the wire
 vector potential in its chosen gauge, and selected real permeability values
 with and without damping. These do not establish general model validity.

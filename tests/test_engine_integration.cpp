@@ -315,6 +315,14 @@ bool test_module_apis()
 	const double quantumCharge = 1.602176634e-19;
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
+	const double linearForce = 2.0e-9;
+	const double linearEnergyScale = std::pow(3.0 * quantumPi * hbar * linearForce /
+		(2.0 * std::sqrt(2.0 * quantumMass)), 2.0 / 3.0);
+	CHECK(approx(qp_wkb_energy_linear_potential(quantum, 1, linearForce),
+			  linearEnergyScale * std::pow(0.75, 2.0 / 3.0)) &&
+		  approx(qp_wkb_energy_linear_potential(quantum, 2, 8.0 * linearForce),
+			  4.0 * linearEnergyScale * std::pow(1.75, 2.0 / 3.0)),
+		  "Half-line linear potential WKB energies and force scaling");
 	const double variationalOmega = 4.0 * hbar / quantumMass;
 	const double variationalGroundEnergy = 0.5 * hbar * variationalOmega;
 	CHECK(approx(qp_variational_energy_gaussian(quantum, 2.0, 0, variationalOmega, 0.0),
@@ -1841,6 +1849,16 @@ bool test_module_apis()
 			  std::sqrt(2.0 * 3.14159265358979323846 * 1.0545718e-34 *
 						 1.0545718e-34 / (4.65e-26 * boltzmann * 300.0))),
 		  "Thermal de Broglie wavelength");
+	const double avogadro = 6.02214076e23;
+	const double thermalLambda = std::sqrt(2.0 * thermalPi * hbar * hbar /
+		(thermalMass * boltzmann * 300.0));
+	const double idealGasEntropy = avogadro * boltzmann *
+		(2.5 + std::log(1.0 / (avogadro * std::pow(thermalLambda, 3.0))));
+	const double entropyAtVolume = td_sackur_tetrode_entropy(thermo, 300.0, 1.0, thermalMass);
+	CHECK(approx(entropyAtVolume, idealGasEntropy) &&
+		  approx(td_sackur_tetrode_entropy(thermo, 300.0, 2.0, thermalMass) - entropyAtVolume,
+			  avogadro * boltzmann * std::log(2.0)),
+		  "Sackur-Tetrode entropy and isothermal volume scaling");
 	CHECK(approx(td_stefan_boltzmann_power(thermo, 300.0, 2.0),
 			  5.670374419e-8 * 2.0 * std::pow(300.0, 4.0)),
 		  "Stefan-Boltzmann power");
