@@ -123,6 +123,12 @@ claiming `ss_debye_specific_heat` is scientifically validated.
 the infinite-chain magnetization per spin. Clarify that contract or implement
 the finite-chain result in ThermodynamicsCore before validating this API.
 
+`QuantumParticle::rayleighRitzHO` uses an absolute `1e-30` Jacobi convergence
+threshold, which can stop diagonalization while off-diagonal terms remain
+significant relative to the energy scale. Review scale-dependent convergence in
+QuantumCore. The added harmonic reference has a diagonal Hamiltonian and does
+not exercise convergence on coupled states.
+
 `ClassicalParticle::drivenHOPowerAbsorbed` uses half the mean power expected
 for the oscillator's `2*gamma` damping convention. Review the factor of two
 in ClassicalMechanicsCore. Its driven-time CSV also labels `F0/mass` as
@@ -232,7 +238,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-750 APIs with exact current test references and 61 APIs still requiring
+755 APIs with exact current test references and 56 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -288,6 +294,12 @@ The Gaussian variational energy and default search are checked against the exact
 harmonic-oscillator ground state with its optimum inside the search interval;
 the Gaussian harmonic variational CSV sweep also has grid and energy checks.
 These do not validate other potentials or optima outside that interval.
+Rayleigh-Ritz checks cover selected exact harmonic levels, total counts,
+buffer truncation and the corresponding CSV; they do not validate eigenvalue
+convergence for coupled states. Additional CSV checks cover a spin-half
+hyperfine spectrum and weak-field splitting, and the time-independent spatial
+amplitude currently exported for an attractive delta bound state. The latter
+does not validate the complex time-dependent phase.
 Additional references cover the half-line linear-potential WKB approximation
 and Sackur-Tetrode entropy with isothermal volume scaling for a classical gas;
 they do not establish exact linear-potential energies or validity outside the

@@ -288,6 +288,28 @@ bool testExports(const fs::path& root)
 			variationalMass * variationalOmega * variationalOmega / (8.0 * alpha);
 		return std::vector<double>{alpha, energy};
 	});
+	const double ritzOmega = 1.0e12;
+	qp_export_rayleigh_ritz_csv(quantum, filename("rayleigh-ritz.csv").c_str(), 4, ritzOmega, 0, ritzOmega, 0.0);
+	verify("rayleigh-ritz.csv", "basisSize,E0,E1,E2", [&](int i) {
+		return std::vector<double>{static_cast<double>(i + 2), 0.5 * hbar * ritzOmega,
+			1.5 * hbar * ritzOmega, i == 0 ? 0.0 : 2.5 * hbar * ritzOmega};
+	});
+	const double hyperfineA = 1.0e-22;
+	qp_export_hyperfine_spectrum_csv(quantum, filename("hyperfine-spectrum.csv").c_str(), 0.5, 0.5, hyperfineA, 2.0, 0.0);
+	verify("hyperfine-spectrum.csv", "F,mF,E_hf,g_F", [&](int row) {
+		if (row == 0) return std::vector<double>{0.0, 0.0, -0.75 * hyperfineA, 0.0};
+		return std::vector<double>{1.0, static_cast<double>(row - 2), 0.25 * hyperfineA, 1.0};
+	}, 4);
+	const double hyperfineBmax = 0.01;
+	qp_export_hyperfine_zeeman_csv(quantum, filename("hyperfine-zeeman.csv").c_str(), 0.5, 0.5, hyperfineA, 2.0, 0.0, hyperfineBmax, 2);
+	verify("hyperfine-zeeman.csv", "B,F,mF,E", [&](int row) {
+		const double field = (row / 4) * hyperfineBmax / 2.0;
+		const int state = row % 4;
+		if (state == 0) return std::vector<double>{field, 0.0, 0.0, -0.75 * hyperfineA};
+		const double magneticNumber = state - 2.0;
+		return std::vector<double>{field, 1.0, magneticNumber,
+			0.25 * hyperfineA + 9.2740100783e-24 * magneticNumber * field};
+	}, 12);
 	qp_export_rabi_csv(quantum, filename("rabi.csv").c_str(), 2.0, 0.0, pi / 2.0, 2);
 	verify("rabi.csv", "t,P_rabi", [&](int i) {
 		const double t = i * pi / 4.0;
@@ -715,6 +737,14 @@ bool testExports(const fs::path& root)
 		const double kappa = mass * deltaStrength / (hbar * hbar);
 		return std::vector<double>{x, std::sqrt(kappa) * std::exp(-kappa * std::abs(x))};
 	});
+	const double deltaTimeMax = 1.0e-12;
+	qp_export_delta_potential_time_evolution_csv(quantum, filename("delta-time.csv").c_str(), deltaStrength, 3, deltaTimeMax);
+	verify("delta-time.csv", "x,t,psi", [&](int row) {
+		const double x = -1.0e-9 + (row % 3) * 2.0e-9 / 3.0;
+		const double t = (row / 3) * deltaTimeMax / 10.0;
+		const double kappa = mass * deltaStrength / (hbar * hbar);
+		return std::vector<double>{x, t, std::sqrt(kappa) * std::exp(-kappa * std::abs(x))};
+	}, 33);
 	qp_export_parabolic_well_wavefunction_csv(quantum, filename("parabolic-wavefunction.csv").c_str(), 1, oscillatorOmega, 3);
 	verify("parabolic-wavefunction.csv", "x,psi", [&](int i) {
 		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;

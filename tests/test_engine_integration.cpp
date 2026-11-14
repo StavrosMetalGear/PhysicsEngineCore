@@ -335,6 +335,15 @@ bool test_module_apis()
 		  approx(qp_variational_energy_gaussian(quantum, optimalAlpha, 0, variationalOmega, 0.0),
 			  variationalGroundEnergy, 1.0e-9),
 		  "Gaussian harmonic variational optimum within the default search interval");
+	const double ritzOmega = 1.0e12;
+	double ritzLevels[4] = {0.0, 0.0, 123.0, 456.0};
+	CHECK(qp_rayleigh_ritz_ho(quantum, 3, ritzOmega, 0, ritzOmega, 0.0, ritzLevels, 2) == 3 &&
+		  approx(ritzLevels[0], 0.5 * hbar * ritzOmega) &&
+		  approx(ritzLevels[1], 1.5 * hbar * ritzOmega) &&
+		  ritzLevels[2] == 123.0 && ritzLevels[3] == 456.0,
+		  "Harmonic Rayleigh-Ritz levels, total count and truncated buffer");
+	CHECK(qp_rayleigh_ritz_ho(quantum, 3, ritzOmega, 0, ritzOmega, 0.0, nullptr, 0) == 3,
+		  "Rayleigh-Ritz null-output total count");
 	const double quantumLength = 1.0e-9;
 	const double electronBoxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * 1.0e-20);
