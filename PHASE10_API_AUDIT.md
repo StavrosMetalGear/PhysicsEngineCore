@@ -232,7 +232,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-742 APIs with exact current test references and 69 APIs still requiring
+747 APIs with exact current test references and 64 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -284,6 +284,12 @@ Additional checks cover complex propagator outputs, a two-level truncated Stark
 shift, constant-potential WKB callback cases, and one-dimensional and distinct-level
 two-particle square-well CSV grids. These selected cases do not establish WKB
 integration accuracy or convergence of the Stark perturbation sum in general.
+The Gaussian variational energy and default search are checked against the exact
+harmonic-oscillator ground state with its optimum inside the search interval;
+this does not validate other potentials or optima outside that interval.
+Electromagnetic checks cover the eddy-braking model's signed velocity, the wire
+vector potential in its chosen gauge, and selected real permeability values
+with and without damping. These do not establish general model validity.
 Bounded box and hyperfine levels, Bloch Euler steps, matrix determinants and
 square-well Slater antisymmetry also have reference checks.
 Zeeman and Paschen-Back level checks cover magnetic shifts, total counts and

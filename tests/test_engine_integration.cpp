@@ -315,6 +315,18 @@ bool test_module_apis()
 	const double quantumCharge = 1.602176634e-19;
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
+	const double variationalOmega = 4.0 * hbar / quantumMass;
+	const double variationalGroundEnergy = 0.5 * hbar * variationalOmega;
+	CHECK(approx(qp_variational_energy_gaussian(quantum, 2.0, 0, variationalOmega, 0.0),
+			  variationalGroundEnergy) &&
+		  approx(qp_variational_energy_gaussian(quantum, 4.0, 0, variationalOmega, 0.0),
+			  1.25 * variationalGroundEnergy),
+		  "Gaussian harmonic variational energy at and away from the minimum");
+	const double optimalAlpha = qp_variational_optimal_alpha(quantum, 0, variationalOmega, 0.0);
+	CHECK(approx(optimalAlpha, 2.0, 1.0e-6) &&
+		  approx(qp_variational_energy_gaussian(quantum, optimalAlpha, 0, variationalOmega, 0.0),
+			  variationalGroundEnergy, 1.0e-9),
+		  "Gaussian harmonic variational optimum within the default search interval");
 	const double quantumLength = 1.0e-9;
 	const double electronBoxEnergy = hbar * hbar * quantumPi * quantumPi /
 		(2.0 * quantumMass * 1.0e-20);
@@ -1072,6 +1084,20 @@ bool test_module_apis()
 	CHECK(approx(em_skin_depth(electromagnetic, 1.0e9),
 				  std::sqrt(2.0 / (1.2566370614e-6 * 1.0 * 5.8e7 * 1.0e9))),
 		  "Electromagnetic skin depth");
+	CHECK(approx(em_eddy_braking_force(electromagnetic, 2.0, 3.0, 5.0, 0.1, 0.2), 1.2) &&
+		  em_eddy_braking_force(electromagnetic, 0.0, 3.0, 5.0, 0.1, 0.2) == 0.0 &&
+		  approx(em_eddy_braking_force(electromagnetic, 2.0, -3.0, 5.0, 0.1, 0.2), -1.2),
+		  "Eddy braking force magnitude model and signed velocity");
+	CHECK(approx(em_vector_potential_wire(electromagnetic, 4.0, 2.0),
+			  -1.2566370614e-6 * 4.0 * std::log(2.0) / (2.0 * quantumPi)) &&
+		  em_vector_potential_wire(electromagnetic, 4.0, 1.0) == 0.0,
+		  "Wire vector-potential gauge and radial dependence");
+	CHECK(approx(em_metamaterial_permeability(electromagnetic, 3.0, 2.0, 0.4, 1.0),
+			  1.0 - 0.4 * 9.0 * 5.0 / 34.0) &&
+		  approx(em_metamaterial_permeability(electromagnetic, 3.0, 2.0, 0.4, 0.0),
+			  1.0 - 0.4 * 9.0 / 5.0) &&
+		  em_metamaterial_permeability(electromagnetic, 3.0, 2.0, 0.0, 1.0) == 1.0,
+		  "Real metamaterial permeability with damping and zero coupling");
 	CHECK(approx(em_resistance(electromagnetic, 1.0e-6, 2.0, 0.5), 4.0e-6),
 		  "Electromagnetic resistance");
 	CHECK(approx(em_power_dissipated(electromagnetic, 3.0, 4.0), 36.0),
