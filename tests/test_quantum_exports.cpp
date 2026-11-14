@@ -313,6 +313,20 @@ bool testExports(const fs::path& root)
 		const double field = i + 1.0;
 		return std::vector<double>{field, 0.0, hbar * charge * field / (2.0 * mass)};
 	});
+	const double planck = 6.62607015e-34;
+	const double landauGround = hbar * charge / (2.0 * mass);
+	const double broadening = landauGround / 2.0;
+	qp_export_landau_dos_csv(quantum, filename("landau-dos.csv").c_str(), 1.0, mass,
+		3.0 * landauGround, 1, broadening, 3);
+	verify("landau-dos.csv", "E,DOS", [&](int i) {
+		const double energy = (i + 1) * landauGround;
+		const double d0 = energy - landauGround;
+		const double d1 = energy - 3.0 * landauGround;
+		const double dos = charge / planck * broadening / pi *
+			(1.0 / (d0 * d0 + broadening * broadening) +
+			 1.0 / (d1 * d1 + broadening * broadening));
+		return std::vector<double>{energy, dos};
+	});
 	qp_export_adiabatic_sweep_csv(quantum, filename("adiabatic.csv").c_str(), 1.0e-19, 3.0e-5, 3);
 	verify("adiabatic.csv", "rate,Q,is_adiabatic", [&](int i) {
 		const double rate = (i + 1) * 1.0e-5;
@@ -458,6 +472,12 @@ bool testExports(const fs::path& root)
 		{"triplet_-1", {1, -1, 0, 0, 0, 1}},
 		{"singlet", {0, 0, 0, invSqrt2, -invSqrt2, 0}}
 	})) ok = false;
+	const double singlet[] = {0.0, 0.0, invSqrt2, 0.0, -invSqrt2, 0.0, 0.0, 0.0};
+	qp_export_chsh_sweep_csv(quantum, filename("chsh.csv").c_str(), singlet, 3);
+	verify("chsh.csv", "thetaB,E_correlator,S_chsh", [&](int i) {
+		const double theta = i * pi / 3.0;
+		return std::vector<double>{theta, -std::cos(theta), -2.0 * std::cos(theta) - std::sqrt(2.0) * std::sin(theta)};
+	}, 4);
 	qp_export_spin_analysis_csv(quantum, filename("spin-analysis.csv").c_str(), invSqrt2, 0.0, 0.0, invSqrt2);
 	if (!verifyLabeledCsv(root / "spin-analysis.csv", "quantity,value", {
 		{"P_up", {0.5}}, {"P_down", {0.5}}, {"Sx", {0.0}}, {"Sy", {hbar / 2.0}}, {"Sz", {0.0}}
@@ -524,6 +544,17 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{x, ground, std::sqrt(2.0 * alpha) * x * ground};
 	});
 	const double electricField = 1.0e8;
+	const double iswUnit = hbar * hbar * pi * pi / (2.0 * mass * 1.0e-20);
+	const double coupling12 = charge * electricField * 16.0e-10 / (9.0 * pi * pi);
+	const double secondOrder = coupling12 * coupling12 / (3.0 * iswUnit);
+	const double firstOrder = charge * electricField * 0.5e-10;
+	qp_export_stark_isw_csv(quantum, filename("stark-isw.csv").c_str(), electricField, 2, 2);
+	verify("stark-isw.csv", "n,E0,E1_correction,E2_correction,E_total", [&](int i) {
+		const double n = i + 1.0;
+		const double energy = n * n * iswUnit;
+		const double correction = i == 0 ? -secondOrder : secondOrder;
+		return std::vector<double>{n, energy, firstOrder, correction, energy + firstOrder + correction};
+	}, 2);
 	qp_export_stark_ho_csv(quantum, filename("stark-ho.csv").c_str(), oscillatorOmega, electricField, 2);
 	verify("stark-ho.csv", "n,E0,E1_correction,E2_correction,E_total", [&](int i) {
 		const double energy = hbar * oscillatorOmega * (i + 0.5);
