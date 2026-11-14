@@ -232,7 +232,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-732 APIs with exact current test references and 79 APIs still requiring
+735 APIs with exact current test references and 76 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -317,6 +317,10 @@ CSV references also check all four Bell states, the first three spherical-well
 s-wave energies, and both sections of a coherent-state export at nonzero
 amplitude. The coherent-state test does not cover the known zero-amplitude
 problem; the spherical-well case does not cover higher angular momentum.
+Additional CSV checks cover spin-half coupled-state coefficients, a complex Bell
+state's amplitudes and measurement probabilities, and Gamow tunneling below,
+at and above the Coulomb barrier. These cases do not validate arbitrary states
+or the full physical domain of the tunneling model.
 Classical property updates and coupled-oscillator normal modes, including optional
 outputs, also have reference checks.
 Classical N-body checks cover three-dimensional kinetic energy, pairwise

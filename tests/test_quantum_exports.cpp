@@ -223,6 +223,40 @@ bool verifyCoherentStateCsv(const fs::path& path, double mass, double omega, dou
 	return true;
 }
 
+bool verifyTwoQubitCsv(const fs::path& path)
+{
+	std::ifstream input(path);
+	input.imbue(std::locale::classic());
+	std::string line;
+	const double s = 1.0 / std::sqrt(2.0);
+	const std::vector<std::pair<std::string, std::vector<double>>> rows = {
+		{"|00>", {s, 0.0, 0.5}}, {"|01>", {0.0, 0.0, 0.0}},
+		{"|10>", {0.0, 0.0, 0.0}}, {"|11>", {0.0, s, 0.5}},
+		{"concurrence", {1.0}}, {"entropy_A", {std::log(2.0)}},
+		{"P(A=0)", {0.5}}, {"P(A=1)", {0.5}}, {"P(B=0)", {0.5}}, {"P(B=1)", {0.5}}
+	};
+	auto header = [&](const char* text) { return std::getline(input, line) && line == text; };
+	if (!header("basis,Re,Im,prob")) return false;
+	for (std::size_t i = 0; i < rows.size(); ++i) {
+		if (i == 4 && (!header("") || !header("property,value"))) return false;
+		if (!std::getline(input, line)) return false;
+		std::istringstream fields(line);
+		fields.imbue(std::locale::classic());
+		std::string field;
+		if (!std::getline(fields, field, ',') || field != rows[i].first) return false;
+		for (double expected : rows[i].second) {
+			if (!std::getline(fields, field, ',')) return false;
+			std::istringstream number(field);
+			number.imbue(std::locale::classic());
+			double actual = 0.0;
+			if (!(number >> actual) || !(number >> std::ws).eof() || !std::isfinite(actual) ||
+				std::abs(actual - expected) > 1.0e-5 * std::max(std::abs(expected), 1.0e-300)) return false;
+		}
+		if (std::getline(fields, field, ',') || (!line.empty() && line.back() == ',')) return false;
+	}
+	return !std::getline(input, line) && !input.bad();
+}
+
 bool testExports(const fs::path& root)
 {
 	constexpr double pi = 3.14159265358979323846;
@@ -427,6 +461,20 @@ bool testExports(const fs::path& root)
 			: 2.0 * mass * potential / (hbar * hbar * q * q * q) * (std::sin(q * radius) - q * radius * std::cos(q * radius));
 		return std::vector<double>{theta, q, amplitude, amplitude * amplitude};
 	});
+	const double gamowMass = 1.0e-27;
+	const double gamowRadius = 1.0e-14;
+	const double coulombStrength = charge * charge / (4.0 * pi * 8.854187817e-12);
+	const double barrier = coulombStrength / gamowRadius;
+	qp_export_gamow_tunneling_csv(quantum, filename("gamow-tunneling.csv").c_str(),
+		1.0, 1.0, gamowMass, gamowRadius, 1.5 * barrier, 3);
+	verify("gamow-tunneling.csv", "E,T,log10_T,G", [&](int i) {
+		const double energy = (i + 1) * barrier / 2.0;
+		if (i >= 1) return std::vector<double>{energy, 1.0, 0.0, 0.0};
+		const double turningPoint = coulombStrength / energy;
+		const double action = std::sqrt(2.0 * gamowMass * energy) * turningPoint / hbar *
+			(pi / 4.0 - 0.5);
+		return std::vector<double>{energy, std::exp(-2.0 * action), -2.0 * action / std::log(10.0), action};
+	});
 	const double scatteringK = std::sqrt(2.0 * mass * incidentEnergy) / hbar;
 	const double scatteringRadius = 0.7 / scatteringK;
 	const double scatteringDepth = 3.0 * incidentEnergy;
@@ -503,6 +551,18 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{n, 0.0, zero, hbar * hbar * zero * zero / (2.0 * mass * 1.0e-20)};
 	});
 	const double invSqrt2 = 1.0 / std::sqrt(2.0);
+	qp_export_coupled_states_csv(quantum, filename("coupled.csv").c_str(), 0.5, 0.5);
+	const std::array<std::array<double, 7>, 6> coupled = {{
+		{{0.5, -0.5, 0.5, 0.5, 0, 0, -invSqrt2}},
+		{{0.5, 0.5, 0.5, -0.5, 0, 0, invSqrt2}},
+		{{0.5, -0.5, 0.5, -0.5, 1, -1, 1}},
+		{{0.5, -0.5, 0.5, 0.5, 1, 0, invSqrt2}},
+		{{0.5, 0.5, 0.5, -0.5, 1, 0, invSqrt2}},
+		{{0.5, 0.5, 0.5, 0.5, 1, 1, 1}}
+	}};
+	verify("coupled.csv", "j1,m1,j2,m2,J,M,CG", [&](int i) {
+		return std::vector<double>(coupled[i].begin(), coupled[i].end());
+	}, 6);
 	qp_export_singlet_triplet_csv(quantum, filename("singlet-triplet.csv").c_str());
 	if (!verifyLabeledCsv(root / "singlet-triplet.csv", "state_name,S,M_S,c_upup,c_updown,c_downup,c_downdown", {
 		{"triplet_+1", {1, 1, 1, 0, 0, 0}},
@@ -517,6 +577,12 @@ bool testExports(const fs::path& root)
 		{"Psi+", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}},
 		{"Psi-", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}}
 	})) ok = false;
+	const double complexBell[] = {invSqrt2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, invSqrt2};
+	qp_export_two_qubit_state_csv(quantum, filename("two-qubit.csv").c_str(), complexBell);
+	if (!verifyTwoQubitCsv(root / "two-qubit.csv")) {
+		std::cerr << "FAIL: invalid two-qubit CSV\n";
+		ok = false;
+	}
 	const double singlet[] = {0.0, 0.0, invSqrt2, 0.0, -invSqrt2, 0.0, 0.0, 0.0};
 	qp_export_chsh_sweep_csv(quantum, filename("chsh.csv").c_str(), singlet, 3);
 	verify("chsh.csv", "thetaB,E_correlator,S_chsh", [&](int i) {
