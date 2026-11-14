@@ -191,6 +191,38 @@ bool verifyBoxLevels(const fs::path& path, int dimensions, double groundUnit)
 	return true;
 }
 
+bool verifyCoherentStateCsv(const fs::path& path, double mass, double omega, double hbar, double pi)
+{
+	std::ifstream input(path);
+	input.imbue(std::locale::classic());
+	std::string line;
+	auto header = [&](const char* expected) {
+		return std::getline(input, line) && line == expected;
+	};
+	auto values = [&](double expectedFirst, double expectedSecond) {
+		if (!std::getline(input, line)) return false;
+		std::istringstream row(line);
+		row.imbue(std::locale::classic());
+		double first = 0.0, second = 0.0;
+		char comma = 0;
+		return (row >> first >> comma >> second) && comma == ',' && (row >> std::ws).eof() &&
+			std::isfinite(first) && std::isfinite(second) &&
+			std::abs(first - expectedFirst) <= 1.0e-5 * std::max(std::abs(expectedFirst), 1.0e-300) &&
+			std::abs(second - expectedSecond) <= 1.0e-5 * std::max(std::abs(expectedSecond), 1.0e-300);
+	};
+	const double positionScale = std::sqrt(hbar / (mass * omega));
+	const double prefactor = std::pow(mass * omega / (pi * hbar), 0.25);
+	const double poisson = std::exp(-1.0);
+	if (!header("n,P_n") || !values(0.0, poisson) || !values(1.0, poisson) ||
+		!values(2.0, poisson / 2.0) || !header("") || !header("x,psi") ||
+		!values(-5.0 * positionScale, prefactor * std::exp(-std::pow(-5.0 - std::sqrt(2.0), 2.0) / 2.0)) ||
+		!values(0.0, prefactor * std::exp(-1.0)) || std::getline(input, line) || input.bad()) {
+		std::cerr << "FAIL: invalid coherent-state CSV: " << path << "\n";
+		return false;
+	}
+	return true;
+}
+
 bool testExports(const fs::path& root)
 {
 	constexpr double pi = 3.14159265358979323846;
@@ -464,6 +496,12 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{(i / 3) * pi / 2.0, (i % 3) * pi, 0.0,
 			1.0 / std::sqrt(4.0 * pi), 0.0, 1.0 / (4.0 * pi)};
 	}, 9);
+	qp_export_spherical_well_energy_levels_csv(quantum, filename("spherical-levels.csv").c_str(), 1.0e-10, 3, 0);
+	verify("spherical-levels.csv", "n,l,g_nl,E", [&](int i) {
+		const double n = i + 1.0;
+		const double zero = n * pi;
+		return std::vector<double>{n, 0.0, zero, hbar * hbar * zero * zero / (2.0 * mass * 1.0e-20)};
+	});
 	const double invSqrt2 = 1.0 / std::sqrt(2.0);
 	qp_export_singlet_triplet_csv(quantum, filename("singlet-triplet.csv").c_str());
 	if (!verifyLabeledCsv(root / "singlet-triplet.csv", "state_name,S,M_S,c_upup,c_updown,c_downup,c_downdown", {
@@ -471,6 +509,13 @@ bool testExports(const fs::path& root)
 		{"triplet_0", {1, 0, 0, invSqrt2, invSqrt2, 0}},
 		{"triplet_-1", {1, -1, 0, 0, 0, 1}},
 		{"singlet", {0, 0, 0, invSqrt2, -invSqrt2, 0}}
+	})) ok = false;
+	qp_export_bell_state_analysis_csv(quantum, filename("bell-analysis.csv").c_str());
+	if (!verifyLabeledCsv(root / "bell-analysis.csv", "state,concurrence,entropy_A,entropy_B,rhoA_00,rhoA_11", {
+		{"Phi+", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}},
+		{"Phi-", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}},
+		{"Psi+", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}},
+		{"Psi-", {1.0, std::log(2.0), std::log(2.0), 0.5, 0.5}}
 	})) ok = false;
 	const double singlet[] = {0.0, 0.0, invSqrt2, 0.0, -invSqrt2, 0.0, 0.0, 0.0};
 	qp_export_chsh_sweep_csv(quantum, filename("chsh.csv").c_str(), singlet, 3);
@@ -528,6 +573,8 @@ bool testExports(const fs::path& root)
 	const double oscillatorOmega = 1.0e14;
 	const double positionScale = std::sqrt(hbar / (mass * oscillatorOmega));
 	const double momentumScale = std::sqrt(mass * hbar * oscillatorOmega);
+	qp_export_coherent_state_csv(quantum, filename("coherent-state.csv").c_str(), 1.0, oscillatorOmega, 2, 2);
+	if (!verifyCoherentStateCsv(root / "coherent-state.csv", mass, oscillatorOmega, hbar, pi)) ok = false;
 	qp_export_wigner_csv(quantum, filename("wigner.csv").c_str(), 0.25, -0.5, oscillatorOmega, 2, 2);
 	verify("wigner.csv", "x,p,W", [&](int i) {
 		const double x = (i / 2 - 1) * 5.0 * positionScale;
