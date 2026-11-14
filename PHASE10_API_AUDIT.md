@@ -232,7 +232,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-735 APIs with exact current test references and 76 APIs still requiring
+742 APIs with exact current test references and 69 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -280,6 +280,10 @@ spherical harmonics and Bessel functions, and Clebsch-Gordan coefficients;
 additional state checks cover Pauli matrices, purity and Bell correlations.
 Free-particle and harmonic path, action and propagator magnitudes have analytic
 reference checks away from singular times and checks of their zero-time sentinels.
+Additional checks cover complex propagator outputs, a two-level truncated Stark
+shift, constant-potential WKB callback cases, and one-dimensional and distinct-level
+two-particle square-well CSV grids. These selected cases do not establish WKB
+integration accuracy or convergence of the Stark perturbation sum in general.
 Bounded box and hyperfine levels, Bloch Euler steps, matrix determinants and
 square-well Slater antisymmetry also have reference checks.
 Zeeman and Paschen-Back level checks cover magnetic shifts, total counts and

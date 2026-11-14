@@ -14,6 +14,11 @@ bool approx(double actual, double expected, double relativeTolerance = 1.0e-9)
 	return std::abs(actual - expected) <= relativeTolerance * scale;
 }
 
+double constantPotential(double, double height)
+{
+	return height;
+}
+
 #define CHECK(condition, message) \
 	do { \
 		if (!(condition)) { \
@@ -517,6 +522,13 @@ bool test_module_apis()
 	CHECK(approx(qp_stark_isw_first_order(quantum, 1, 2.0e5), quantumCharge * 2.0e5 * 0.5e-10) &&
 		  approx(qp_wkb_energy_harmonic_oscillator(quantum, 2, 4.0), 10.0 * hbar),
 		  "Quantum Stark shift and WKB oscillator energy");
+	const double iswCoupling = quantumCharge * 2.0e5 * 16.0e-10 / (9.0 * quantumPi * quantumPi);
+	const double iswSecondOrder = iswCoupling * iswCoupling / (3.0 * electronBoxEnergy);
+	CHECK(approx(qp_stark_isw_second_order(quantum, 1, 2.0e5, 2), -iswSecondOrder) &&
+		  approx(qp_stark_isw_second_order(quantum, 2, 2.0e5, 2), iswSecondOrder) &&
+		  qp_stark_isw_second_order(quantum, 1, 2.0e5, 1) == 0.0 &&
+		  qp_stark_isw_second_order(quantum, 1, 0.0, 2) == 0.0,
+		  "Square-well second-order Stark shifts with a truncated basis");
 	const double barrierHeight = 2.0e-19;
 	const double barrierEnergy = 1.0e-19;
 	const double barrierHalfWidth = 1.0e-10;
@@ -525,6 +537,21 @@ bool test_module_apis()
 				  std::exp(-4.0 * barrierHalfWidth * barrierDecay)) &&
 		  qp_wkb_tunneling_barrier(quantum, barrierHeight, barrierHeight, barrierHalfWidth) == 1.0,
 		  "WKB rectangular barrier and threshold");
+	CHECK(approx(qp_wkb_tunneling_probability(quantum, constantPotential, barrierHeight,
+				  -barrierHalfWidth, barrierHalfWidth, barrierEnergy, 32),
+				  std::exp(-4.0 * barrierHalfWidth * barrierDecay)) &&
+		  qp_wkb_tunneling_probability(quantum, constantPotential, barrierHeight,
+				  -barrierHalfWidth, barrierHalfWidth, barrierHeight, 32) == 1.0 &&
+		  qp_wkb_tunneling_probability(quantum, constantPotential, barrierHeight,
+				  -barrierHalfWidth, barrierHalfWidth, 2.0 * barrierHeight, 32) == 1.0,
+		  "Callback WKB constant barrier and allowed-region limit");
+	const double wkbOffset = 1.0e-20;
+	const double wkbLength = 1.0e-9;
+	const double wkbTarget = 1.5 * quantumPi * hbar;
+	CHECK(approx(qp_wkb_bohr_sommerfeld(quantum, constantPotential, wkbOffset,
+				  0.0, wkbLength, 1, 32),
+				  wkbOffset + wkbTarget * wkbTarget / (2.0 * quantumMass * wkbLength * wkbLength)),
+		  "Callback Bohr-Sommerfeld action for a constant potential");
 	CHECK(approx(qp_transition_prob_sinusoidal(0.1 * hbar, 2.0, 2.0, 2.0), 0.04) &&
 		  approx(qp_transition_prob_sinusoidal(0.1 * hbar, 1.0, 3.0, quantumPi / 2.0), 0.01) &&
 		  approx(qp_fermi_golden_rule_rate(hbar, 2.0 / hbar), 4.0 * quantumPi),
@@ -542,6 +569,26 @@ bool test_module_apis()
 		  approx(qp_ho_propagator_mod2(quantum, pathStart, pathEnd, pathTime, pathOmega),
 				  quantumMass * pathOmega / (2.0 * quantumPi * hbar)),
 		  "Free and harmonic propagator magnitudes");
+	double kernelReal = 0.0, kernelImaginary = 0.0;
+	const double freeMagnitude = std::sqrt(quantumMass / (2.0 * quantumPi * hbar * pathTime));
+	const double freePhase = quantumMass * (pathEnd - pathStart) * (pathEnd - pathStart) /
+		(2.0 * hbar * pathTime) - quantumPi / 4.0;
+	qp_free_particle_propagator(quantum, pathStart, pathEnd, pathTime, &kernelReal, &kernelImaginary);
+	CHECK(approx(kernelReal, freeMagnitude * std::cos(freePhase)) &&
+		  approx(kernelImaginary, freeMagnitude * std::sin(freePhase)), "Complex free-particle propagator");
+	qp_free_particle_propagator(quantum, pathStart, pathEnd, pathTime, nullptr, &kernelImaginary);
+	CHECK(approx(kernelImaginary, freeMagnitude * std::sin(freePhase)), "Free propagator optional real output");
+	const double hoMagnitude = std::sqrt(quantumMass * pathOmega / (2.0 * quantumPi * hbar));
+	const double hoPhase = -quantumMass * pathOmega * pathStart * pathEnd / hbar - quantumPi / 4.0;
+	qp_ho_propagator(quantum, pathStart, pathEnd, pathTime, pathOmega, &kernelReal, &kernelImaginary);
+	CHECK(approx(kernelReal, hoMagnitude * std::cos(hoPhase)) &&
+		  approx(kernelImaginary, hoMagnitude * std::sin(hoPhase)), "Complex harmonic propagator");
+	qp_ho_propagator(quantum, pathStart, pathEnd, pathTime, pathOmega, &kernelReal, nullptr);
+	CHECK(approx(kernelReal, hoMagnitude * std::cos(hoPhase)), "Harmonic propagator optional imaginary output");
+	qp_free_particle_propagator(quantum, pathStart, pathEnd, 0.0, &kernelReal, &kernelImaginary);
+	CHECK(kernelReal == 0.0 && kernelImaginary == 0.0, "Free propagator zero-time sentinel");
+	qp_ho_propagator(quantum, pathStart, pathEnd, 0.0, pathOmega, &kernelReal, &kernelImaginary);
+	CHECK(kernelReal == 0.0 && kernelImaginary == 0.0, "Harmonic propagator zero-time sentinel");
 	CHECK(approx(qp_classical_action_free_particle(quantum, pathStart, pathEnd, pathTime),
 				  quantumMass * (pathEnd - pathStart) * (pathEnd - pathStart) / (2.0 * pathTime)) &&
 		  approx(qp_classical_action_ho(quantum, pathStart, pathEnd, pathTime, pathOmega),

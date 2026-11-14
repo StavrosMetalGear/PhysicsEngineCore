@@ -51,7 +51,8 @@ public:
 };
 
 bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
-			   const std::function<std::vector<double>(int)>& expected)
+			   const std::function<std::vector<double>(int)>& expected,
+			   const std::vector<double>& absoluteTolerances = {})
 {
 	std::ifstream input(path);
 	input.imbue(std::locale::classic());
@@ -77,8 +78,9 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 			std::istringstream number(field);
 			number.imbue(std::locale::classic());
 			double actual = 0.0;
+			const double absoluteTolerance = column < absoluteTolerances.size() ? absoluteTolerances[column] : 0.0;
 			if (!(number >> actual) || !(number >> std::ws).eof() || !std::isfinite(actual) ||
-				std::abs(actual - values[column]) > 1.0e-5 * std::max(std::abs(values[column]), 1.0e-300)) {
+				std::abs(actual - values[column]) > absoluteTolerance + 1.0e-5 * std::max(std::abs(values[column]), 1.0e-300)) {
 				std::cerr << "FAIL: invalid CSV value in " << path << " row " << row
 						  << " column " << column << ": " << field << " expected " << values[column] << "\n";
 				return false;
@@ -326,6 +328,22 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{static_cast<double>(i), 1.0, 2.0 * pi * i};
 	});
 	const double mass = 9.1093837015e-31;
+	qp_export_wavefunction_csv(quantum, filename("box-1d-wave.csv").c_str(), 2, 5);
+	verify("box-1d-wave.csv", "x,psi", [&](int i) {
+		const double x = i * 0.2e-10;
+		return std::vector<double>{x, std::sqrt(2.0e10) * std::sin(2.0 * i * pi / 5.0)};
+	}, 5);
+	qp_export_two_particle_isw_csv(quantum, filename("two-particle-box.csv").c_str(), 1, 2, 4);
+	if (!verifyCsv(root / "two-particle-box.csv", "x1,x2,psi_symmetric,psi_antisymmetric,prob_sym,prob_antisym", 16, [&](int row) {
+		const double x1 = (row / 4) * 1.0e-10 / 3.0;
+		const double x2 = (row % 4) * 1.0e-10 / 3.0;
+		const double a = std::sin(pi * x1 / 1.0e-10) * std::sin(2.0 * pi * x2 / 1.0e-10);
+		const double b = std::sin(pi * x2 / 1.0e-10) * std::sin(2.0 * pi * x1 / 1.0e-10);
+		const double symmetric = std::sqrt(2.0) * (a + b) / 1.0e-10;
+		const double antisymmetric = std::sqrt(2.0) * (a - b) / 1.0e-10;
+		return std::vector<double>{x1, x2, symmetric, antisymmetric,
+			symmetric * symmetric, antisymmetric * antisymmetric};
+	}, {0.0, 0.0, 1.0e-4, 1.0e-4, 1.0e-8, 1.0e-8})) ok = false;
 	qp_export_wavefunction_2d_box_csv(quantum, filename("box-2d-wave.csv").c_str(), 1, 1, 2.0, 2.0, 2);
 	verify("box-2d-wave.csv", "x,y,psi", [&](int row) {
 		const double x = static_cast<double>(row / 3);
