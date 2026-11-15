@@ -136,6 +136,15 @@ bool testExports(const fs::path& root)
 		const double pulse = std::exp(-9.0);
 		return std::vector<double>{0.0, -pulse / 3.0, pulse, 0.0, 0.0};
 	}, 1);
+	const double confinementMass = 9.1093837015e-31;
+	const auto confinementReference = [&](int row) {
+		const double field = 0.1 + 5.0 * row;
+		return std::vector<double>{field, confinementMass * 1.0e6 / (1.602176634e-19 * field)};
+	};
+	em_export_confinement_csv(em, filename("confinement-a.csv").c_str(), 1.0, confinementMass, 3);
+	verify("confinement-a.csv", "B,r_c", confinementReference);
+	em_export_confinement_csv(em, filename("confinement-b.csv").c_str(), 2.0, confinementMass, 3);
+	verify("confinement-b.csv", "B,r_c", confinementReference);
 
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {

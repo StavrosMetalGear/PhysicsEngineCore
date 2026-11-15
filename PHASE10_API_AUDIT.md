@@ -146,6 +146,9 @@ ElectrodynamicsCore; the CSV reference checks the current sweep behavior.
 `em_export_circ_waveguide_csv` ignores its point-count argument and always
 exports 15 modes. Its reference checks this observed behavior at two counts;
 clarify or revise the argument in ElectrodynamicsCore.
+`em_export_confinement_csv` ignores its `B` argument and instead sweeps a fixed
+0.1–10.1 T range. Its reference checks this observed behavior at two argument
+values; clarify or revise the argument in ElectrodynamicsCore.
 
 `EMField::eddyCurrentDensity` computes `B0*omega*delta*exp(-z/delta)/2`,
 which has electric-field units in SI rather than current-density units.
@@ -245,7 +248,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-762 APIs with exact current test references and 49 APIs still requiring
+767 APIs with exact current test references and 44 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -314,6 +317,9 @@ dilute ideal-gas domain.
 Relativistic references check selected Dirac hydrogen energies and degeneracy,
 and the current step model's normal, evanescent and negative-energy cases and
 CSV grid. They do not establish the model's general physical validity or domain.
+Additional references check the selected 1s fine-structure outputs, their CSV,
+the 1s weak-field Zeeman CSV, and the n=2 Lamb-shift frequency conversion.
+These do not validate the full fine-structure or magnetic-field domains.
 Electromagnetic checks cover the eddy-braking model's signed velocity, the wire
 vector potential in its chosen gauge, and selected real permeability values
 with and without damping. These do not establish general model validity.

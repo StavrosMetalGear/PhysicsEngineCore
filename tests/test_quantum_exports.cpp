@@ -310,6 +310,24 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{field, 1.0, magneticNumber,
 			0.25 * hyperfineA + 9.2740100783e-24 * magneticNumber * field};
 	}, 12);
+	const double fineAlpha = 1.0 / 137.035999084;
+	const double electronCharge = 1.602176634e-19;
+	const double bohrGroundEv = -13.6057;
+	const double fineEnergyEv = bohrGroundEv * (1.0 + fineAlpha * fineAlpha / 4.0);
+	const double fineScaleEv = bohrGroundEv * bohrGroundEv * electronCharge /
+		(variationalMass * c * c);
+	qp_export_fine_structure_csv(quantum, filename("fine-1s.csv").c_str(), 1, 1.0);
+	verify("fine-1s.csv", "n,l,j,E_Bohr_eV,E_rel_eV,E_so_eV,E_Darwin_eV,E_total_eV", [&](int) {
+		return std::vector<double>{1.0, 0.0, 0.5, bohrGroundEv, -2.5 * fineScaleEv,
+			0.0, 2.0 * fineScaleEv, fineEnergyEv};
+	}, 1);
+	qp_export_zeeman_csv(quantum, filename("zeeman-1s.csv").c_str(), 1, 1.0, 0.5, 2);
+	verify("zeeman-1s.csv", "B,n,l,j,mj,g_j,E_eV", [&](int row) {
+		const double field = (row / 2) * 0.25;
+		const double magneticNumber = row % 2 == 0 ? -0.5 : 0.5;
+		return std::vector<double>{field, 1.0, 0.0, 0.5, magneticNumber, 2.0,
+			fineEnergyEv + 2.0 * 9.2740100783e-24 * magneticNumber * field / electronCharge};
+	}, 6);
 	qp_export_rabi_csv(quantum, filename("rabi.csv").c_str(), 2.0, 0.0, pi / 2.0, 2);
 	verify("rabi.csv", "t,P_rabi", [&](int i) {
 		const double t = i * pi / 4.0;

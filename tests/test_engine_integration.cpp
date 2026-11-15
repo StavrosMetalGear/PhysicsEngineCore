@@ -916,6 +916,19 @@ bool test_module_apis()
 		  approx(qp_dirac_hydrogen_energy(2, 1, 0.5, 1.0),
 			  qp_dirac_hydrogen_energy(2, 0, 0.5, 1.0)),
 		  "Dirac hydrogen ground energy and selected n=2 degeneracy");
+	const double bohrGround = -13.6057 * quantumCharge;
+	const double fineScale = bohrGround * bohrGround / restEnergy;
+	double fineStructure[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 123.0};
+	qp_fine_structure(quantum, 1, 0, 0.5, 1.0, fineStructure);
+	CHECK(approx(fineStructure[0], bohrGround) &&
+		  approx(fineStructure[1], -2.5 * fineScale) && fineStructure[2] == 0.0 &&
+		  approx(fineStructure[3], 2.0 * fineScale) &&
+		  approx(fineStructure[4], bohrGround * (1.0 + alpha * alpha / 4.0)) &&
+		  fineStructure[5] == 123.0,
+		  "Hydrogen 1s fine-structure outputs and buffer boundary");
+	qp_fine_structure(quantum, 1, 0, 0.5, 1.0, nullptr);
+	CHECK(approx(qp_lamb_shift_n2(), quantumPlanck * 1057.845e6),
+		  "Hydrogen n=2 Lamb shift frequency conversion");
 	const double incidentEnergy = 5.0 * restEnergy;
 	const double incomingMomentumScale = std::sqrt(24.0);
 	const double transmittedMomentumScale = std::sqrt(8.0);
