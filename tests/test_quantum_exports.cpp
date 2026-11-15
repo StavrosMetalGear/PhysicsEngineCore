@@ -328,6 +328,20 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{field, 1.0, 0.0, 0.5, magneticNumber, 2.0,
 			fineEnergyEv + 2.0 * 9.2740100783e-24 * magneticNumber * field / electronCharge};
 	}, 6);
+	const double diracRest = variationalMass * c * c;
+	const double diracBinding = -diracRest * fineAlpha * fineAlpha /
+		(1.0 + std::sqrt(1.0 - fineAlpha * fineAlpha));
+	qp_export_dirac_hydrogen_csv(quantum, filename("dirac-1s.csv").c_str(), 1, 1.0);
+	verify("dirac-1s.csv", "n,l,j,E_Dirac_eV,E_Bohr_eV,Delta_E_eV", [&](int) {
+		return std::vector<double>{1.0, 0.0, 0.5, diracBinding / electronCharge, bohrGroundEv,
+			diracBinding / electronCharge - bohrGroundEv};
+	}, 1);
+	const double singleSliceTime = 2.0e-15;
+	const double singleSliceMagnitude = variationalMass / (2.0 * pi * hbar * singleSliceTime);
+	qp_export_path_integral_convergence_csv(quantum, filename("single-slice-path.csv").c_str(), 0.0, 0.0, singleSliceTime, 1);
+	if (!verifyCsv(root / "single-slice-path.csv", "N,K_mod2_discrete,K_mod2_exact,relative_error", 1, [&](int) {
+		return std::vector<double>{1.0, singleSliceMagnitude, singleSliceMagnitude, 0.0};
+	}, {0.0, 0.0, 0.0, 1.0e-12})) ok = false;
 	qp_export_rabi_csv(quantum, filename("rabi.csv").c_str(), 2.0, 0.0, pi / 2.0, 2);
 	verify("rabi.csv", "t,P_rabi", [&](int i) {
 		const double t = i * pi / 4.0;

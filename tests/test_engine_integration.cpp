@@ -598,6 +598,14 @@ bool test_module_apis()
 		  approx(qp_ho_propagator_mod2(quantum, pathStart, pathEnd, pathTime, pathOmega),
 				  quantumMass * pathOmega / (2.0 * quantumPi * hbar)),
 		  "Free and harmonic propagator magnitudes");
+	const double exactFreeMagnitudeSquared = quantumMass / (2.0 * quantumPi * hbar * pathTime);
+	CHECK(approx(qp_discretized_path_integral_free(quantum, pathStart, pathEnd, pathTime, 1, 21),
+			  exactFreeMagnitudeSquared) &&
+		  approx(qp_discretized_path_integral_free(quantum, 0.0, 0.0, pathTime, 1, 81),
+			  exactFreeMagnitudeSquared) &&
+		  approx(qp_discretized_path_integral_free(quantum, 0.0, 0.0, pathTime, 0, 21),
+			  exactFreeMagnitudeSquared),
+		  "Single-slice free propagator magnitude and slice-count sentinel");
 	double kernelReal = 0.0, kernelImaginary = 0.0;
 	const double freeMagnitude = std::sqrt(quantumMass / (2.0 * quantumPi * hbar * pathTime));
 	const double freePhase = quantumMass * (pathEnd - pathStart) * (pathEnd - pathStart) /

@@ -248,7 +248,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-767 APIs with exact current test references and 44 APIs still requiring
+770 APIs with exact current test references and 41 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -296,6 +296,9 @@ spherical harmonics and Bessel functions, and Clebsch-Gordan coefficients;
 additional state checks cover Pauli matrices, purity and Bell correlations.
 Free-particle and harmonic path, action and propagator magnitudes have analytic
 reference checks away from singular times and checks of their zero-time sentinels.
+The discretized free-particle path integral and its CSV additionally check only
+the single-slice magnitude, plus the implementation's zero-slice fallback;
+these cases do not establish multi-slice convergence or grid accuracy.
 Additional checks cover complex propagator outputs, a two-level truncated Stark
 shift, constant-potential WKB callback cases, and one-dimensional and distinct-level
 two-particle square-well CSV grids. These selected cases do not establish WKB
@@ -317,6 +320,7 @@ dilute ideal-gas domain.
 Relativistic references check selected Dirac hydrogen energies and degeneracy,
 and the current step model's normal, evanescent and negative-energy cases and
 CSV grid. They do not establish the model's general physical validity or domain.
+The Dirac hydrogen CSV also has a selected ground-state binding-energy check.
 Additional references check the selected 1s fine-structure outputs, their CSV,
 the 1s weak-field Zeeman CSV, and the n=2 Lamb-shift frequency conversion.
 These do not validate the full fine-structure or magnetic-field domains.
