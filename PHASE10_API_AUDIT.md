@@ -177,6 +177,11 @@ or version the API deliberately rather than silently changing the output order.
 transition energy, but the implementation writes the wavelength `h*c/gap`.
 Clarify or version the sibling contract before changing that output's units.
 
+`qp_klein_paradox_transmission` uses a momentum-only step matching expression;
+its applicability to Dirac spinor matching and the negative-energy regime needs
+scientific review in QuantumCore. The added checks characterize that expression,
+not the full relativistic scattering solution.
+
 `qp_rabi_probability` divides by the effective frequency and returns a
 non-finite result when both drive and detuning are zero. Review and correct
 the zero-drive limit in QuantumCore; the expected transition probability is zero.
@@ -197,7 +202,9 @@ energy convention and correct the offset in QuantumCore if appropriate.
 
 `qp_coulomb_energy` uses a prefactor proportional to `e^2/epsilon0^2/hbar^2`,
 which differs dimensionally and numerically from the hydrogenic `e^4` formula.
-Verify and correct the QuantumCore implementation before scientific validation.
+The same prefactor is used by `qp_two_body_coulomb_energy` and the two-body
+comparison CSV. Verify and correct these QuantumCore implementations before
+scientific validation.
 `QuantumParticle::hydrogenRadialWavefunction` uses a cubic `(n+l)!` factor in
 its normalization while its associated Laguerre polynomial uses the standard
 recurrence. Review the normalization for excited states in QuantumCore; the
@@ -238,7 +245,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-755 APIs with exact current test references and 56 APIs still requiring
+762 APIs with exact current test references and 49 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -304,9 +311,16 @@ Additional references cover the half-line linear-potential WKB approximation
 and Sackur-Tetrode entropy with isothermal volume scaling for a classical gas;
 they do not establish exact linear-potential energies or validity outside the
 dilute ideal-gas domain.
+Relativistic references check selected Dirac hydrogen energies and degeneracy,
+and the current step model's normal, evanescent and negative-energy cases and
+CSV grid. They do not establish the model's general physical validity or domain.
 Electromagnetic checks cover the eddy-braking model's signed velocity, the wire
 vector potential in its chosen gauge, and selected real permeability values
 with and without damping. These do not establish general model validity.
+Small-grid CSV references also check one Laplace relaxation sweep, a centered
+Poisson source and zero-source case, and the initial FDTD update and boundary
+values. They do not establish solver convergence, stability, or accuracy for
+larger grids and longer simulations.
 Bounded box and hyperfine levels, Bloch Euler steps, matrix determinants and
 square-well Slater antisymmetry also have reference checks.
 Zeeman and Paschen-Back level checks cover magnetic shifts, total counts and

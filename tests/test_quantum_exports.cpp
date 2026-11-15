@@ -345,6 +345,16 @@ bool testExports(const fs::path& root)
 		const double kinetic = p * p / 2.0;
 		return std::vector<double>{p, relativistic, rest + kinetic, relativistic - rest, kinetic};
 	});
+	const double kleinRest = c * c;
+	qp_export_klein_paradox_csv(quantum, filename("klein-step.csv").c_str(), 5.0 * kleinRest, 1.0, 10.0 * kleinRest, 4);
+	verify("klein-step.csv", "V0,T,R", [&](int i) {
+		const double potential = (i + 1) * 2.5 * kleinRest;
+		if (i == 1) return std::vector<double>{potential, 0.0, 1.0};
+		if (i == 3) return std::vector<double>{potential, 1.0, 0.0};
+		const double reflection = std::pow((std::sqrt(24.0) - std::sqrt(5.25)) /
+			(std::sqrt(24.0) + std::sqrt(5.25)), 2.0);
+		return std::vector<double>{potential, 1.0 - reflection, reflection};
+	}, 4);
 	qp_export_ab_interference_csv(quantum, filename("ab-interference.csv").c_str(), 0.0, 1.0, 0.0, 3);
 	verify("ab-interference.csv", "theta,I_with_flux,I_no_flux", [&](int i) {
 		return std::vector<double>{(i - 1) * pi / 4.0, 1.0, 1.0};

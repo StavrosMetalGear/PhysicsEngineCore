@@ -909,6 +909,26 @@ bool test_module_apis()
 		  approx(qp_relativistic_de_broglie((std::sqrt(2.0) - 1.0) * restEnergy, quantumMass),
 				 quantumPlanck / momentum),
 		  "Relativistic density, de Broglie wavelength and zitterbewegung");
+	CHECK(approx(qp_dirac_hydrogen_energy(1, 0, 0.5, 1.0),
+			  restEnergy * std::sqrt(1.0 - alpha * alpha)) &&
+		  approx(qp_dirac_hydrogen_energy(2, 0, 0.5, 1.0),
+			  restEnergy * std::sqrt((1.0 + std::sqrt(1.0 - alpha * alpha)) / 2.0)) &&
+		  approx(qp_dirac_hydrogen_energy(2, 1, 0.5, 1.0),
+			  qp_dirac_hydrogen_energy(2, 0, 0.5, 1.0)),
+		  "Dirac hydrogen ground energy and selected n=2 degeneracy");
+	const double incidentEnergy = 5.0 * restEnergy;
+	const double incomingMomentumScale = std::sqrt(24.0);
+	const double transmittedMomentumScale = std::sqrt(8.0);
+	const double stepReflection = std::pow((incomingMomentumScale - transmittedMomentumScale) /
+		(incomingMomentumScale + transmittedMomentumScale), 2.0);
+	CHECK(approx(qp_klein_paradox_transmission(incidentEnergy, 2.0 * restEnergy, quantumMass),
+			  1.0 - stepReflection) &&
+		  approx(qp_klein_paradox_reflection(incidentEnergy, 2.0 * restEnergy, quantumMass), stepReflection) &&
+		  qp_klein_paradox_transmission(incidentEnergy, 5.0 * restEnergy, quantumMass) == 0.0 &&
+		  qp_klein_paradox_reflection(incidentEnergy, 5.0 * restEnergy, quantumMass) == 1.0 &&
+		  approx(qp_klein_paradox_transmission(incidentEnergy, 10.0 * restEnergy, quantumMass), 1.0) &&
+		  qp_klein_paradox_transmission(restEnergy, 0.0, quantumMass) == 0.0,
+		  "Relativistic step momentum-ratio model across propagation regimes");
 	qp_destroy(quantum);
 
 	CP_Handle classical = cp_create("integration-classical", 2.0, 1.0, 3);

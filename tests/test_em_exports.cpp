@@ -115,6 +115,28 @@ bool testExports(const fs::path& root)
 	};
 	auto filename = [&](const char* name) { return (root / name).string(); };
 
+	em_export_laplace2d_csv(em, filename("laplace-one-step.csv").c_str(), 4, 1);
+	verify("laplace-one-step.csv", "col0,col1,col2,col3", [&](int row) {
+		const double grid[4][4] = {
+			{1.0, 1.0, 1.0, 1.0}, {0.0, 0.25, 0.3125, 0.0},
+			{0.0, 0.0625, 0.09375, 0.0}, {0.0, 0.0, 0.0, 0.0}
+		};
+		return std::vector<double>{grid[row][0], grid[row][1], grid[row][2], grid[row][3]};
+	}, 4);
+	em_export_poisson2d_csv(em, filename("poisson-point.csv").c_str(), 16.0 * eps0, 3, 2);
+	verify("poisson-point.csv", "col0,col1,col2", [&](int row) {
+		return std::vector<double>{0.0, row == 1 ? 1.0 : 0.0, 0.0};
+	});
+	em_export_poisson2d_csv(em, filename("poisson-zero.csv").c_str(), 0.0, 3, 2);
+	verify("poisson-zero.csv", "col0,col1,col2", [&](int) {
+		return std::vector<double>{0.0, 0.0, 0.0};
+	});
+	em_export_fdtd1d_csv(em, filename("fdtd-initial-step.csv").c_str(), 4, 1, 1.0e9, 1);
+	verify("fdtd-initial-step.csv", "step,E0,E1,E2,E3", [&](int) {
+		const double pulse = std::exp(-9.0);
+		return std::vector<double>{0.0, -pulse / 3.0, pulse, 0.0, 0.0};
+	}, 1);
+
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {
 		const double r = 0.01 + i;
