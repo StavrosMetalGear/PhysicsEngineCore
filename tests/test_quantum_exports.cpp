@@ -411,6 +411,10 @@ bool testExports(const fs::path& root)
 		const double x = i * 0.2e-10;
 		return std::vector<double>{x, std::sqrt(2.0e10) * std::sin(2.0 * i * pi / 5.0)};
 	}, 5);
+	qp_export_spherical_well_wavefunction_csv(quantum, filename("spherical-wave.csv").c_str(), 1, 0, 2.0, 2);
+	if (!verifyCsv(root / "spherical-wave.csv", "r,R_nl,psi_squared_r2", 3, [&](int i) {
+		return std::vector<double>{static_cast<double>(i), i == 1 ? 1.0 : 0.0, i == 1 ? 1.0 : 0.0};
+	}, {0.0, 1.0e-14, 1.0e-27})) ok = false;
 	qp_export_two_particle_isw_csv(quantum, filename("two-particle-box.csv").c_str(), 1, 2, 4);
 	if (!verifyCsv(root / "two-particle-box.csv", "x1,x2,psi_symmetric,psi_antisymmetric,prob_sym,prob_antisym", 16, [&](int row) {
 		const double x1 = (row / 4) * 1.0e-10 / 3.0;
@@ -604,6 +608,24 @@ bool testExports(const fs::path& root)
 		const double phase = std::atan2(k * std::sin(K * scatteringRadius), K * std::cos(K * scatteringRadius)) - k * scatteringRadius;
 		return std::array<double, 3>{k, phase, 4.0 * pi * std::pow(std::sin(phase) / k, 2.0)};
 	};
+	qp_export_born_vs_exact_csv(quantum, filename("born-vs-exact.csv").c_str(),
+		scatteringDepth, scatteringRadius, 0, incidentEnergy, 3);
+	verify("born-vs-exact.csv", "E,sigma_born,sigma_exact", [&](int i) {
+		const double energy = (i + 1) * incidentEnergy / 3.0;
+		const double k = std::sqrt(2.0 * mass * energy) / hbar;
+		const int intervals = 10000;
+		const double step = pi / intervals;
+		double integral = 0.0;
+		for (int j = 1; j < intervals; ++j) {
+			const double theta = j * step;
+			const double q = 2.0 * k * std::sin(theta / 2.0);
+			const double qa = q * scatteringRadius;
+			const double amplitude = 2.0 * mass * scatteringDepth / (hbar * hbar * q * q * q) *
+				(std::sin(qa) - qa * std::cos(qa));
+			integral += (j % 2 == 0 ? 2.0 : 4.0) * amplitude * amplitude * std::sin(theta);
+		}
+		return std::vector<double>{energy, 2.0 * pi * step * integral / 3.0, sWave(energy)[2]};
+	});
 	qp_export_partial_wave_csv(quantum, filename("partial-wave.csv").c_str(), scatteringDepth, scatteringRadius, 0, incidentEnergy, 3);
 	verify("partial-wave.csv", "E,k,sigma_total,delta_0,sigma_0", [&](int i) {
 		const double energy = (i + 1) * incidentEnergy / 3.0;

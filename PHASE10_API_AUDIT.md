@@ -263,7 +263,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-780 APIs with exact current test references and 31 APIs still requiring
+782 APIs with exact current test references and 29 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -394,6 +394,12 @@ CSV references also check all four Bell states, the first three spherical-well
 s-wave energies, and both sections of a coherent-state export at nonzero
 amplitude. The coherent-state test does not cover the known zero-amplitude
 problem; the spherical-well case does not cover higher angular momentum.
+The spherical-well ground-state wavefunction export is checked at the midpoint
+and boundary, and its current zero at the origin is characterized rather than
+validated: the normalized s-wave has a nonzero origin limit. Review the origin
+handling in QuantumCore. A Born-versus-exact CSV check compares the s-wave
+cross section and an independently integrated Born approximation at three
+energies; it does not validate higher partial waves or general accuracy.
 Additional CSV checks cover spin-half coupled-state coefficients, a complex Bell
 state's amplitudes and measurement probabilities, and Gamow tunneling below,
 at and above the Coulomb barrier. These cases do not validate arbitrary states
