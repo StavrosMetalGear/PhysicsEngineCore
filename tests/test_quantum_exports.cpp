@@ -75,6 +75,11 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 				std::cerr << "FAIL: missing CSV column: " << path << "\n";
 				return false;
 			}
+			if (!std::isfinite(values[column])) {
+				std::cerr << "FAIL: non-finite expected CSV value in " << path << " row " << row
+						  << " column " << column << "\n";
+				return false;
+			}
 			std::istringstream number(field);
 			number.imbue(std::locale::classic());
 			double actual = 0.0;
@@ -484,6 +489,16 @@ bool testExports(const fs::path& root)
 			 1.0 / (d1 * d1 + broadening * broadening));
 		return std::vector<double>{energy, dos};
 	});
+	const double hallDensity = charge / planck;
+	qp_export_quantum_hall_csv(quantum, filename("quantum-hall.csv").c_str(), hallDensity, mass,
+		0.5, 2.5, 0.05, 2);
+	verify("quantum-hall.csv", "B,nu,sigma_xy,R_H,R_xx", [&](int i) {
+		const double field = i == 0 ? 1.5 : 2.5;
+		const double filling = 1.0 / field;
+		const double nearestPeak = std::exp(-std::pow(filling - 0.5, 2.0) / (2.0 * 0.05 * 0.05));
+		return std::vector<double>{field, filling, charge * charge / planck,
+			planck / (charge * charge), nearestPeak};
+	}, 2);
 	qp_export_adiabatic_sweep_csv(quantum, filename("adiabatic.csv").c_str(), 1.0e-19, 3.0e-5, 3);
 	verify("adiabatic.csv", "rate,Q,is_adiabatic", [&](int i) {
 		const double rate = (i + 1) * 1.0e-5;
@@ -566,6 +581,20 @@ bool testExports(const fs::path& root)
 			(pi / 4.0 - 0.5);
 		return std::vector<double>{energy, std::exp(-2.0 * action), -2.0 * action / std::log(10.0), action};
 	});
+	const double alphaMass = 2.0 * 1.66053906660e-27;
+	const double alphaRadius = 2.4e-15 * std::cbrt(4.0);
+	qp_export_alpha_decay_csv(quantum, filename("alpha-decay.csv").c_str(), 3, 8, 0.2, 0.6, 2);
+	verify("alpha-decay.csv", "E_alpha_MeV,t_half_s,log10_t_half", [&](int i) {
+		const double energyMeV = 0.4 + 0.2 * i;
+		const double energy = energyMeV * 1.0e6 * charge;
+		const double turningPoint = 2.0 * coulombStrength / energy;
+		const double ratio = alphaRadius / turningPoint;
+		const double action = std::sqrt(2.0 * alphaMass * energy) * turningPoint / hbar *
+			(std::acos(std::sqrt(ratio)) - std::sqrt(ratio * (1.0 - ratio)));
+		const double halfLife = std::log(2.0) * 2.0 * alphaRadius /
+			(std::sqrt(2.0 * energy / alphaMass) * std::exp(-2.0 * action));
+		return std::vector<double>{energyMeV, halfLife, std::log10(halfLife)};
+	}, 2);
 	const double scatteringK = std::sqrt(2.0 * mass * incidentEnergy) / hbar;
 	const double scatteringRadius = 0.7 / scatteringK;
 	const double scatteringDepth = 3.0 * incidentEnergy;
@@ -773,6 +802,25 @@ bool testExports(const fs::path& root)
 			levelEnergy - hbar * coupling / 2.0, hbar * coupling};
 	});
 	const double deltaStrength = 1.0e-29;
+	const double stepWaveNumber = 1.0e9;
+	const double stepEnergy = hbar * hbar * stepWaveNumber * stepWaveNumber / (2.0 * mass);
+	qp_export_step_potential_wavefunction_csv(quantum, filename("step-evanescent.csv").c_str(), stepEnergy, 2.0 * stepEnergy, 5);
+	verify("step-evanescent.csv", "x,psi", [&](int i) {
+		const double x = -2.0e-9 + i * 4.0e-9 / 5.0;
+		return std::vector<double>{x, x < 0.0 ? std::cos(stepWaveNumber * x) : std::exp(-stepWaveNumber * x)};
+	}, 5);
+	qp_export_step_potential_wavefunction_csv(quantum, filename("step-propagating.csv").c_str(), 2.0 * stepEnergy, stepEnergy, 5);
+	verify("step-propagating.csv", "x,psi", [&](int i) {
+		const double x = -2.0e-9 + i * 4.0e-9 / 5.0;
+		return std::vector<double>{x, std::cos((x < 0.0 ? std::sqrt(2.0) : 1.0) * stepWaveNumber * x)};
+	}, 5);
+	const double barrierHalfWidth = 1.0e-9;
+	qp_export_barrier_wavefunction_csv(quantum, filename("barrier-wave.csv").c_str(), stepEnergy, 2.0 * stepEnergy, barrierHalfWidth, 4);
+	verify("barrier-wave.csv", "x,psi", [&](int i) {
+		const double x = (-3.0 + 1.5 * i) * barrierHalfWidth;
+		return std::vector<double>{x, std::abs(x) <= barrierHalfWidth ? std::exp(-stepWaveNumber * std::abs(x)) :
+			std::cos(stepWaveNumber * x)};
+	}, 4);
 	qp_export_delta_potential_wavefunction_csv(quantum, filename("delta-wavefunction.csv").c_str(), deltaStrength, 3);
 	verify("delta-wavefunction.csv", "x,psi", [&](int i) {
 		const double x = -1.0e-9 + i * 2.0e-9 / 3.0;

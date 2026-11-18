@@ -193,11 +193,26 @@ the zero-drive limit in QuantumCore; the expected transition probability is zero
 producing non-finite coefficients rather than the finite rectangular-barrier
 limit. Correct the threshold calculation in QuantumCore.
 
+The step and barrier wavefunction CSV exports use piecewise real cosines and
+exponentials without matching reflected and transmitted amplitudes at interfaces.
+Their tests characterize those expressions, not a fully matched scattering state;
+review or clarify these approximations in QuantumCore.
+
 `qp_transfer_matrix_multilayer` also divides by zero when a layer height equals
 positive incident energy: its evanescent branch evaluates `sinh(0)/0` instead
 of the finite zero-wave-number limit. This also affects
 `qp_resonant_tunneling` when its barrier height equals the energy. Review and
 correct these threshold cases in QuantumCore; the added tests avoid them.
+
+`qp_kronig_penney_dispersion` returns the sentinel `2.0` at both zero energy
+and the barrier threshold instead of evaluating their finite limiting values.
+Its band scanner skips energies at or above the barrier, but can leave an open
+band ending at the larger scan limit. Review these domains and band endpoints
+in QuantumCore before relying on full band calculations.
+
+`qp_longitudinal_resistance_shm` ignores its effective-mass argument and returns
+a dimensionless Gaussian peak sum as `R_xx`. Clarify the intended units and
+mass dependence in QuantumCore; the new checks characterize this model only.
 
 `qp_breit_rabi_energy` uses a zero-field offset of `-DeltaHF/[4(2I+1)]`;
 the standard Breit-Rabi expression uses `-DeltaHF/[2(2I+1)]`. Review the
@@ -248,7 +263,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-770 APIs with exact current test references and 41 APIs still requiring
+780 APIs with exact current test references and 31 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -276,11 +291,17 @@ Additional Quantum reference checks cover confinement and density-of-states
 formulas, coherent and squeezed states, phase and Landau-level quantities,
 and relativistic energies and wave propagation.
 Additional confinement checks cover parabolic wells, wires, anisotropic harmonic
-dots and the delta-barrier Kronig-Penney dispersion.
+dots, selected finite-barrier Kronig-Penney values and the delta-barrier limit.
+The finite-barrier checks do not validate band scanning or threshold limits.
+Selected Gaussian longitudinal peaks and a quantum Hall CSV grid characterize
+the implementation's dimensionless model, not a physical resistance calibration.
 Additional references cover delta and parabolic wavefunctions, square-well time
 evolution, effective central potentials, Bessel roots and spherical-well energy.
 Additional references cover oscillator wavefunctions, hyperfine and Landau
 quantities, Aharonov-Bohm scattering, Gamow tunneling, and relativistic density.
+Selected alpha-decay checks cover the Coulomb-barrier and assault-frequency
+model, its CSV energy grid, and the empirical Geiger-Nuttall conversion. These
+do not establish general experimental half-life accuracy or validity domains.
 Spin operator layouts, eigenstates, expectation values, two-level energies,
 Hermitian diagonalization and hydrogen expectation arrays now have reference checks.
 Additional references cover reduced mass, angular momentum ladder coefficients,
@@ -321,6 +342,11 @@ Relativistic references check selected Dirac hydrogen energies and degeneracy,
 and the current step model's normal, evanescent and negative-energy cases and
 CSV grid. They do not establish the model's general physical validity or domain.
 The Dirac hydrogen CSV also has a selected ground-state binding-energy check.
+Selected Dirac fine-structure and spin-orbit checks cover a high-charge 1s
+correction and the current 2p splitting convention; they do not establish
+accuracy across the full allowed charge and quantum-number domains.
+Step and barrier CSV tests check selected propagating and evanescent branches,
+subject to the interface-matching limitations described above.
 Additional references check the selected 1s fine-structure outputs, their CSV,
 the 1s weak-field Zeeman CSV, and the n=2 Lamb-shift frequency conversion.
 These do not validate the full fine-structure or magnetic-field domains.

@@ -707,6 +707,13 @@ bool test_module_apis()
 				  4.0 / quantumPi) &&
 		  approx(qp_kronig_penney_delta_dispersion(quantum, 4.0 * periodicEnergy, 0.0, quantumLength), -1.0),
 		  "Kronig-Penney delta dispersion and zero-energy limit");
+	CHECK(std::abs(qp_kronig_penney_dispersion(quantum, periodicEnergy, 2.0 * periodicEnergy,
+			  quantumLength, quantumLength)) < 1.0e-12 &&
+		  approx(qp_kronig_penney_dispersion(quantum, periodicEnergy, 5.0 * periodicEnergy,
+			  quantumLength, quantumLength), 0.75 * std::sinh(quantumPi)) &&
+		  qp_kronig_penney_dispersion(quantum, 0.0, periodicEnergy, quantumLength, quantumLength) == 2.0 &&
+		  qp_kronig_penney_dispersion(quantum, periodicEnergy, periodicEnergy, quantumLength, quantumLength) == 2.0,
+		  "Finite-barrier Kronig-Penney dispersion and threshold sentinels");
 	QP_EnergyLevel2D levels2d[3] = {};
 	levels2d[2].nx = 123;
 	CHECK(qp_list_energy_levels_2d_box(quantum, quantumLength, 2, levels2d, 2) == 4 &&
@@ -832,6 +839,14 @@ bool test_module_apis()
 		  approx(qp_hydrogen_21cm_frequency(), 1420.405751768e6) &&
 		  approx(qp_hydrogen_21cm_wavelength(), quantumC / 1420.405751768e6),
 		  "Integer quantum Hall and hyperfine quantities");
+	const double peakDensity = 0.5 * quantumCharge / quantumPlanck;
+	const double peakWidth = 0.05;
+	const double peakResistance = qp_longitudinal_resistance_shm(1.0, peakDensity, quantumMass, peakWidth);
+	CHECK(approx(peakResistance, 1.0) &&
+		  approx(qp_longitudinal_resistance_shm(1.0, peakDensity, 2.0 * quantumMass, peakWidth), 1.0) &&
+		  qp_longitudinal_resistance_shm(1.0, 0.05 * quantumCharge / quantumPlanck,
+			  quantumMass, peakWidth) == 0.0,
+		  "Longitudinal Gaussian peak, current mass-independent model and low-filling sentinel");
 	const double restEnergy = quantumMass * quantumC * quantumC;
 	const double momentum = quantumMass * quantumC;
 	const double waveNumber = momentum / hbar;
@@ -908,6 +923,26 @@ bool test_module_apis()
 		  approx(qp_cross_section_from_s_factor(reactionEnergy, 1.0e-40, 1.0, 1.0, reducedMass),
 				 1.0e-40 / reactionEnergy * std::exp(-std::sqrt(gamowEnergy / reactionEnergy))),
 		  "Gamow peak, window and astrophysical S factor");
+	const double atomicMassUnit = 1.66053906660e-27;
+	const double alphaReducedMass = 2.0 * atomicMassUnit;
+	const double alphaRadius = 2.4e-15 * std::cbrt(4.0);
+	const double alphaEnergyMeV = 0.4;
+	const double alphaEnergy = alphaEnergyMeV * 1.0e6 * quantumCharge;
+	const double alphaTurningPoint = 2.0 * coulombCoupling / alphaEnergy;
+	const double alphaRatio = alphaRadius / alphaTurningPoint;
+	const double alphaAction = std::sqrt(2.0 * alphaReducedMass * alphaEnergy) * alphaTurningPoint / hbar *
+		(std::acos(std::sqrt(alphaRatio)) - std::sqrt(alphaRatio * (1.0 - alphaRatio)));
+	const double alphaHalfLife = std::log(2.0) * 2.0 * alphaRadius /
+		(std::sqrt(2.0 * alphaEnergy / alphaReducedMass) * std::exp(-2.0 * alphaAction));
+	CHECK(approx(qp_alpha_decay_half_life(alphaEnergyMeV, 3, 8), alphaHalfLife),
+		  "Alpha-decay Coulomb-barrier and assault-frequency model");
+	double geigerLog = 0.0, geigerLambda = 0.0;
+	qp_geiger_nuttall(4.0, 50, &geigerLog, &geigerLambda);
+	CHECK(approx(geigerLog, -6.58) && approx(geigerLambda, std::log(2.0) * std::pow(10.0, 6.58)),
+		  "Empirical Geiger-Nuttall logarithm and decay-rate conversion");
+	qp_geiger_nuttall(4.0, 50, nullptr, &geigerLambda);
+	CHECK(approx(geigerLambda, std::log(2.0) * std::pow(10.0, 6.58)),
+		  "Geiger-Nuttall optional logarithm output");
 	CHECK(approx(qp_zitterbewegung_frequency(quantumMass), 2.0 * restEnergy / hbar) &&
 		  approx(qp_zitterbewegung_amplitude(quantumMass), hbar / (2.0 * quantumMass * quantumC)) &&
 		  approx(qp_relativistic_dos_3d(restEnergy, quantumMass), 0.0) &&
@@ -924,6 +959,21 @@ bool test_module_apis()
 		  approx(qp_dirac_hydrogen_energy(2, 1, 0.5, 1.0),
 			  qp_dirac_hydrogen_energy(2, 0, 0.5, 1.0)),
 		  "Dirac hydrogen ground energy and selected n=2 degeneracy");
+	const double diracZ = 40.0;
+	const double diracA2 = alpha * alpha * diracZ * diracZ;
+	const double diracRoot = std::sqrt(1.0 - diracA2);
+	const double diracBinding = -restEnergy * diracA2 / (1.0 + diracRoot);
+	const double diracCorrection = diracBinding + 13.6057 * quantumCharge * diracZ * diracZ;
+	CHECK(approx(qp_dirac_fine_structure_correction(1, 0, 0.5, diracZ), diracCorrection, 1.0e-8),
+		  "Dirac 1s energy correction relative to the adopted Bohr reference");
+	const double diracUp = std::sqrt(1.0 - diracA2 / 4.0);
+	const double diracDown = std::sqrt((1.0 + diracRoot) / 2.0);
+	const double diracSplitting = restEnergy * (diracA2 / (2.0 * (1.0 + diracRoot)) - diracA2 / 4.0) /
+		(diracUp + diracDown);
+	CHECK(approx(qp_dirac_spin_orbit_energy(2, 1, 1.5, diracZ), diracSplitting / 3.0, 1.0e-8) &&
+		  approx(qp_dirac_spin_orbit_energy(2, 1, 0.5, diracZ), -2.0 * diracSplitting / 3.0, 1.0e-8) &&
+		  qp_dirac_spin_orbit_energy(1, 0, 0.5, diracZ) == 0.0,
+		  "Dirac n=2 spin-orbit splitting convention and s-state limit");
 	const double bohrGround = -13.6057 * quantumCharge;
 	const double fineScale = bohrGround * bohrGround / restEnergy;
 	double fineStructure[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 123.0};
