@@ -1257,6 +1257,11 @@ bool test_module_apis()
 			  1.0 - 0.4 * 9.0 / 5.0) &&
 		  em_metamaterial_permeability(electromagnetic, 3.0, 2.0, 0.0, 1.0) == 1.0,
 		  "Real metamaterial permeability with damping and zero coupling");
+	CHECK(approx(em_metamaterial_permittivity(electromagnetic, 4.0, 2.0, 0.0), 0.75) &&
+		  approx(em_metamaterial_permittivity(electromagnetic, 4.0, 2.0, 3.0), 0.75) &&
+		  approx(em_metamaterial_permittivity(electromagnetic, 1.0, 2.0, 3.0), -3.0) &&
+		  em_metamaterial_permittivity(electromagnetic, 4.0, 0.0, 3.0) == 1.0,
+		  "Metamaterial permittivity current expression and ignored damping");
 	CHECK(approx(em_resistance(electromagnetic, 1.0e-6, 2.0, 0.5), 4.0e-6),
 		  "Electromagnetic resistance");
 	CHECK(approx(em_power_dissipated(electromagnetic, 3.0, 4.0), 36.0),

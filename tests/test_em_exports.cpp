@@ -158,6 +158,17 @@ bool testExports(const fs::path& root)
 		const double depth = 2.5 * skinDepth * i;
 		return std::vector<double>{depth, eddyField * eddyOmega * skinDepth * std::exp(-depth / skinDepth) / 2.0};
 	});
+	const double metamaterialPlasma = 2.0e9;
+	const double metamaterialResonance = 2.0e9;
+	const double metamaterialDamping = 1.0e8;
+	em_export_metamaterial_csv(em, filename("metamaterial.csv").c_str(), metamaterialPlasma, metamaterialResonance, 3);
+	verify("metamaterial.csv", "omega,eps_r,mu_r", [&](int i) {
+		const double omega = 0.2e9 + i * 1.9e9;
+		const double difference = omega * omega - metamaterialResonance * metamaterialResonance;
+		const double dampingTerm = metamaterialDamping * omega;
+		return std::vector<double>{omega, 1.0 - metamaterialPlasma * metamaterialPlasma / (omega * omega),
+			1.0 - 0.56 * omega * omega * difference / (difference * difference + dampingTerm * dampingTerm)};
+	});
 
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {

@@ -170,7 +170,9 @@ or a general loss model.
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
 against the intended complex Drude response and correct in ElectrodynamicsCore
-before claiming the exposed API is scientifically validated.
+before claiming the exposed API is scientifically validated. The scalar and
+CSV tests characterize this behavior and selected real permeability values;
+the CSV uses fixed damping and permeability coupling parameters.
 
 For positive electron density, `em_export_plasma_csv` sweeps frequencies below
 the plasma frequency, where `plasmaGroupVelocity` takes the square root of a
@@ -296,7 +298,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-798 APIs with exact current test references and 13 APIs still requiring
+800 APIs with exact current test references and 11 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -462,7 +464,7 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Forty-four Electrodynamics CSV exports have isolated filesystem tests checking their
+Forty-five Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
 Meissner outputs, electric and magnetic dipoles, radiation, Rayleigh scattering,
