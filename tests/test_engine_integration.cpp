@@ -411,6 +411,11 @@ bool test_module_apis()
 		  approx(qp_hydrogen_probability_density(quantum, 1, 0, 0, bohrRadius, 0.7, 1.0),
 			  hydrogen1sRadial * hydrogen1sRadial / (4.0 * quantumPi)),
 		  "Hydrogen 1s radial wavefunction and probability density");
+	const double coulombRadialScale = std::sqrt(8.0) * std::pow(bohrRadius, -1.5);
+	CHECK(approx(qp_coulomb_radial_wavefunction(quantum, 1, 0.0, 1.0), coulombRadialScale) &&
+		  approx(qp_coulomb_radial_wavefunction(quantum, 1, bohrRadius, 1.0), coulombRadialScale / std::exp(1.0)) &&
+		  approx(qp_coulomb_radial_wavefunction(quantum, 2, 2.0 * bohrRadius, 1.0), std::pow(bohrRadius, -1.5) / std::exp(1.0)),
+		  "Simplified Coulomb radial expression and principal-number scaling");
 	CHECK(approx(qp_lande_g_factor(1, 0.5, 1.5), 4.0 / 3.0) &&
 		  qp_lande_g_factor(0, 0.0, 0.0) == 0.0, "Lande g factor and zero-j sentinel");
 	CHECK(approx(qp_spherical_neumann_n(0, 1.0), -std::cos(1.0)) &&
@@ -728,6 +733,16 @@ bool test_module_apis()
 		  qp_kronig_penney_dispersion(quantum, 0.0, periodicEnergy, quantumLength, quantumLength) == 2.0 &&
 		  qp_kronig_penney_dispersion(quantum, periodicEnergy, periodicEnergy, quantumLength, quantumLength) == 2.0,
 		  "Finite-barrier Kronig-Penney dispersion and threshold sentinels");
+	double periodicBands[4] = {0.0, 0.0, 123.0, 456.0};
+	CHECK(qp_compute_kronig_penney_bands(quantum, 10.0 * periodicEnergy, quantumLength, 0.0, 50, 2,
+				 periodicBands, 1) == 1 &&
+		  approx(periodicBands[0], periodicEnergy) && approx(periodicBands[1], 49.0 * periodicEnergy) &&
+		  periodicBands[2] == 123.0 && periodicBands[3] == 456.0 &&
+		  qp_compute_kronig_penney_bands(quantum, 10.0 * periodicEnergy, quantumLength, 0.0, 50, 2,
+				 nullptr, 0) == 1 &&
+		  qp_compute_kronig_penney_bands(quantum, 10.0 * periodicEnergy, quantumLength, 0.0, 50, 2,
+				 periodicBands + 2, 0) == 1 && periodicBands[2] == 123.0 && periodicBands[3] == 456.0,
+		  "Kronig-Penney free-layer scan, open endpoint and output capacity");
 	QP_EnergyLevel2D levels2d[3] = {};
 	levels2d[2].nx = 123;
 	CHECK(qp_list_energy_levels_2d_box(quantum, quantumLength, 2, levels2d, 2) == 4 &&
@@ -1935,6 +1950,16 @@ bool test_module_apis()
 	CHECK(approx(td_brownian_msd(thermo, 2.0e-12, 0.50), 2.0e-12),
 		  "Brownian mean-square displacement");
 	const double boltzmann = 1.380649e-23;
+	const double isingTemperature = 300.0;
+	const double isingField = 0.7 * boltzmann * isingTemperature / 9.2740100783e-24;
+	const double isingCoupling = 0.25 * boltzmann * isingTemperature;
+	const double isingExpected = std::sinh(0.7) / std::sqrt(std::sinh(0.7) * std::sinh(0.7) + std::exp(-1.0));
+	CHECK(approx(td_ising_1d_magnetization(thermo, 4, isingCoupling, isingField, isingTemperature), isingExpected) &&
+		  approx(td_ising_1d_magnetization(thermo, 40, isingCoupling, isingField, isingTemperature), isingExpected) &&
+		  approx(td_ising_1d_magnetization(thermo, 4, isingCoupling, -isingField, isingTemperature), -isingExpected) &&
+		  approx(td_ising_1d_magnetization(thermo, 4, 0.0, isingField, isingTemperature), std::tanh(0.7)) &&
+		  td_ising_1d_magnetization(thermo, 4, isingCoupling, 0.0, isingTemperature) == 0.0,
+		  "Infinite-chain Ising magnetization, independent-spin limit and N independence");
 	CHECK(approx(td_bose_einstein_occupation(thermo, 2.0 * boltzmann * 300.0, 0.0, 300.0),
 				  1.0 / (std::exp(2.0) - 1.0)),
 		  "Bose-Einstein occupation");

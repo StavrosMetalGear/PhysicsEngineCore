@@ -121,7 +121,9 @@ claiming `ss_debye_specific_heat` is scientifically validated.
 
 `ThermoSystem::ising1DMagnetization` ignores its `N` argument and implements
 the infinite-chain magnetization per spin. Clarify that contract or implement
-the finite-chain result in ThermodynamicsCore before validating this API.
+the finite-chain result in ThermodynamicsCore. The added test checks the
+infinite-chain expression, independent-spin limit, field reversal and two
+different values of `N`, not finite-chain behavior.
 
 `QuantumParticle::rayleighRitzHO` uses an absolute `1e-30` Jacobi convergence
 threshold, which can stop diagonalization while off-diagonal terms remain
@@ -228,8 +230,9 @@ correct these threshold cases in QuantumCore; the added tests avoid them.
 `qp_kronig_penney_dispersion` returns the sentinel `2.0` at both zero energy
 and the barrier threshold instead of evaluating their finite limiting values.
 Its band scanner skips energies at or above the barrier, but can leave an open
-band ending at the larger scan limit. Review these domains and band endpoints
-in QuantumCore before relying on full band calculations.
+band ending at the larger scan limit. A zero-barrier-width scan characterizes
+that endpoint and checks output capacity and a null count query; it does not
+validate full band calculations. Review these domains and endpoints in QuantumCore.
 
 `qp_longitudinal_resistance_shm` ignores its effective-mass argument and returns
 a dimensionless Gaussian peak sum as `R_xx`. Clarify the intended units and
@@ -246,6 +249,10 @@ which differs dimensionally and numerically from the hydrogenic `e^4` formula.
 The same prefactor is used by `qp_two_body_coulomb_energy` and the two-body
 comparison CSV. Verify and correct these QuantumCore implementations before
 scientific validation.
+`qp_coulomb_radial_wavefunction` and its CSV export use a simplified
+exponential without the excited-state radial polynomial; its 1s amplitude is
+`sqrt(2)` times the normalized hydrogenic radial amplitude. The added tests
+characterize this expression for selected inputs, not normalized Coulomb states.
 `QuantumParticle::hydrogenRadialWavefunction` uses a cubic `(n+l)!` factor in
 its normalization while its associated Laguerre polynomial uses the standard
 recurrence. Review the normalization for excited states in QuantumCore; the
@@ -289,7 +296,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-794 APIs with exact current test references and 17 APIs still requiring
+798 APIs with exact current test references and 13 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac

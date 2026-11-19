@@ -911,6 +911,11 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{x, std::sqrt(2.0 * alpha) * x * std::pow(alpha / pi, 0.25) * std::exp(-alpha * x * x / 2.0)};
 	});
 	const double bohrRadius = 5.29177210903e-11;
+	qp_export_coulomb_wavefunction_csv(quantum, filename("coulomb-radial.csv").c_str(), 2, 1.0, 5);
+	verify("coulomb-radial.csv", "r,psi", [&](int i) {
+		const double r = i * 1.0e-10;
+		return std::vector<double>{r, std::pow(bohrRadius, -1.5) * std::exp(-r / (2.0 * bohrRadius))};
+	}, 5);
 	qp_export_hydrogen_radial_csv(quantum, filename("hydrogen-1s.csv").c_str(), 1, 0, 1.0, 3);
 	verify("hydrogen-1s.csv", "r,R_nl,r2_R2", [&](int i) {
 		const double r = 4.0 * bohrRadius * (i + 1) / 3.0;
