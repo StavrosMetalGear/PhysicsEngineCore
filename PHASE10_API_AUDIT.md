@@ -184,7 +184,9 @@ before validating this export; this finding is based on source inspection.
 inverse-cubed-speed expression for a magnetic field input. Its dependence on
 charge, gamma and speed of light differs from the Lienard formula with magnetic
 acceleration substituted. Review the intended units and expression in
-ElectrodynamicsCore before validating its scalar wrapper or CSV export.
+ElectrodynamicsCore. The scalar and CSV checks characterize the current
+expression, parameter scaling and zero-field/rest limits; they do not validate
+synchrotron radiation power. The CSV sweep uses fixed electron charge and mass.
 
 The Quantum header labels `qp_two_level_perturbation` and `qp_two_level_exact`
 outputs as E_minus then E_plus, but their pinned implementations return the
@@ -298,7 +300,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-800 APIs with exact current test references and 11 APIs still requiring
+802 APIs with exact current test references and 9 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -464,7 +466,7 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Forty-five Electrodynamics CSV exports have isolated filesystem tests checking their
+Forty-six Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
 Meissner outputs, electric and magnetic dipoles, radiation, Rayleigh scattering,

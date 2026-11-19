@@ -1262,6 +1262,16 @@ bool test_module_apis()
 		  approx(em_metamaterial_permittivity(electromagnetic, 1.0, 2.0, 3.0), -3.0) &&
 		  em_metamaterial_permittivity(electromagnetic, 4.0, 0.0, 3.0) == 1.0,
 		  "Metamaterial permittivity current expression and ignored damping");
+	const double synchCharge = 1.602176634e-19;
+	const double synchField = 0.5;
+	const double synchReference = synchCharge * synchCharge * 12.0 * synchField * synchField /
+		(6.0 * quantumPi * 8.854187817e-12 * quantumMass * quantumMass * std::pow(299792458.0, 3));
+	CHECK(approx(em_synchrotron_power(electromagnetic, synchCharge, 2.0, synchField, quantumMass), synchReference) &&
+		  approx(em_synchrotron_power(electromagnetic, -2.0 * synchCharge, 2.0, synchField, quantumMass), 4.0 * synchReference) &&
+		  approx(em_synchrotron_power(electromagnetic, synchCharge, 2.0, -synchField, 2.0 * quantumMass), synchReference / 4.0) &&
+		  em_synchrotron_power(electromagnetic, synchCharge, 1.0, synchField, quantumMass) == 0.0 &&
+		  em_synchrotron_power(electromagnetic, synchCharge, 2.0, 0.0, quantumMass) == 0.0,
+		  "Synchrotron current expression and parameter scaling");
 	CHECK(approx(em_resistance(electromagnetic, 1.0e-6, 2.0, 0.5), 4.0e-6),
 		  "Electromagnetic resistance");
 	CHECK(approx(em_power_dissipated(electromagnetic, 3.0, 4.0), 36.0),

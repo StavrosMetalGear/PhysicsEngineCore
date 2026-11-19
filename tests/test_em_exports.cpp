@@ -169,6 +169,16 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{omega, 1.0 - metamaterialPlasma * metamaterialPlasma / (omega * omega),
 			1.0 - 0.56 * omega * omega * difference / (difference * difference + dampingTerm * dampingTerm)};
 	});
+	const double synchField = 0.5;
+	const double electronCharge = 1.602176634e-19;
+	const double electronMass = 9.1093837015e-31;
+	const double synchCoefficient = electronCharge * electronCharge * synchField * synchField /
+		(6.0 * pi * eps0 * electronMass * electronMass * std::pow(299792458.0, 3));
+	em_export_synchrotron_csv(em, filename("synchrotron.csv").c_str(), 3.0, synchField, 3);
+	verify("synchrotron.csv", "gamma,P_synch", [&](int i) {
+		const double gamma = 1.0 + i;
+		return std::vector<double>{gamma, synchCoefficient * gamma * gamma * (gamma * gamma - 1.0)};
+	});
 
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {
