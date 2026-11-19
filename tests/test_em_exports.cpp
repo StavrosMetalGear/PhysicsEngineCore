@@ -8,6 +8,7 @@
 #include <iostream>
 #include <locale>
 #include <random>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -98,6 +99,34 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 	return true;
 }
 
+bool verifyPlasmaCsv(const fs::path& path)
+{
+	std::ifstream input(path);
+	input.imbue(std::locale::classic());
+	std::string line;
+	if (!std::getline(input, line) || line != "omega_ratio,n_refr,v_group_over_c") return false;
+	const std::regex nanPattern("[+-]?nan(\\([a-z0-9_]*\\))?", std::regex_constants::icase);
+	for (int row = 0; row < 3; ++row) {
+		if (!std::getline(input, line)) return false;
+		std::istringstream fields(line);
+		std::string ratioText, indexText, velocityText, extra;
+		if (!std::getline(fields, ratioText, ',') || !std::getline(fields, indexText, ',') ||
+			!std::getline(fields, velocityText, ',') || std::getline(fields, extra, ',') || line.back() == ',') return false;
+		const double ratio = 0.01 + 1.5 * row;
+		const double index = row == 0 ? 0.0 : std::sqrt(1.0 - 1.0 / (ratio * ratio));
+		const auto matches = [](const std::string& text, double expected) {
+			std::istringstream number(text);
+			number.imbue(std::locale::classic());
+			double value = 0.0;
+			return (number >> value) && (number >> std::ws).eof() && std::isfinite(value) &&
+				std::abs(value - expected) <= 1.0e-5 * std::max(std::abs(expected), 1.0e-25);
+		};
+		if (!matches(ratioText, ratio) || !matches(indexText, index) ||
+			(row == 0 ? !std::regex_match(velocityText, nanPattern) : !matches(velocityText, index))) return false;
+	}
+	return !std::getline(input, line) && !input.bad();
+}
+
 bool testExports(const fs::path& root)
 {
 	constexpr double pi = 3.14159265358979323846;
@@ -179,6 +208,11 @@ bool testExports(const fs::path& root)
 		const double gamma = 1.0 + i;
 		return std::vector<double>{gamma, synchCoefficient * gamma * gamma * (gamma * gamma - 1.0)};
 	});
+	em_export_plasma_csv(em, filename("plasma.csv").c_str(), 1.0e20, 3);
+	if (!verifyPlasmaCsv(root / "plasma.csv")) {
+		std::cerr << "FAIL: plasma CSV values or below-cutoff NaN\n";
+		ok = false;
+	}
 
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {

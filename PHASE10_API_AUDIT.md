@@ -95,16 +95,16 @@ helpers use the physical `hbar` constant; tests preserve and document this
 observed implementation behavior.
 
 The existing integration test also verifies lifecycle and one representative
-call for every module. This is representative coverage, not yet exhaustive
-coverage of every declaration in the large sibling C APIs.
+call for every module. Combined tests now reference every inventoried declaration,
+but their selected cases do not exhaust the behavior of those APIs.
 
 ## Phase 10 actionable gap
 
 The parser-aware inventory task is complete with zero declaration/definition
-mismatches across all eight APIs. Remaining work is grouped reference testing
-for the remaining declarations, especially stateless mathematical helpers and
-lifecycle-safe stateful operations. The inventory does not itself prove
-scientific correctness or define behavior for invalid numeric domains.
+mismatches across all eight APIs, and each declaration has an exact test
+reference. Scientific review, fixes to the pinned sibling implementations, and
+broader domain and contract validation remain follow-up work. The inventory
+does not itself prove correctness or define invalid numeric domains.
 
 Scientific review is needed for two pinned Thermodynamics implementations:
 `ThermoSystem::debyeSpecificHeat` does not appear to approach the standard
@@ -181,7 +181,8 @@ For positive electron density, `em_export_plasma_csv` sweeps frequencies below
 the plasma frequency, where `plasmaGroupVelocity` takes the square root of a
 negative value. Those CSV rows can contain non-finite group velocities. Review
 the evanescent-wave representation and export contract in ElectrodynamicsCore
-before validating this export; this finding is based on source inspection.
+before validating this export. The CSV test characterizes a below-cutoff NaN
+and two finite propagating rows; it does not validate the evanescent model.
 
 `EMField::synchrotronPower` uses a charge-squared, gamma-to-the-fourth and
 inverse-cubed-speed expression for a magnetic field input. Its dependence on
@@ -239,7 +240,8 @@ and the barrier threshold instead of evaluating their finite limiting values.
 Its band scanner skips energies at or above the barrier, but can leave an open
 band ending at the larger scan limit. A zero-barrier-width scan characterizes
 that endpoint and checks output capacity and a null count query; it does not
-validate full band calculations. Review these domains and endpoints in QuantumCore.
+validate full band calculations. The CSV test checks two interpolated free-layer
+crossings, not general band structure. Review these domains and endpoints in QuantumCore.
 
 `qp_longitudinal_resistance_shm` ignores its effective-mass argument and returns
 a dimensionless Gaussian peak sum as `R_xx`. Clarify the intended units and
@@ -262,6 +264,9 @@ implementations before scientific validation.
 exponential without the excited-state radial polynomial; its 1s amplitude is
 `sqrt(2)` times the normalized hydrogenic radial amplitude. The added tests
 characterize this expression for selected inputs, not normalized Coulomb states.
+The Coulomb time export instead uses `exp(-Z*r/n)` and the incorrect energy
+prefactor above. Its CSV test characterizes a short phase evolution, not a
+physical normalized Coulomb state; review its units and radial scale.
 `QuantumParticle::hydrogenRadialWavefunction` uses a cubic `(n+l)!` factor in
 its normalization while its associated Laguerre polynomial uses the standard
 recurrence. Review the normalization for excited states in QuantumCore; the
@@ -299,14 +304,14 @@ documented distributional interpretation rather than a physical zero claim.
 
 Complete: all 811 declarations are categorized reproducibly, with category
 totals verified against the inventory and all eight modules retaining zero
-missing or extra definitions. The next phase step is to turn each category
-into a test plan, beginning with scalar-domain and lifecycle-state APIs.
+missing or extra definitions. Phase 10.2 provides the corresponding test plan.
 
 ## Phase 10.2 status
 
-Complete: the generated test plan accounts for all 811 declarations. It records
-808 APIs with exact current test references and 3 APIs still requiring
-domain-specific test design. The latest implementation batch covers additional
+Complete for the inventory and exact-symbol reference milestone: the generated
+test plan records 811 of 811 declarations referenced. This does not establish
+complete scientific, domain, buffer, or numerical validation; the findings
+above remain open for follow-up. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
 helpers, plus Electrodynamics capacitance, magnetic-field, radiation-pressure,

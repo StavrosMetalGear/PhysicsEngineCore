@@ -416,6 +416,16 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{static_cast<double>(i), 1.0, 2.0 * pi * i};
 	});
 	const double mass = 9.1093837015e-31;
+	const double latticeLength = 1.0e-9;
+	const double latticeEnergyStep = hbar * hbar / (2.0 * mass * latticeLength * latticeLength);
+	const double crossingFraction = std::cos(std::sqrt(2.0)) /
+		(std::cos(std::sqrt(2.0)) - std::cos(std::sqrt(3.0)));
+	qp_export_kronig_penney_bands_csv(quantum, filename("free-bands.csv").c_str(),
+		10.0 * latticeEnergyStep, latticeLength, 0.0, 5, 50, 1);
+	verify("free-bands.csv", "k,E,band", [&](int row) {
+		return std::vector<double>{(row == 0 ? -1.0 : 1.0) * pi / (2.0 * latticeLength),
+			(2.0 + crossingFraction) * latticeEnergyStep, 0.0};
+	}, 2);
 	qp_export_wavefunction_csv(quantum, filename("box-1d-wave.csv").c_str(), 2, 5);
 	verify("box-1d-wave.csv", "x,psi", [&](int i) {
 		const double x = i * 0.2e-10;
@@ -918,6 +928,15 @@ bool testExports(const fs::path& root)
 	}, 5);
 	const double comparisonMass = 3.0 * mass;
 	const double coulombReference = -mass * charge * charge / (8.0 * 8.854187817e-12 * 8.854187817e-12 * hbar * hbar);
+	const double coulombTimeStep = 0.6 * hbar / -coulombReference;
+	qp_export_coulomb_time_evolution_csv(quantum, filename("coulomb-time.csv").c_str(), 1, 1.0, 3, 2, 2.0 * coulombTimeStep);
+	verify("coulomb-time.csv", "r,t,RePsi,ImPsi,AbsPsi,Phase", [&](int row) {
+		const double r = (row % 3) * 1.0e-9 / 3.0;
+		const double t = (row / 3) * coulombTimeStep;
+		const double amplitude = std::exp(-r);
+		const double phase = (row / 3) * 0.6;
+		return std::vector<double>{r, t, amplitude * std::cos(phase), amplitude * std::sin(phase), amplitude, phase};
+	}, 6);
 	qp_export_two_body_comparison_csv(quantum, filename("two-body-coulomb.csv").c_str(), mass, comparisonMass, 1.0, 3);
 	verify("two-body-coulomb.csv", "n,E_infinite_nucleus,E_two_body,E_CM_term,reduced_mass,total_mass", [&](int i) {
 		const double n = i + 1.0;
