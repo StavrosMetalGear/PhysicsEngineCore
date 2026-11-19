@@ -152,7 +152,18 @@ values; clarify or revise the argument in ElectrodynamicsCore.
 
 `EMField::eddyCurrentDensity` computes `B0*omega*delta*exp(-z/delta)/2`,
 which has electric-field units in SI rather than current-density units.
-Review the intended quantity and conductivity dependence in ElectrodynamicsCore.
+The eddy CSV test characterizes this expression, not a validated current
+density. Review the intended quantity and conductivity dependence in
+ElectrodynamicsCore.
+
+`em_mutual_inductance_loops` uses the source-loop axial field multiplied by
+the receiver area. This is a small-receiver approximation rather than a
+general finite-loop mutual inductance formula; the test checks that expression
+and zero receiver area. Clarify its applicability in ElectrodynamicsCore.
+`em_eddy_power_loss` uses a squared frequency factor but its argument is named
+`omega`; its coefficient and the output's volume or mass basis need clarification.
+The test characterizes the current expression rather than establishing SI units
+or a general loss model.
 
 `EMField::metamaterialPermittivity` takes the real part of its complex
 denominator before division, so its damping argument has no effect. Review
@@ -216,7 +227,9 @@ mass dependence in QuantumCore; the new checks characterize this model only.
 
 `qp_breit_rabi_energy` uses a zero-field offset of `-DeltaHF/[4(2I+1)]`;
 the standard Breit-Rabi expression uses `-DeltaHF/[2(2I+1)]`. Review the
-energy convention and correct the offset in QuantumCore if appropriate.
+energy convention and correct the offset in QuantumCore if appropriate. The
+scalar and CSV tests characterize the current offset and selected I=1/2
+branch splittings; they do not establish an absolute-energy convention.
 
 `qp_coulomb_energy` uses a prefactor proportional to `e^2/epsilon0^2/hbar^2`,
 which differs dimensionally and numerically from the hydrogenic `e^4` formula.
@@ -229,7 +242,10 @@ recurrence. Review the normalization for excited states in QuantumCore; the
 CSV reference test covers only the unaffected 1s state.
 `qp_double_delta_energy` ignores the separation `a` and returns a single-delta
 energy under a simplified approximation; review its validity and document its
-applicable domain before treating it as a double-delta reference.
+applicable domain before treating it as a double-delta reference. Its CSV
+export is an unnormalized sum of single-delta exponentials using the single-well
+decay constant, not an exact normalized double-delta solution. Tests characterize
+these expressions and the energy's separation independence.
 The compatibility implementation of `qp_delta_potential_wavefunction` ignores
 `n` and computes the single attractive-delta bound state for positive strength;
 clarify the supported state and numeric domain in the public API.
@@ -263,7 +279,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-782 APIs with exact current test references and 29 APIs still requiring
+789 APIs with exact current test references and 22 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -429,7 +445,7 @@ image charges, and induction.
 Additional scalar references cover Larmor radiation and paramagnetism; Fresnel
 edge and coherence optics; Einstein heat capacity and semiconductor properties;
 and Maxwell, Planck and Antoine thermodynamic formulas.
-Forty-three Electrodynamics CSV exports have isolated filesystem tests checking their
+Forty-four Electrodynamics CSV exports have isolated filesystem tests checking their
 headers, sample counts, grids, and numeric values, including transmission-line,
 polarization, magnetization, total-reflection, Fresnel, antenna, plane-wave and
 Meissner outputs, electric and magnetic dipoles, radiation, Rayleigh scattering,

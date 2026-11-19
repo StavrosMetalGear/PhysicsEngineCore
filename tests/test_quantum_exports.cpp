@@ -315,6 +315,16 @@ bool testExports(const fs::path& root)
 		return std::vector<double>{field, 1.0, magneticNumber,
 			0.25 * hyperfineA + 9.2740100783e-24 * magneticNumber * field};
 	}, 12);
+	const double breitBmax = hyperfineA / (4.0 * 9.2740100783e-24);
+	qp_export_breit_rabi_csv(quantum, filename("breit-rabi.csv").c_str(), hyperfineA, 0.5, 2.0, 0.0, breitBmax, 1);
+	verify("breit-rabi.csv", "B,mF,upper,E", [&](int row) {
+		const int state = row % 4;
+		const bool upper = state < 3;
+		const double m = upper ? state - 1.0 : 0.0;
+		const double root = row < 4 ? 1.0 : (state == 0 ? 0.5 : state == 2 ? 1.5 : std::sqrt(5.0) / 2.0);
+		return std::vector<double>{row < 4 ? 0.0 : breitBmax, m, upper ? 1.0 : 0.0,
+			hyperfineA * (-1.0 / 8.0 + (upper ? 0.5 : -0.5) * root)};
+	}, 8);
 	const double fineAlpha = 1.0 / 137.035999084;
 	const double electronCharge = 1.602176634e-19;
 	const double bohrGroundEv = -13.6057;
@@ -849,6 +859,15 @@ bool testExports(const fs::path& root)
 		const double kappa = mass * deltaStrength / (hbar * hbar);
 		return std::vector<double>{x, std::sqrt(kappa) * std::exp(-kappa * std::abs(x))};
 	});
+	const double doubleDeltaSeparation = 1.0e-9;
+	qp_export_double_delta_wavefunction_csv(quantum, filename("double-delta-wavefunction.csv").c_str(),
+		deltaStrength, doubleDeltaSeparation, 4);
+	verify("double-delta-wavefunction.csv", "x,psi", [&](int i) {
+		const double x = (i - 2) * doubleDeltaSeparation;
+		const double kappa = mass * deltaStrength / (hbar * hbar);
+		return std::vector<double>{x, std::exp(-kappa * std::abs(x - doubleDeltaSeparation)) +
+			std::exp(-kappa * std::abs(x + doubleDeltaSeparation))};
+	}, 4);
 	const double deltaTimeMax = 1.0e-12;
 	qp_export_delta_potential_time_evolution_csv(quantum, filename("delta-time.csv").c_str(), deltaStrength, 3, deltaTimeMax);
 	verify("delta-time.csv", "x,t,psi", [&](int row) {

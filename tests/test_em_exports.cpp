@@ -71,6 +71,11 @@ bool verifyCsv(const fs::path& path, const std::string& header, int rowCount,
 				std::cerr << "FAIL: missing CSV column: " << path << "\n";
 				return false;
 			}
+			if (!std::isfinite(values[column])) {
+				std::cerr << "FAIL: non-finite expected CSV value in " << path << " row " << row
+						  << " column " << column << "\n";
+				return false;
+			}
 			std::istringstream number(field);
 			number.imbue(std::locale::classic());
 			double actual = 0.0;
@@ -145,6 +150,14 @@ bool testExports(const fs::path& root)
 	verify("confinement-a.csv", "B,r_c", confinementReference);
 	em_export_confinement_csv(em, filename("confinement-b.csv").c_str(), 2.0, confinementMass, 3);
 	verify("confinement-b.csv", "B,r_c", confinementReference);
+	const double eddyField = 0.3;
+	const double eddyOmega = 1000.0;
+	const double skinDepth = std::sqrt(2.0 / (mu0 * 5.8e7 * eddyOmega));
+	em_export_eddy_csv(em, filename("eddy.csv").c_str(), eddyField, eddyOmega, 3);
+	verify("eddy.csv", "z,J", [&](int i) {
+		const double depth = 2.5 * skinDepth * i;
+		return std::vector<double>{depth, eddyField * eddyOmega * skinDepth * std::exp(-depth / skinDepth) / 2.0};
+	});
 
 	em_export_coulomb_csv(em, filename("coulomb.csv").c_str(), charge, 3);
 	verify("coulomb.csv", "r,E,V,U(q1=q)", [&](int i) {

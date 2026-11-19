@@ -312,6 +312,11 @@ bool test_module_apis()
 		  "Quantum delta-potential energy");
 	const double quantumPi = 3.14159265358979323846;
 	const double quantumMass = 9.1093837015e-31;
+	const double doubleDeltaStrength = 1.0e-29;
+	const double singleDeltaEnergy = -quantumMass * doubleDeltaStrength * doubleDeltaStrength / (2.0 * hbar * hbar);
+	CHECK(approx(qp_double_delta_energy(quantum, doubleDeltaStrength, 0.5e-9), singleDeltaEnergy) &&
+		  approx(qp_double_delta_energy(quantum, doubleDeltaStrength, 2.0e-9), singleDeltaEnergy),
+		  "Double-delta single-well approximation and separation independence");
 	const double quantumCharge = 1.602176634e-19;
 	const double quantumPlanck = 6.62607015e-34;
 	const double quantumC = 299792458.0;
@@ -891,6 +896,14 @@ bool test_module_apis()
 		  approx(qp_hyperfine_gf(0.0, 0.5, 0.5, 2.0, 0.0), 0.0) &&
 		  approx(qp_hyperfine_zeeman_weak(1.0e-23, 2.0, 0.5, 2.0), 1.0e-23 + 2.0 * bohrMagneton),
 		  "Hyperfine constant, g factor and weak-field splitting");
+	const double breitGap = 1.0e-22;
+	const double breitField = breitGap / (4.0 * bohrMagneton);
+	CHECK(approx(qp_breit_rabi_energy(0.0, 1, 0.5, 2.0, 0.0, breitGap, 0.0), 3.0 * breitGap / 8.0) &&
+		  approx(qp_breit_rabi_energy(0.0, 0, 0.5, 2.0, 0.0, breitGap, 0.0), -5.0 * breitGap / 8.0) &&
+		  approx(qp_breit_rabi_energy(1.0, 1, 0.5, 2.0, 0.0, breitGap, breitField), 5.0 * breitGap / 8.0) &&
+		  approx(qp_breit_rabi_energy(0.0, 0, 0.5, 2.0, 0.0, breitGap, breitField),
+				  breitGap * (-1.0 / 8.0 - std::sqrt(5.0) / 4.0)),
+		  "Breit-Rabi branch splitting and current energy offset");
 	CHECK(approx(qp_ab_interference(0.0, 1.0, 1.0, 0.0), 1.0) &&
 		  approx(qp_ab_interference(0.0, 1.0, 1.0, quantumPi / 2.0), 0.5) &&
 		  approx(qp_ab_scattering_cross_section(quantumPi, 2.0, 0.5), 1.0 / (4.0 * quantumPi)),
@@ -1192,6 +1205,20 @@ bool test_module_apis()
 	CHECK(approx(em_skin_depth(electromagnetic, 1.0e9),
 				  std::sqrt(2.0 / (1.2566370614e-6 * 1.0 * 5.8e7 * 1.0e9))),
 		  "Electromagnetic skin depth");
+	const double coilRadius = 0.2;
+	const double receiverRadius = 0.001;
+	const double coilDistance = 0.3;
+	const double coilAxisFieldPerAmp = 1.2566370614e-6 * coilRadius * coilRadius /
+		(2.0 * std::pow(coilRadius * coilRadius + coilDistance * coilDistance, 1.5));
+	CHECK(approx(em_mutual_inductance_loops(electromagnetic, coilRadius, receiverRadius, coilDistance),
+				  coilAxisFieldPerAmp * quantumPi * receiverRadius * receiverRadius) &&
+		  em_mutual_inductance_loops(electromagnetic, coilRadius, 0.0, coilDistance) == 0.0,
+		  "Coaxial-loop small receiver approximation and zero receiver area");
+	const double eddyPower = quantumPi * quantumPi * 4.0 * 9.0 * 0.01 / (6.0 * 5.0);
+	CHECK(approx(em_eddy_power_loss(electromagnetic, 2.0, 3.0, 0.1, 5.0), eddyPower) &&
+		  approx(em_eddy_power_loss(electromagnetic, 2.0, 6.0, 0.1, 5.0), 4.0 * eddyPower) &&
+		  em_eddy_power_loss(electromagnetic, 0.0, 3.0, 0.1, 5.0) == 0.0,
+		  "Eddy loss current expression and field-frequency scaling");
 	CHECK(approx(em_eddy_braking_force(electromagnetic, 2.0, 3.0, 5.0, 0.1, 0.2), 1.2) &&
 		  em_eddy_braking_force(electromagnetic, 0.0, 3.0, 5.0, 0.1, 0.2) == 0.0 &&
 		  approx(em_eddy_braking_force(electromagnetic, 2.0, -3.0, 5.0, 0.1, 0.2), -1.2),
