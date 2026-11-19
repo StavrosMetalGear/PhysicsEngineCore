@@ -19,6 +19,19 @@ double constantPotential(double, double height)
 	return height;
 }
 
+double debyeD3Reference(double x)
+{
+	const int intervals = 10000;
+	const double step = x / intervals;
+	double sum = 0.0;
+	for (int i = 1; i <= intervals; ++i) {
+		const double t = i * step;
+		const double weight = i == intervals ? 1.0 : (i % 2 == 0 ? 2.0 : 4.0);
+		sum += weight * t * t * t / std::expm1(t);
+	}
+	return step * sum / (x * x * x);
+}
+
 #define CHECK(condition, message) \
 	do { \
 		if (!(condition)) { \
@@ -1897,6 +1910,12 @@ bool test_module_apis()
 	const double solidCharge = 1.602176634e-19;
 	const double electronMass = 9.1093837015e-31;
 	const double solidPi = 3.14159265358979323846;
+	const double solidGasConstant = solidBoltzmann * 6.02214076e23;
+	CHECK(ss_debye_specific_heat(0.0, 300.0) == 0.0 &&
+		  approx(ss_debye_specific_heat(300.0, 300.0), 9.0 * solidGasConstant * debyeD3Reference(1.0), 0.003) &&
+		  approx(ss_debye_specific_heat(150.0, 300.0), 9.0 * solidGasConstant * debyeD3Reference(2.0), 0.003) &&
+		  approx(ss_debye_specific_heat(300000.0, 300.0), 9.0 * solidGasConstant, 0.003),
+		  "Solid-state Debye current expression, quadrature and limits");
 	CHECK(approx(ss_einstein_specific_heat(300.0, 300.0),
 			  3.0 * solidBoltzmann * 6.02214076e23 * std::exp(1.0) / std::pow(std::exp(1.0) - 1.0, 2)),
 		  "Einstein solid specific heat");
@@ -2061,6 +2080,15 @@ bool test_module_apis()
 	const double thermoHbar = 1.0545718e-34;
 	const double electronCharge = 1.602176634e-19;
 	const double gasConstant = 8.31446261815324;
+	CHECK(approx(td_debye_specific_heat(thermo, 300.0, 300.0), 9.0 * gasConstant * debyeD3Reference(1.0), 0.004) &&
+		  approx(td_debye_specific_heat(thermo, 150.0, 300.0), 4.5 * gasConstant * debyeD3Reference(2.0), 0.004) &&
+		  approx(td_debye_specific_heat(thermo, 300000.0, 300.0), 9000.0 * gasConstant, 0.004),
+		  "Thermodynamics Debye current expression, quadrature and high-temperature scaling");
+	const double lowEntropy = 12.0 * std::pow(thermoPi, 4) * gasConstant / (5.0 * 1000.0);
+	CHECK(approx(td_debye_entropy_low_t(thermo, 30.0, 300.0), lowEntropy) &&
+		  approx(td_debye_entropy_low_t(thermo, 60.0, 300.0), 8.0 * lowEntropy) &&
+		  td_debye_entropy_low_t(thermo, 0.0, 300.0) == 0.0,
+		  "Low-temperature Debye entropy current coefficient and cubic scaling");
 	const double particleMass = 9.1093837015e-31;
 	const double density = 1.0e28;
 	const double fermiEnergy = thermoHbar * thermoHbar / (2.0 * particleMass) *

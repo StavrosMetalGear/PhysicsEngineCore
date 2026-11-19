@@ -111,13 +111,16 @@ Scientific review is needed for two pinned Thermodynamics implementations:
 high-temperature limit of 3 nR, and `debyeEntropyLowT` appears to use the
 low-temperature heat-capacity coefficient rather than the entropy coefficient.
 Verify against authoritative references and correct in ThermodynamicsCore before
-claiming these APIs are scientifically validated; neither is covered by the
-new reference tests.
+claiming these APIs are scientifically validated. The new tests characterize
+the implemented expressions and scaling, with independently integrated Debye
+functions and tolerances for the implementation's discrete quadrature.
 
 `SolidStateSystem::debyeSpecificHeat` returns `9 R * D3(thetaD/T)` and thus
 approaches 9 R rather than the standard 3 R per mole at high temperature.
 Review its full temperature dependence and correct it in SolidStateCore before
-claiming `ss_debye_specific_heat` is scientifically validated.
+claiming `ss_debye_specific_heat` is scientifically validated. Its new test
+characterizes the current expression, zero-temperature sentinel and selected
+high-temperature behavior, rather than validating physical heat capacity.
 
 `ThermoSystem::ising1DMagnetization` ignores its `N` argument and implements
 the infinite-chain magnetization per spin. Clarify that contract or implement
@@ -302,7 +305,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-805 APIs with exact current test references and 6 APIs still requiring
+808 APIs with exact current test references and 3 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
