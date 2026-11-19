@@ -251,8 +251,10 @@ branch splittings; they do not establish an absolute-energy convention.
 `qp_coulomb_energy` uses a prefactor proportional to `e^2/epsilon0^2/hbar^2`,
 which differs dimensionally and numerically from the hydrogenic `e^4` formula.
 The same prefactor is used by `qp_two_body_coulomb_energy` and the two-body
-comparison CSV. Verify and correct these QuantumCore implementations before
-scientific validation.
+comparison CSV. The new scalar and CSV tests characterize that prefactor,
+principal-number and reduced-mass scaling, and selected output columns; they
+do not validate physical Coulomb energies. Verify and correct these QuantumCore
+implementations before scientific validation.
 `qp_coulomb_radial_wavefunction` and its CSV export use a simplified
 exponential without the excited-state radial polynomial; its 1s amplitude is
 `sqrt(2)` times the normalized hydrogenic radial amplitude. The added tests
@@ -300,7 +302,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-802 APIs with exact current test references and 9 APIs still requiring
+805 APIs with exact current test references and 6 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac

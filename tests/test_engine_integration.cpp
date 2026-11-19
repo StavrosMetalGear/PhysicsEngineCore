@@ -416,6 +416,19 @@ bool test_module_apis()
 		  approx(qp_coulomb_radial_wavefunction(quantum, 1, bohrRadius, 1.0), coulombRadialScale / std::exp(1.0)) &&
 		  approx(qp_coulomb_radial_wavefunction(quantum, 2, 2.0 * bohrRadius, 1.0), std::pow(bohrRadius, -1.5) / std::exp(1.0)),
 		  "Simplified Coulomb radial expression and principal-number scaling");
+	const double currentCoulombEnergy = -quantumMass * quantumCharge * quantumCharge /
+		(8.0 * 8.854187817e-12 * 8.854187817e-12 * hbar * hbar);
+	CHECK(approx(qp_coulomb_energy(quantum, 1, 1.0), currentCoulombEnergy) &&
+		  approx(qp_coulomb_energy(quantum, 2, 1.0), currentCoulombEnergy / 4.0) &&
+		  approx(qp_coulomb_energy(quantum, 2, 2.0), currentCoulombEnergy) &&
+		  qp_coulomb_energy(quantum, 1, 0.0) == 0.0,
+		  "Coulomb energy current prefactor and quantum-number scaling");
+	CHECK(approx(qp_two_body_coulomb_energy(quantum, quantumMass, 3.0 * quantumMass, 1, 1.0),
+				  0.75 * currentCoulombEnergy) &&
+		  approx(qp_two_body_coulomb_energy(quantum, 3.0 * quantumMass, quantumMass, 2, 1.0),
+				  0.75 * currentCoulombEnergy / 4.0) &&
+		  qp_two_body_coulomb_energy(quantum, quantumMass, quantumMass, 1, 0.0) == 0.0,
+		  "Two-body Coulomb current prefactor and reduced-mass scaling");
 	CHECK(approx(qp_lande_g_factor(1, 0.5, 1.5), 4.0 / 3.0) &&
 		  qp_lande_g_factor(0, 0.0, 0.0) == 0.0, "Lande g factor and zero-j sentinel");
 	CHECK(approx(qp_spherical_neumann_n(0, 1.0), -std::cos(1.0)) &&

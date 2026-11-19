@@ -916,6 +916,14 @@ bool testExports(const fs::path& root)
 		const double r = i * 1.0e-10;
 		return std::vector<double>{r, std::pow(bohrRadius, -1.5) * std::exp(-r / (2.0 * bohrRadius))};
 	}, 5);
+	const double comparisonMass = 3.0 * mass;
+	const double coulombReference = -mass * charge * charge / (8.0 * 8.854187817e-12 * 8.854187817e-12 * hbar * hbar);
+	qp_export_two_body_comparison_csv(quantum, filename("two-body-coulomb.csv").c_str(), mass, comparisonMass, 1.0, 3);
+	verify("two-body-coulomb.csv", "n,E_infinite_nucleus,E_two_body,E_CM_term,reduced_mass,total_mass", [&](int i) {
+		const double n = i + 1.0;
+		return std::vector<double>{n, coulombReference / (n * n), 0.75 * coulombReference / (n * n),
+			0.0, 0.75 * mass, 4.0 * mass};
+	});
 	qp_export_hydrogen_radial_csv(quantum, filename("hydrogen-1s.csv").c_str(), 1, 0, 1.0, 3);
 	verify("hydrogen-1s.csv", "r,R_nl,r2_R2", [&](int i) {
 		const double r = 4.0 * bohrRadius * (i + 1) / 3.0;
