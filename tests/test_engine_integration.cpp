@@ -312,6 +312,15 @@ bool test_module_apis()
 		  "Quantum delta-potential energy");
 	const double quantumPi = 3.14159265358979323846;
 	const double quantumMass = 9.1093837015e-31;
+	const double finiteHalfWidth = 0.5e-10;
+	const double finiteK = quantumPi / (4.0 * finiteHalfWidth);
+	const double finiteBinding = hbar * hbar * finiteK * finiteK / (2.0 * quantumMass);
+	const double finiteDepth = 2.0 * finiteBinding;
+	const double finiteNorm4 = 1.0 / std::sqrt(finiteHalfWidth * (1.0 + 0.5 * std::exp(-quantumPi / 2.0)));
+	CHECK(approx(qp_ground_state_energy_finite_well(quantum, finiteDepth, 80), -finiteBinding, 1.0e-8),
+		  "Finite square well ground state with equal internal and decay wave numbers");
+	CHECK(approx(qp_finite_well_normalization(quantum, finiteDepth, -finiteBinding, 4), finiteNorm4),
+		  "Finite square well four-point normalization expression");
 	const double doubleDeltaStrength = 1.0e-29;
 	const double singleDeltaEnergy = -quantumMass * doubleDeltaStrength * doubleDeltaStrength / (2.0 * hbar * hbar);
 	CHECK(approx(qp_double_delta_energy(quantum, doubleDeltaStrength, 0.5e-9), singleDeltaEnergy) &&

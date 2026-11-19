@@ -209,6 +209,16 @@ exponentials without matching reflected and transmitted amplitudes at interfaces
 Their tests characterize those expressions, not a fully matched scattering state;
 review or clarify these approximations in QuantumCore.
 
+The finite-well energy solver uses the even-state matching equation, while its
+wavefunction export uses an odd interior sine and a same-sign tail on both
+sides, giving a discontinuity at the negative boundary. Its normalization
+integrates only a finite interval, and its time-evolution export currently writes
+only a header. Review these implementations in QuantumCore; the added tests
+check one ground-state root and characterize the other behavior, not a matched
+or fully normalized finite-well solution. The triangular-well wavefunction
+export also uses placeholder sine and `exp(-x)` expressions instead of a
+matched Airy-function solution; its test characterizes those expressions only.
+
 `qp_transfer_matrix_multilayer` also divides by zero when a layer height equals
 positive incident energy: its evanescent branch evaluates `sinh(0)/0` instead
 of the finite zero-wave-number limit. This also affects
@@ -279,7 +289,7 @@ into a test plan, beginning with scalar-domain and lifecycle-state APIs.
 ## Phase 10.2 status
 
 Complete: the generated test plan accounts for all 811 declarations. It records
-789 APIs with exact current test references and 22 APIs still requiring
+794 APIs with exact current test references and 17 APIs still requiring
 domain-specific test design. The latest implementation batch covers additional
 Classical free-particle, projectile, and oscillator formulas; Solid State BCS
 gap domain behavior; and Thermodynamics setter, Boltzmann, and Fermi-Dirac
@@ -454,7 +464,7 @@ induction, and wire and solenoid vector potentials. The field-transform case
 uses the implementation's electric field parallel to the boost. The vector-potential
 export uses a fixed solenoid field of 0.5 T;
 failure reporting and other export variants remain to be reviewed.
-Thirty-eight Quantum CSV exports have isolated filesystem checks for headers, sample
+Additional Quantum CSV exports have isolated filesystem checks for headers, sample
 counts, grids and numeric references covering Rabi, transition, Berry,
 Landau-Zener, tight-binding, relativistic, Aharonov-Bohm, density-of-states,
 Landau spectrum, adiabatic, classical-path, free-electron, helium variational,

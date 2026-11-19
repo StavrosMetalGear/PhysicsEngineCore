@@ -834,6 +834,34 @@ bool testExports(const fs::path& root)
 			levelEnergy - hbar * coupling / 2.0, hbar * coupling};
 	});
 	const double deltaStrength = 1.0e-29;
+	const double finiteHalfWidth = 0.5e-10;
+	const double finiteK = pi / (4.0 * finiteHalfWidth);
+	const double finiteBinding = hbar * hbar * finiteK * finiteK / (2.0 * mass);
+	double finiteSum = 0.0;
+	for (int j = 1; j <= 125; ++j) finiteSum += 2.0 * std::pow(std::sin(pi * j / 500.0), 2.0);
+	for (int j = 126; j <= 249; ++j) finiteSum += std::exp(-pi * (j / 125.0 - 1.0) / 2.0);
+	finiteSum += 0.5 * std::exp(-pi / 2.0);
+	const double finiteNorm = 1.0 / std::sqrt(finiteHalfWidth * finiteSum / 125.0);
+	qp_export_finite_well_wavefunction_csv(quantum, filename("finite-wave.csv").c_str(),
+		2.0 * finiteBinding, -finiteBinding, 4);
+	verify("finite-wave.csv", "x,psi", [&](int i) {
+		const double x = (i - 2) * finiteHalfWidth;
+		const double psi = i == 0 ? finiteNorm * std::sqrt(0.5) * std::exp(-pi / 4.0) :
+			finiteNorm * std::sin(finiteK * x);
+		return std::vector<double>{x, psi};
+	}, 4);
+	qp_export_finite_well_time_evolution_csv(quantum, filename("finite-time.csv").c_str(),
+		2.0 * finiteBinding, -finiteBinding, 4, 3, 1.0e-15);
+	verify("finite-time.csv", "x,t,psi", [&](int) { return std::vector<double>{}; }, 0);
+	const double triangularForce = 1.0e-10;
+	const double triangularEnergy = triangularForce * 2.0e-9;
+	qp_export_triangular_well_wavefunction_csv(quantum, filename("triangular-wave.csv").c_str(),
+		triangularForce, triangularEnergy, 5);
+	verify("triangular-wave.csv", "x,psi", [&](int i) {
+		const double x = i * 1.0e-9;
+		const double remaining = triangularEnergy - triangularForce * x;
+		return std::vector<double>{x, i < 2 ? std::sin(x * std::sqrt(2.0 * mass * remaining) / hbar) : std::exp(-x)};
+	}, 5);
 	const double stepWaveNumber = 1.0e9;
 	const double stepEnergy = hbar * hbar * stepWaveNumber * stepWaveNumber / (2.0 * mass);
 	qp_export_step_potential_wavefunction_csv(quantum, filename("step-evanescent.csv").c_str(), stepEnergy, 2.0 * stepEnergy, 5);
