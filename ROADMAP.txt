@@ -375,6 +375,40 @@ PHASE 10 CHECKPOINT
 Every approved module equation is mapped to compiled implementation code, exposed through
 a deliberate public interface, documented with units and domains, and covered by tests.
 
+PHASE 10.5 - Performance and allocation baseline
+--------------------------------------------------
+Goal: Start a reproducible, measurement-driven performance and allocation baseline
+without compromising correctness, numerical validity, or the public contract.
+
+1. Define representative workloads and correctness oracles for all eight modules,
+   collision broadphase and narrowphase, and async execution; include small and
+   scaling workloads where applicable.
+2. Record Release build settings, dependency revisions, hardware, workload inputs,
+   warmup, sample counts, timing distributions, and allocation measurements.
+3. Measure throughput, latency, allocation counts and bytes, and relevant memory
+   and cache behavior where the platform's tools support them. Separate setup,
+   steady-state, and teardown costs; do not infer allocations from CPU samples.
+4. Establish a PC baseline first and repeat representative workloads on real Android
+   hardware when an Android build and device are available. Record unavailable data
+   explicitly rather than extrapolating between platforms.
+5. Prioritize improvements using measured hotspots; preserve reference tests and
+   compare the same workloads before and after each change. Aim for allocation-free
+   steady-state paths and fewer cache misses where feasible, not universal guarantees.
+6. Carry the results into Phase 15 for broader budgets, regression thresholds, and
+   sustained performance engineering after measurement noise is characterized.
+
+PHASE 10.5 CHECKPOINT
+---------------------
+Representative, correctness-checked Release workloads have reproducible PC results;
+Android coverage and remaining gaps are recorded with their availability status.
+
+STATUS: STARTED
+- Recorded an exploratory PC smoke trace and its limitations in PERFORMANCE_BASELINE.md.
+- The broadphase performance-test scaffold failed to build; a usable in-repository
+  measurement harness and allocation baseline remain outstanding.
+- Phase 10's 811/811 declaration-reference coverage is not proof of scientific
+  correctness; retain the open findings in PHASE10_API_AUDIT.md as correctness work.
+
 PHASE 11 - API and ABI evolution
 ---------------------------------
 Goal: Establish a controlled compatibility strategy before adding larger features.
@@ -454,7 +488,8 @@ regressions, and reference-backed accuracy for all supported shape pairs.
 
 PHASE 15 - Performance and memory engineering
 -----------------------------------------------
-Goal: Establish measurable performance budgets for engine and collision workloads.
+Goal: Extend the Phase 10.5 baseline into measurable performance budgets and ongoing
+performance engineering for engine and collision workloads.
 
 135. Define representative workloads for metadata, coupling, async, broadphase, and narrowphase.
 136. Add repeatable Release benchmarks with recorded compiler and machine metadata.
