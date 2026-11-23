@@ -429,6 +429,8 @@ STATUS: STARTED
 - Added a compile-only C++ signature check for representative engine and module APIs.
 - Added an opt-in C11 consumer check for representative signatures and static-library
   linkage, enabled in Windows CI; all 21 tests passed in a local Release x64 build.
+- Added an external C11 installed-package consumer alongside the C++ example; both
+  built and ran against the local Release x64 static package and are checked in CI.
 - Broader C compatibility, stable-surface classification, ABI and symbol checks,
   versioning, and deprecation policies remain open. Phase 10.5 measurements remain pending.
 

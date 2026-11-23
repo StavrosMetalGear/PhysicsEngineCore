@@ -39,6 +39,13 @@ The Windows CI configuration enables it. The test uses the build-tree headers an
 does not validate the installed package, every API, cross-release ABI compatibility,
 structure layout, or shared-library exports.
 
+`examples/c_consumer` separately checks a C11 source file against installed headers
+and the installed static package. It exercises metadata, Fluid, and Quantum handle
+lifecycle calls; `examples/consumer` provides the existing C++ package check. The C
+example uses a C++ linker because the library contains C++ implementation code.
+Windows CI builds both examples; this is representative package coverage, not a
+guarantee for every function, ABI, platform, or shared-library configuration.
+
 Solid State declares `ss_flux_quantum()` and `ss_conductance_quantum()` with empty
 parameter lists, which are non-prototypes in C before C23. These functions are not
 covered by the C signature checks. A broader C consumer audit remains necessary

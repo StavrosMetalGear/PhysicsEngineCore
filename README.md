@@ -59,6 +59,18 @@ find_package(PhysicsEngine CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE PhysicsEngine::PhysicsEngine)
 ```
 
+A C11 consumer example is available in `examples/c_consumer`. It compiles C
+source against the installed headers and links the static library with the C++
+linker, so a compatible C++ toolchain and runtime are still required. After
+installing the package, build and run it using an absolute install prefix:
+
+```bash
+cmake -S examples/c_consumer -B c-consumer-build -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/absolute/path/to/physics-engine-install
+cmake --build c-consumer-build
+ctest --test-dir c-consumer-build --output-on-failure
+```
+
 The supported Phase 7 artifact is a static library. Shared-library export behavior
 remains deferred until a separate ABI and runtime-dependency policy is established.
 

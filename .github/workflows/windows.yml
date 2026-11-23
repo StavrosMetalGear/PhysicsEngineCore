@@ -76,6 +76,16 @@ jobs:
           cmake --build consumer-build --parallel 2
           .\consumer-build\physics_engine_consumer.exe
 
+      - name: Build and test external C consumer
+        shell: pwsh
+        run: |
+          cmake -S examples/c_consumer -B c-consumer-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build c-consumer-build --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ctest --test-dir c-consumer-build --output-on-failure
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
