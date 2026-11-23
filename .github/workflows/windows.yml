@@ -55,7 +55,7 @@ jobs:
 
       - name: Configure
         shell: pwsh
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=cl.exe -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=cl.exe -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR" -DPHYSICSCORE_ENABLE_C_API_CHECKS=ON
 
       - name: Build
         shell: pwsh

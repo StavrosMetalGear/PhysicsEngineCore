@@ -22,6 +22,13 @@ include(CMakePackageConfigHelpers)
 option(PHYSICSCORE_ENABLE_STRICT_WARNINGS
        "Enable strict warnings for PhysicsEngine-owned sources and tests"
        OFF)
+option(PHYSICSCORE_ENABLE_C_API_CHECKS
+       "Build and run the representative C11 API consumer test"
+       OFF)
+
+if(PHYSICSCORE_ENABLE_C_API_CHECKS)
+    enable_language(C)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -238,6 +245,20 @@ install(FILES
 
 # ── Automated tests ───────────────────────────────────────────────────────────
 enable_testing()
+add_library(test_api_compat_cpp OBJECT tests/test_api_compat_cpp.cpp)
+target_link_libraries(test_api_compat_cpp PRIVATE PhysicsEngine)
+
+if(PHYSICSCORE_ENABLE_C_API_CHECKS)
+    add_executable(test_api_compat_c tests/test_api_compat_c.c)
+    set_target_properties(test_api_compat_c PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        LINKER_LANGUAGE CXX
+    )
+    target_link_libraries(test_api_compat_c PRIVATE PhysicsEngine)
+    add_test(NAME test_api_compat_c COMMAND test_api_compat_c)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quantum.cpp")
     add_executable(test_quantum tests/test_quantum.cpp)
     target_link_libraries(test_quantum PRIVATE PhysicsEngine)

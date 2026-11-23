@@ -11,6 +11,39 @@ The exported module APIs use C linkage and are intended to be callable from C an
 C-compatible consumers. The collision subsystem under `include/physics` is C++17
 and is not part of the C ABI.
 
+## Phase 11 compatibility work
+
+The installed header list in `CMakeLists.txt` and the installed `include/physics`
+directory describe the current package surface, not a finalized stability promise.
+`PhysicsEngine.h` aggregates the eight module declarations, async, coupling, and
+engine metadata. The module declaration headers originate from the sibling
+repositories except for the local Fluid header. `PhysicsEngine_export.h` and the
+module export headers support these declarations; internal implementation headers
+are not installed by this project. The installed collision headers form a separate
+C++17 surface. Classifying each surface and approving compatibility guarantees
+remain Phase 11 work.
+
+`tests/test_api_compat_cpp.cpp` is an initial compile-only C++17 check of selected
+declarations from all eight modules and representative metadata, task, callback,
+and coupling types. It detects changes to these source signatures when built; it
+does not check C compilation, linking, exported symbols, object layout, behavior,
+or ABI compatibility.
+
+`tests/test_api_compat_c.c` is a representative C11 consumer check. It includes
+`PhysicsEngine.h`, checks selected function and task types, links selected symbols
+from all eight modules and engine layers against the static library, and executes
+metadata and Fluid smoke checks. Configure with
+`-DPHYSICSCORE_ENABLE_C_API_CHECKS=ON`, then build and run CTest; this option is
+off by default so existing C++-only builds do not acquire a C compiler requirement.
+The Windows CI configuration enables it. The test uses the build-tree headers and
+does not validate the installed package, every API, cross-release ABI compatibility,
+structure layout, or shared-library exports.
+
+Solid State declares `ss_flux_quantum()` and `ss_conductance_quantum()` with empty
+parameter lists, which are non-prototypes in C before C23. These functions are not
+covered by the C signature checks. A broader C consumer audit remains necessary
+before promising C compatibility.
+
 ## Module inventory
 
 | Module | Authoritative header | Handle/type family | Function family | Current state |

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include <limits>
-#include "../PhysicsEngineCore/include/physics/Broadphase.h"
+#include "physics/Broadphase.h"
 #include <chrono>
 #include <string>
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

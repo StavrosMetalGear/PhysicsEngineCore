@@ -404,8 +404,9 @@ Android coverage and remaining gaps are recorded with their availability status.
 
 STATUS: STARTED
 - Recorded an exploratory PC smoke trace and its limitations in PERFORMANCE_BASELINE.md.
-- The broadphase performance-test scaffold failed to build; a usable in-repository
-  measurement harness and allocation baseline remain outstanding.
+- A broadphase test project exists in the repository. Automated test discovery
+  did not find its test in the latest attempt; repeatable Release timing and a
+  native allocation baseline remain outstanding.
 - Phase 10's 811/811 declaration-reference coverage is not proof of scientific
   correctness; retain the open findings in PHASE10_API_AUDIT.md as correctness work.
 
@@ -422,6 +423,14 @@ Goal: Establish a controlled compatibility strategy before adding larger feature
 104. Define the compatibility policy for task IDs, handles, callbacks, and result values.
 105. Add an API diff check between the current release and the previous release.
 106. Document source compatibility, binary compatibility, and package compatibility.
+
+STATUS: STARTED
+- Documented the current installed header surfaces and initial compatibility gaps.
+- Added a compile-only C++ signature check for representative engine and module APIs.
+- Added an opt-in C11 consumer check for representative signatures and static-library
+  linkage, enabled in Windows CI; all 21 tests passed in a local Release x64 build.
+- Broader C compatibility, stable-surface classification, ABI and symbol checks,
+  versioning, and deprecation policies remain open. Phase 10.5 measurements remain pending.
 
 PHASE 11 CHECKPOINT
 -------------------
