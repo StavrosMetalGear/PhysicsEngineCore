@@ -251,11 +251,17 @@ add_library(test_api_compat_cpp OBJECT tests/test_api_compat_cpp.cpp)
 target_link_libraries(test_api_compat_cpp PRIVATE PhysicsEngine)
 add_library(test_metadata_header_cpp OBJECT tests/test_metadata_header_cpp.cpp)
 target_link_libraries(test_metadata_header_cpp PRIVATE PhysicsEngine)
+add_library(test_engine_api_baseline_cpp OBJECT tests/test_engine_api_baseline.cpp)
+target_link_libraries(test_engine_api_baseline_cpp PRIVATE PhysicsEngine)
 
 if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     add_library(test_metadata_header_c OBJECT tests/test_metadata_header_c.c)
     set_target_properties(test_metadata_header_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
     target_link_libraries(test_metadata_header_c PRIVATE PhysicsEngine)
+
+    add_library(test_engine_api_baseline_c OBJECT tests/test_engine_api_baseline.c)
+    set_target_properties(test_engine_api_baseline_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+    target_link_libraries(test_engine_api_baseline_c PRIVATE PhysicsEngine)
 
     add_executable(test_api_compat_c tests/test_api_compat_c.c)
     set_target_properties(test_api_compat_c PROPERTIES

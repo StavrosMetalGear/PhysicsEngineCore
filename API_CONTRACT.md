@@ -70,6 +70,16 @@ and coupling types. It detects changes to these source signatures when built; it
 does not check C compilation, linking, exported symbols, object layout, behavior,
 or ABI compatibility.
 
+`tests/baselines/engine_api_snapshot.h` records the 20 engine-owned metadata,
+async, and coupling signatures observed at revision `d813a60`. Compile-only C11
+and C++17 targets compare current declarations with that snapshot. The standalone
+`tests/signature_baseline` CMake project also checks that a deliberately altered
+signature is rejected; its two failed compile probes are intentional. Windows CI
+runs both the build targets and these probes. This snapshot is not a previous
+release or an approved stable-surface definition. It does not cover the module
+APIs, new declarations, exports, calling conventions on every toolchain, layouts,
+behavior, or cross-release ABI compatibility.
+
 `tests/test_api_compat_c.c` is a representative C11 consumer check. It includes
 `PhysicsEngine.h`, checks selected function and task types, links selected symbols
 from all eight modules and engine layers against the static library, and executes

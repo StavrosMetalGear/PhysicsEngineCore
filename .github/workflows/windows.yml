@@ -69,6 +69,10 @@ jobs:
         shell: pwsh
         run: cmake -S tests/deprecation -B build-deprecation -G Ninja -DCMAKE_BUILD_TYPE=Release
 
+      - name: Verify engine signature baseline checks
+        shell: pwsh
+        run: cmake -S tests/signature_baseline -B build-signature-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
+
       - name: Install package
         shell: pwsh
         run: cmake --install build --prefix "$env:INSTALL_DIR"
