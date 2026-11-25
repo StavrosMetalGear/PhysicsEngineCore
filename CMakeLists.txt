@@ -265,6 +265,16 @@ if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     )
     target_link_libraries(test_api_compat_c PRIVATE PhysicsEngine)
     add_test(NAME test_api_compat_c COMMAND test_api_compat_c)
+
+    add_executable(test_async_c_contract tests/test_async_c_contract.c)
+    set_target_properties(test_async_c_contract PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        LINKER_LANGUAGE CXX
+    )
+    target_link_libraries(test_async_c_contract PRIVATE PhysicsEngine)
+    add_test(NAME test_async_c_contract COMMAND test_async_c_contract)
+    set_tests_properties(test_async_c_contract PROPERTIES TIMEOUT 30)
 endif()
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quantum.cpp")

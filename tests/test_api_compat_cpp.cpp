@@ -19,7 +19,15 @@ static_assert(PE_CAPABILITY_SOLID_STATE == (UINT64_C(1) << 9));
 static_assert(PE_CAPABILITY_THERMODYNAMICS == (UINT64_C(1) << 10));
 static_assert(std::is_same_v<PE_TaskId, uint64_t>);
 static_assert(std::is_same_v<PE_TaskFunc, void (*)(void*)>);
+static_assert(std::is_same_v<decltype(&pe_async_init), void (*)(int)>);
+static_assert(std::is_same_v<decltype(&pe_async_shutdown), void (*)()>);
 static_assert(std::is_same_v<decltype(&pe_submit_async), PE_TaskId (*)(PE_TaskFunc, void*)>);
+static_assert(std::is_same_v<decltype(&pe_task_ready), int (*)(PE_TaskId)>);
+static_assert(std::is_same_v<decltype(&pe_task_wait), void (*)(PE_TaskId)>);
+static_assert(std::is_same_v<decltype(&pe_tasks_pending), int (*)()>);
+static_assert(std::is_same_v<QP_Handle, void*> && std::is_same_v<CP_Handle, void*>);
+static_assert(std::is_same_v<EM_Handle, void*> && std::is_same_v<NP_Handle, void*>);
+static_assert(std::is_same_v<OP_Handle, void*> && std::is_same_v<TD_Handle, void*>);
 static_assert(std::is_same_v<decltype(&pe_fermi_energy), double (*)(double, double)>);
 
 static_assert(std::is_same_v<decltype(&qp_create), QP_Handle (*)(const char*, double, double, int)>);

@@ -430,7 +430,10 @@ STATUS: STARTED
   its availability through PhysicsEngine.h; stable-surface classification remains open.
 - Added a compile-only C++ signature check for representative engine and module APIs.
 - Added an opt-in C11 consumer check for representative signatures and static-library
-  linkage, enabled in Windows CI; all 21 tests passed in a local Release x64 build.
+	linkage, enabled in Windows CI.
+- Documented the current handle, task, callback, and result compatibility baseline;
+  added C/C++ signature checks and a C callback lifecycle test. All 22 tests passed
+  in a local Release x64 build; a cross-release compatibility policy remains open.
 - Added an external C11 installed-package consumer alongside the C++ example; both
   built and ran against the local Release x64 static package and are checked in CI.
 - Added MSVC static-library symbol inspection and failure-path tests. An earlier

@@ -8,7 +8,12 @@
 CHECK_SIGNATURE(pe_version, const char* (*)(void));
 CHECK_SIGNATURE(pe_capabilities, uint64_t (*)(void));
 CHECK_SIGNATURE(pe_module_count, int (*)(void));
+CHECK_SIGNATURE(pe_async_init, void (*)(int));
+CHECK_SIGNATURE(pe_async_shutdown, void (*)(void));
 CHECK_SIGNATURE(pe_submit_async, PE_TaskId (*)(PE_TaskFunc, void*));
+CHECK_SIGNATURE(pe_task_ready, int (*)(PE_TaskId));
+CHECK_SIGNATURE(pe_task_wait, void (*)(PE_TaskId));
+CHECK_SIGNATURE(pe_tasks_pending, int (*)(void));
 CHECK_SIGNATURE(pe_fermi_energy, double (*)(double, double));
 CHECK_SIGNATURE(qp_create, QP_Handle (*)(const char*, double, double, int));
 CHECK_SIGNATURE(cp_create, CP_Handle (*)(const char*, double, double, int));
@@ -20,6 +25,12 @@ CHECK_SIGNATURE(ss_lattice_spacing, double (*)(int, int, int, double));
 CHECK_SIGNATURE(td_create, TD_Handle (*)(const char*, double, double));
 _Static_assert(_Generic((PE_TaskId)0, uint64_t: 1, default: 0), "PE_TaskId changed");
 _Static_assert(_Generic((PE_TaskFunc)0, void (*)(void*): 1, default: 0), "PE_TaskFunc changed");
+_Static_assert(_Generic((QP_Handle)0, void*: 1, default: 0), "QP_Handle changed");
+_Static_assert(_Generic((CP_Handle)0, void*: 1, default: 0), "CP_Handle changed");
+_Static_assert(_Generic((EM_Handle)0, void*: 1, default: 0), "EM_Handle changed");
+_Static_assert(_Generic((NP_Handle)0, void*: 1, default: 0), "NP_Handle changed");
+_Static_assert(_Generic((OP_Handle)0, void*: 1, default: 0), "OP_Handle changed");
+_Static_assert(_Generic((TD_Handle)0, void*: 1, default: 0), "TD_Handle changed");
 _Static_assert(PE_API_VERSION_MAJOR == 1 && PE_API_VERSION_MINOR == 0 && PE_API_VERSION_PATCH == 0,
 	"unexpected C API version");
 _Static_assert(PE_CAPABILITY_ASYNC == (UINT64_C(1) << 1), "async capability bit changed");

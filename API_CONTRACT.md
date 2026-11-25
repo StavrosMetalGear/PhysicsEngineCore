@@ -378,6 +378,36 @@ The current wrappers do not provide a uniform error/status API.
 - Any future error/status redesign should be additive or versioned rather than
   silently changing numeric-return behavior.
 
+### Current handle, task, callback, and result baseline
+
+This describes the current interface and informs future compatibility decisions;
+it is not a finalized cross-release ABI guarantee.
+
+- The six handle typedefs are currently `void*`. They are opaque to callers, must
+  be used with their matching module and destroy function, and must not be
+  dereferenced, serialized, or treated as interchangeable just because their C
+  types match. Pointer representation depends on the target ABI.
+- `PE_TaskId` is currently `uint64_t`. Treat nonzero IDs as opaque process-local
+  tokens rather than persistent identifiers or sequence numbers. ID zero denotes
+  a rejected submission and is immediately complete.
+- Unknown, evicted, and cleared IDs are currently treated as complete. Thus
+  `pe_task_ready` or `pe_task_wait` cannot establish that an unknown ID was ever
+  submitted or that its callback ran successfully. `pe_tasks_pending` is a snapshot,
+  not an individual task result.
+- `PE_TaskFunc` currently has the signature `void (*)(void*)`; its data remains
+  caller-owned and must outlive the callback. Coordinate shutdown with submissions
+  and callback lifetimes. A completed callback does not have a result or error
+  channel; C++ exceptions are caught internally and are not reported to callers.
+- Module numeric results and error handling are not uniform. In particular, do not
+  interpret every zero or NaN as a common status code, or assume scientific validity
+  from a successful call; consult the module contract and Phase 10 audit.
+
+The opt-in `test_async_c_contract` checks a C callback, zero and null submission
+behavior, waiting, caller-owned data, and shutdown draining in a controlled run.
+The C and C++ compatibility checks also cover the current async signatures and
+handle typedefs. They do not prove all thread interleavings, persistence, platform
+ABIs, or future compatibility.
+
 ## Packaging and external consumption
 
 - The supported Phase 7 artifact is the static `PhysicsEngine` library.
