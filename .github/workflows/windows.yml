@@ -69,6 +69,13 @@ jobs:
         shell: pwsh
         run: cmake --install build --prefix "$env:INSTALL_DIR"
 
+      - name: Inspect installed static-library symbols
+        shell: pwsh
+        run: |
+          ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib"
+          ./tests/test_compare_msvc_c_symbols.ps1
+          ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"
+
       - name: Build external consumer
         shell: pwsh
         run: |
@@ -85,6 +92,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           ctest --test-dir c-consumer-build --output-on-failure
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload static-library symbol list
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhysicsEngineCore-symbols-${{ github.sha }}
+          path: ${{ runner.temp }}\PhysicsEngine-symbols.txt
+          if-no-files-found: error
 
       - name: Upload package
         uses: actions/upload-artifact@v4

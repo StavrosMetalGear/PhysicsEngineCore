@@ -46,6 +46,41 @@ example uses a C++ linker because the library contains C++ implementation code.
 Windows CI builds both examples; this is representative package coverage, not a
 guarantee for every function, ABI, platform, or shared-library configuration.
 
+On Windows, `scripts/inspect-msvc-symbols.ps1` uses `dumpbin /linkermember:1` to
+inspect the installed MSVC x64 static library. It checks the module declarations
+listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsEngine.h`,
+`PhysicsAsync.h`, and `PhysicsCoupling.h`. In an MSVC developer environment, run:
+
+```powershell
+./scripts/inspect-msvc-symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib -SymbolListPath out/phase11-symbols.txt
+./tests/test_inspect_msvc_symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib
+```
+
+Windows CI checks the installed library and uploads the sorted archive symbol list.
+That list includes implementation and toolchain symbols; it is not a public API
+manifest or a DLL export list. The generated module inventory is a snapshot and
+must be regenerated and reviewed when declarations change. Name presence does not
+verify signatures, behavior, structure layout, cross-release ABI compatibility, or
+shared-library exports; a previous-release comparison and stable-surface policy
+remain open.
+
+`scripts/compare-msvc-c-symbols.ps1` compares two such archive symbol lists. It
+reports additions and fails on removals of undecorated names with the engine or
+module prefixes; it ignores other names. For example, after obtaining the list
+from an actual previous release and generating the current list, run:
+
+```powershell
+./scripts/compare-msvc-c-symbols.ps1 -BaselinePath previous-release-symbols.txt -CurrentPath out/phase11-symbols.txt
+```
+
+Use lists from comparable MSVC x64 builds and verify their provenance and
+completeness. The family checks reject some incomplete inputs but cannot prove a
+list is complete. Prefixes can include implementation symbols, so differences
+need review against the eventual public API classification. The script compares
+names only; unchanged names do not prove compatible signatures, structure layouts,
+calling conventions, behavior, or binary compatibility. CI tests the comparison
+logic with fixtures, but does not yet compare against a real previous release.
+
 Solid State declares `ss_flux_quantum()` and `ss_conductance_quantum()` with empty
 parameter lists, which are non-prototypes in C before C23. These functions are not
 covered by the C signature checks. A broader C consumer audit remains necessary
