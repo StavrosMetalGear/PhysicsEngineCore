@@ -23,6 +23,24 @@ are not installed by this project. The installed collision headers form a separa
 C++17 surface. Classifying each surface and approving compatibility guarantees
 remain Phase 11 work.
 
+### API revision and capabilities
+
+`PE_API_VERSION_MAJOR`, `PE_API_VERSION_MINOR`, and `PE_API_VERSION_PATCH` identify
+the C API revision declared by the headers, currently 1.0.0. This initial revision
+is provisional; the versioning and compatibility policy is not yet finalized.
+It is a compile-time header value, not proof that a separately supplied binary
+matches those headers. `pe_version()` reports the engine release version instead.
+
+`pe_capabilities()` returns a `uint64_t` bitmask describing the metadata, async,
+coupling, and eight module C APIs compiled into this library. Check the named
+`PE_CAPABILITY_*` bits individually and ignore unknown bits. Existing bit values
+must not be reassigned; additional capabilities can use unused bits. A set bit
+does not establish async initialization, support for every equation in a sibling
+repository, numerical correctness, allocation behavior, or platform performance.
+The separate C++ collision headers are not represented in this C API bitmask.
+This function is a new symbol: earlier builds reporting engine version 1.0.0 do
+not necessarily provide it, so callers must link against a matching newer library.
+
 `tests/test_api_compat_cpp.cpp` is an initial compile-only C++17 check of selected
 declarations from all eight modules and representative metadata, task, callback,
 and coupling types. It detects changes to these source signatures when built; it

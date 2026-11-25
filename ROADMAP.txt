@@ -431,11 +431,13 @@ STATUS: STARTED
   linkage, enabled in Windows CI; all 21 tests passed in a local Release x64 build.
 - Added an external C11 installed-package consumer alongside the C++ example; both
   built and ran against the local Release x64 static package and are checked in CI.
-- Added MSVC static-library symbol inspection and failure-path tests. The local
-  Release archive contains all 811 inventoried module and 19 engine C names; CI
+- Added MSVC static-library symbol inspection and failure-path tests. An earlier
+  Release archive contained all 811 inventoried module and 19 engine C names; CI
   checks the installed archive and uploads its full symbol list.
 - Added a tested comparison for candidate C symbol names in two archive lists;
   a real previous-release baseline, signature checks, and ABI comparison remain open.
+- Added provisional C API revision macros and a runtime bitmask of compiled-in
+  API capabilities; a formal versioning and compatibility policy remains open.
 - Broader C compatibility, stable-surface classification, ABI and symbol checks,
   versioning, and deprecation policies remain open. Phase 10.5 measurements remain pending.
 

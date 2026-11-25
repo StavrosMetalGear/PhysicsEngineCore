@@ -3,7 +3,20 @@
 #include <type_traits>
 
 static_assert(std::is_same_v<decltype(&pe_version), const char* (*)()>);
+static_assert(std::is_same_v<decltype(&pe_capabilities), uint64_t (*)()>);
 static_assert(std::is_same_v<decltype(&pe_module_count), int (*)()>);
+static_assert(PE_API_VERSION_MAJOR == 1 && PE_API_VERSION_MINOR == 0 && PE_API_VERSION_PATCH == 0);
+static_assert(PE_CAPABILITY_METADATA == (UINT64_C(1) << 0));
+static_assert(PE_CAPABILITY_ASYNC == (UINT64_C(1) << 1));
+static_assert(PE_CAPABILITY_COUPLING == (UINT64_C(1) << 2));
+static_assert(PE_CAPABILITY_QUANTUM == (UINT64_C(1) << 3));
+static_assert(PE_CAPABILITY_CLASSICAL == (UINT64_C(1) << 4));
+static_assert(PE_CAPABILITY_ELECTRODYNAMICS == (UINT64_C(1) << 5));
+static_assert(PE_CAPABILITY_FLUID == (UINT64_C(1) << 6));
+static_assert(PE_CAPABILITY_NUCLEAR == (UINT64_C(1) << 7));
+static_assert(PE_CAPABILITY_OPTICS == (UINT64_C(1) << 8));
+static_assert(PE_CAPABILITY_SOLID_STATE == (UINT64_C(1) << 9));
+static_assert(PE_CAPABILITY_THERMODYNAMICS == (UINT64_C(1) << 10));
 static_assert(std::is_same_v<PE_TaskId, uint64_t>);
 static_assert(std::is_same_v<PE_TaskFunc, void (*)(void*)>);
 static_assert(std::is_same_v<decltype(&pe_submit_async), PE_TaskId (*)(PE_TaskFunc, void*)>);

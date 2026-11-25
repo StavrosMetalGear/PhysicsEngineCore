@@ -6,6 +6,7 @@
 	_Static_assert(_Generic(&(function), type: 1, default: 0), #function " signature changed")
 
 CHECK_SIGNATURE(pe_version, const char* (*)(void));
+CHECK_SIGNATURE(pe_capabilities, uint64_t (*)(void));
 CHECK_SIGNATURE(pe_module_count, int (*)(void));
 CHECK_SIGNATURE(pe_submit_async, PE_TaskId (*)(PE_TaskFunc, void*));
 CHECK_SIGNATURE(pe_fermi_energy, double (*)(double, double));
@@ -19,6 +20,9 @@ CHECK_SIGNATURE(ss_lattice_spacing, double (*)(int, int, int, double));
 CHECK_SIGNATURE(td_create, TD_Handle (*)(const char*, double, double));
 _Static_assert(_Generic((PE_TaskId)0, uint64_t: 1, default: 0), "PE_TaskId changed");
 _Static_assert(_Generic((PE_TaskFunc)0, void (*)(void*): 1, default: 0), "PE_TaskFunc changed");
+_Static_assert(PE_API_VERSION_MAJOR == 1 && PE_API_VERSION_MINOR == 0 && PE_API_VERSION_PATCH == 0,
+	"unexpected C API version");
+_Static_assert(PE_CAPABILITY_ASYNC == (UINT64_C(1) << 1), "async capability bit changed");
 
 static QP_Handle (*volatile quantum_create)(const char*, double, double, int) = qp_create;
 static CP_Handle (*volatile classical_create)(const char*, double, double, int) = cp_create;
@@ -39,6 +43,7 @@ int main(void)
 		return 1;
 	}
 	if (pe_version() == NULL || pe_module_count() != 8 ||
+		(pe_capabilities() & PE_CAPABILITY_ASYNC) == 0 ||
 		fluid_reynolds(1.0, 1.0, 1.0, 1.0) != 1.0) {
 		return 1;
 	}

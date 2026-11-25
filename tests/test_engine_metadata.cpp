@@ -26,6 +26,16 @@ int main()
 		return 1;
 	}
 
+	const uint64_t expectedCapabilities =
+		PE_CAPABILITY_METADATA | PE_CAPABILITY_ASYNC | PE_CAPABILITY_COUPLING |
+		PE_CAPABILITY_QUANTUM | PE_CAPABILITY_CLASSICAL | PE_CAPABILITY_ELECTRODYNAMICS |
+		PE_CAPABILITY_FLUID | PE_CAPABILITY_NUCLEAR | PE_CAPABILITY_OPTICS |
+		PE_CAPABILITY_SOLID_STATE | PE_CAPABILITY_THERMODYNAMICS;
+	if ((pe_capabilities() & expectedCapabilities) != expectedCapabilities) {
+		std::cerr << "FAIL: missing compiled-in API capability\n";
+		return 1;
+	}
+
 	for (int i = 0; i < pe_module_count(); ++i) {
 		if (pe_module_name(i) == nullptr || std::string(pe_module_name(i)) != expectedNames[i]) {
 			std::cerr << "FAIL: unexpected module name at index " << i << "\n";
