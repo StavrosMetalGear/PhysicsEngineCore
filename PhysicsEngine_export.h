@@ -22,3 +22,12 @@
     // Static library — no decoration needed
     #define PHYSENG_API
 #endif
+
+// Apply before PHYSENG_API on deprecated function declarations.
+#if defined(_MSC_VER)
+    #define PHYSENG_DEPRECATED(message) __declspec(deprecated(message))
+#elif defined(__GNUC__) || defined(__clang__)
+    #define PHYSENG_DEPRECATED(message) __attribute__((deprecated(message)))
+#else
+    #define PHYSENG_DEPRECATED(message)
+#endif

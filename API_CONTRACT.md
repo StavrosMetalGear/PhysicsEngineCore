@@ -41,6 +41,27 @@ The separate C++ collision headers are not represented in this C API bitmask.
 This function is a new symbol: earlier builds reporting engine version 1.0.0 do
 not necessarily provide it, so callers must link against a matching newer library.
 
+### Deprecation annotation
+
+`PHYSENG_DEPRECATED(message)` is available in `PhysicsEngine_export.h` for future
+function declarations; place it before `PHYSENG_API`. It requests a compiler
+warning with the supplied message on MSVC, GCC, and Clang, and is a no-op on other
+compilers. It does not remove a symbol or change its calling convention. No API
+has been deprecated by adding this macro, and warning periods and removal rules
+remain to be decided.
+
+The standalone `tests/deprecation` CMake project verifies both unused declarations
+and diagnostics for uses in C11 and C++17, with static, shared-export, and
+shared-import macro configurations. Run it in a compiler environment with:
+
+```powershell
+cmake -S tests/deprecation -B out/phase11-deprecation -G Ninja -DCMAKE_BUILD_TYPE=Release
+```
+
+The tests treat the expected deprecation warnings as errors; the six reported
+failed compile probes are intentional. Shared-mode annotation checks do not build
+or validate a shared-library package. Windows CI runs these checks with MSVC.
+
 `tests/test_api_compat_cpp.cpp` is an initial compile-only C++17 check of selected
 declarations from all eight modules and representative metadata, task, callback,
 and coupling types. It detects changes to these source signatures when built; it

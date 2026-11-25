@@ -438,6 +438,8 @@ STATUS: STARTED
   a real previous-release baseline, signature checks, and ABI comparison remain open.
 - Added provisional C API revision macros and a runtime bitmask of compiled-in
   API capabilities; a formal versioning and compatibility policy remains open.
+- Added a deprecation annotation and C/C++ diagnostic checks for static and shared
+  declaration modes. No API is deprecated; warning periods and removal rules remain open.
 - Broader C compatibility, stable-surface classification, ABI and symbol checks,
   versioning, and deprecation policies remain open. Phase 10.5 measurements remain pending.
 

@@ -65,6 +65,10 @@ jobs:
         shell: pwsh
         run: ctest --test-dir build --output-on-failure
 
+      - name: Verify C and C++ deprecation diagnostics
+        shell: pwsh
+        run: cmake -S tests/deprecation -B build-deprecation -G Ninja -DCMAKE_BUILD_TYPE=Release
+
       - name: Install package
         shell: pwsh
         run: cmake --install build --prefix "$env:INSTALL_DIR"
