@@ -53,7 +53,7 @@ foreach ($line in $declarationLines) {
 	}
 }
 $moduleCount = $required.Count
-foreach ($header in @('PhysicsEngine.h', 'PhysicsAsync.h', 'PhysicsCoupling.h')) {
+foreach ($header in @('PhysicsMetadata.h', 'PhysicsAsync.h', 'PhysicsCoupling.h')) {
 	$text = Get-Content -Raw -LiteralPath (Join-Path $projectRoot $header)
 	$matchesInHeader = [regex]::Matches($text, 'PHYSENG_API\s+[^;{}]*?\b(pe_[A-Za-z0-9_]+)\s*\(')
 	if ($matchesInHeader.Count -eq 0) { throw "No engine declarations found in $header." }

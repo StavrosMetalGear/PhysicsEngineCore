@@ -426,6 +426,8 @@ Goal: Establish a controlled compatibility strategy before adding larger feature
 
 STATUS: STARTED
 - Documented the current installed header surfaces and initial compatibility gaps.
+- Separated engine metadata into a standalone installed C header while preserving
+  its availability through PhysicsEngine.h; stable-surface classification remains open.
 - Added a compile-only C++ signature check for representative engine and module APIs.
 - Added an opt-in C11 consumer check for representative signatures and static-library
   linkage, enabled in Windows CI; all 21 tests passed in a local Release x64 build.

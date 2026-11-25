@@ -16,7 +16,9 @@ and is not part of the C ABI.
 The installed header list in `CMakeLists.txt` and the installed `include/physics`
 directory describe the current package surface, not a finalized stability promise.
 `PhysicsEngine.h` aggregates the eight module declarations, async, coupling, and
-engine metadata. The module declaration headers originate from the sibling
+engine metadata. `PhysicsMetadata.h` can also be included independently for the
+engine metadata functions, C API revision macros, and capability bits. The module
+declaration headers originate from the sibling
 repositories except for the local Fluid header. `PhysicsEngine_export.h` and the
 module export headers support these declarations; internal implementation headers
 are not installed by this project. The installed collision headers form a separate
@@ -80,14 +82,15 @@ structure layout, or shared-library exports.
 
 `examples/c_consumer` separately checks a C11 source file against installed headers
 and the installed static package. It exercises metadata, Fluid, and Quantum handle
-lifecycle calls; `examples/consumer` provides the existing C++ package check. The C
+lifecycle calls; both installed-package examples also compile `PhysicsMetadata.h`
+in a separate translation unit. `examples/consumer` provides the C++ package check. The C
 example uses a C++ linker because the library contains C++ implementation code.
 Windows CI builds both examples; this is representative package coverage, not a
 guarantee for every function, ABI, platform, or shared-library configuration.
 
 On Windows, `scripts/inspect-msvc-symbols.ps1` uses `dumpbin /linkermember:1` to
 inspect the installed MSVC x64 static library. It checks the module declarations
-listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsEngine.h`,
+listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsMetadata.h`,
 `PhysicsAsync.h`, and `PhysicsCoupling.h`. In an MSVC developer environment, run:
 
 ```powershell
@@ -378,7 +381,7 @@ The current wrappers do not provide a uniform error/status API.
 ## Packaging and external consumption
 
 - The supported Phase 7 artifact is the static `PhysicsEngine` library.
-- Installation provides `include/PhysicsEngine.h`, the module C API and export headers,
+- Installation provides `include/PhysicsEngine.h`, `include/PhysicsMetadata.h`, the module C API and export headers,
   `include/physics/` collision headers, `lib/PhysicsEngine.lib` on MSVC, and a CMake
   package under `lib/cmake/PhysicsEngine/`.
 - External CMake projects should use `find_package(PhysicsEngine CONFIG REQUIRED)` and

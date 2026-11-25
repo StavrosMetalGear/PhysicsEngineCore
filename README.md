@@ -110,6 +110,7 @@ repository when the configured directory is incomplete.
 PhysicsEngineCore/
 ├── CMakeLists.txt            # Master build — adds all 8 submodules
 ├── PhysicsEngine.h           # Single master include header
+├── PhysicsMetadata.h         # Standalone C API for engine metadata
 ├── PhysicsEngine.cpp         # Engine metadata (version, module registry)
 ├── PhysicsEngine_export.h    # DLL/static export macros
 ├── PhysicsAsync.h/.cpp       # Thread-pool async task system

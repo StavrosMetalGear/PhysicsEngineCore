@@ -1,10 +1,12 @@
 #include <PhysicsEngine.h>
 #include <stdio.h>
 
+int metadata_header_check(void);
+
 int main(void)
 {
 	const char* version = pe_version();
-	if (version == NULL || pe_module_count() != 8 ||
+	if (!metadata_header_check() || version == NULL || pe_module_count() != 8 ||
 		(pe_capabilities() & (PE_CAPABILITY_FLUID | PE_CAPABILITY_QUANTUM)) !=
 			(PE_CAPABILITY_FLUID | PE_CAPABILITY_QUANTUM) ||
 		fluid_reynolds_number(1.0, 1.0, 1.0, 1.0) != 1.0) {

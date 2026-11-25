@@ -3,6 +3,7 @@ PROJECT_NUMBER         = 1.0.0
 OUTPUT_DIRECTORY        = api
 OUTPUT_LANGUAGE         = English
 INPUT                  = PhysicsEngine.h \
+						 PhysicsMetadata.h \
 						 PhysicsAsync.h \
 						 PhysicsCoupling.h \
 						 PhysicsEngine_export.h \

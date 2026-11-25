@@ -2,7 +2,7 @@
 //  PhysicsEngine.cpp — Engine metadata and module registry
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
-#include "PhysicsEngine.h"
+#include "PhysicsMetadata.h"
 
 static const char* ENGINE_VERSION = "1.0.0";
 
