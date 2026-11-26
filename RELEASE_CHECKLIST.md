@@ -38,10 +38,14 @@
 
 ## Phase 11 compatibility review for each release candidate
 
+- [ ] Resolve the open decisions in `PHASE11_COMPATIBILITY_PROPOSAL.md` before
+	  treating its proposed rules as a release guarantee.
 - [ ] Record the candidate commit, compiler/toolset, architecture, build configuration,
 	  runtime settings, and all eight sibling revisions with the release evidence.
 - [ ] Review the installed header manifest and changes against the last released
 	  package; explicitly classify additions, removals, and compatibility impact.
+- [ ] Compare verified previous and candidate include trees with
+	  `scripts/compare-package-headers.ps1` and manually review changed files.
 - [ ] Run the C/C++ signature, capability, layout, installed-header, package-version,
 	  installed consumer, and relocation checks appropriate to the release target.
 - [ ] Regenerate and review the module declaration inventory; account for limitations

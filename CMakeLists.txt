@@ -298,6 +298,12 @@ if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     target_link_libraries(test_async_c_contract PRIVATE PhysicsEngine)
     add_test(NAME test_async_c_contract COMMAND test_async_c_contract)
     set_tests_properties(test_async_c_contract PROPERTIES TIMEOUT 30)
+
+    add_executable(test_async_mixed_contract tests/test_async_mixed_contract.cpp tests/test_async_c_compat_client.c)
+    set_target_properties(test_async_mixed_contract PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+    target_link_libraries(test_async_mixed_contract PRIVATE PhysicsEngine)
+    add_test(NAME test_async_mixed_contract COMMAND test_async_mixed_contract)
+    set_tests_properties(test_async_mixed_contract PROPERTIES TIMEOUT 30)
 endif()
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quantum.cpp")

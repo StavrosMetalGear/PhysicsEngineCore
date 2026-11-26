@@ -119,6 +119,7 @@ jobs:
           ./tests/test_c_api_inventory.ps1 -ReposRoot "$env:DEPS_DIR" -TestRoot "$env:RUNNER_TEMP\physics-inventory-fixture"
           ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib"
           ./tests/test_compare_msvc_c_symbols.ps1
+          ./tests/test_compare_package_headers.ps1
           ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"
 
       - name: Build external consumer

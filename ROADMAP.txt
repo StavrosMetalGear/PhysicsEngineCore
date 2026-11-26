@@ -426,6 +426,8 @@ Goal: Establish a controlled compatibility strategy before adding larger feature
 
 STATUS: STARTED
 - Documented the current installed header surfaces and initial compatibility gaps.
+- Drafted PHASE11_COMPATIBILITY_PROPOSAL.md to group surface, source/binary/package,
+  versioning, deprecation, and release-baseline decisions for maintainer review.
 - Separated engine metadata into a standalone installed C header while preserving
   its availability through PhysicsEngine.h; stable-surface classification remains open.
 - Added a compile-only C++ signature check for representative engine and module APIs.
@@ -438,6 +440,8 @@ STATUS: STARTED
 - Documented the current handle, task, callback, and result compatibility baseline;
   added C/C++ signature checks and a C callback lifecycle test. All 22 tests passed
   in a local Release x64 build; a cross-release compatibility policy remains open.
+- Added a mixed C/C++ callback test for build-tree and installed static libraries;
+  this checks one controlled execution, not cross-release or platform ABI guarantees.
 - Added an external C11 installed-package consumer alongside the C++ example; both
   built and ran against the local Release x64 static package and are checked in CI.
 - Added a Windows CI relocation check that builds and runs both representative
@@ -455,10 +459,14 @@ STATUS: STARTED
   checks the installed archive and uploads its full symbol list.
 - Added a current-header declaration-name inventory comparison and changed-name
   negative fixture before CI symbol inspection; the regex parser is not exhaustive.
+- Hardened MSVC archive inspection so failed name checks do not create or overwrite
+  symbol evidence; verified tool selection when multiple dumpbin paths are present.
 - Added a release-candidate compatibility review checklist covering provenance,
   artifact inspection, comparison, and outstanding policy decisions.
 - Added a tested comparison for candidate C symbol names in two archive lists;
   a real previous-release baseline, signature checks, and ABI comparison remain open.
+- Added a tested installed-include-tree comparison for added, removed, and
+  byte-changed files; semantic and real previous-release review remain open.
 - Added provisional C API revision macros and a runtime bitmask of compiled-in
   API capabilities; a formal versioning and compatibility policy remains open.
 - Added installed CMake package version-selection probes for accepted and rejected

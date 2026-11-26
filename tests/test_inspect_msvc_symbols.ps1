@@ -26,13 +26,27 @@ try {
 	$badInventory = Join-Path $temp 'missing-symbol.md'
 	[IO.File]::WriteAllText($badInventory, $replacement)
 	$rejected = $false
+	$failedListPath = Join-Path $temp 'failed-symbols.txt'
 	try {
-		& $script -LibraryPath $LibraryPath -InventoryPath $badInventory
+		& $script -LibraryPath $LibraryPath -InventoryPath $badInventory -SymbolListPath $failedListPath
 	} catch {
 		if ($_.Exception.Message -cnotmatch 'qp_phase11_missing_symbol') { throw }
 		$rejected = $true
 	}
 	if (-not $rejected) { throw 'A missing symbol was not detected.' }
+	if (Test-Path -LiteralPath $failedListPath) { throw 'A failed verification wrote a symbol list.' }
+
+	[IO.File]::WriteAllText($failedListPath, 'existing evidence')
+	$rejected = $false
+	try {
+		& $script -LibraryPath $LibraryPath -InventoryPath $badInventory -SymbolListPath $failedListPath
+	} catch {
+		if ($_.Exception.Message -cnotmatch 'qp_phase11_missing_symbol') { throw }
+		$rejected = $true
+	}
+	if (-not $rejected -or [IO.File]::ReadAllText($failedListPath) -cne 'existing evidence') {
+		throw 'A failed verification modified an existing symbol list.'
+	}
 
 	$rejected = $false
 	try {

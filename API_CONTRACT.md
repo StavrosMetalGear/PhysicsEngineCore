@@ -25,6 +25,10 @@ are not installed by this project. The installed collision headers form a separa
 C++17 surface. Classifying each surface and approving compatibility guarantees
 remain Phase 11 work.
 
+`PHASE11_COMPATIBILITY_PROPOSAL.md` groups the proposed surface boundaries,
+source/binary/package rules, and release decisions for maintainer review. It is a
+draft, not an approved policy or a replacement for the observed contracts below.
+
 ### API revision and capabilities
 
 `PE_API_VERSION_MAJOR`, `PE_API_VERSION_MINOR`, and `PE_API_VERSION_PATCH` identify
@@ -205,7 +209,10 @@ listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsMetadata
 
 Windows CI checks the installed library and uploads the sorted archive symbol list.
 That list includes implementation and toolchain symbols; it is not a public API
-manifest or a DLL export list. The generated module inventory is a snapshot and
+manifest or a DLL export list. The inspector writes the requested list only after
+all expected names are present; if verification fails, an existing list is left
+untouched and may be stale. Use a fresh output path for each artifact. The
+generated module inventory is a snapshot and
 must be regenerated and reviewed when declarations change. Windows CI now
 regenerates declaration names from the current module headers and compares each
 module with the checked-in inventory before inspecting the archive. To run the
@@ -238,6 +245,20 @@ need review against the eventual public API classification. The script compares
 names only; unchanged names do not prove compatible signatures, structure layouts,
 calling conventions, behavior, or binary compatibility. CI tests the comparison
 logic with fixtures, but does not yet compare against a real previous release.
+
+`scripts/compare-package-headers.ps1` compares relative file names and SHA-256
+content hashes in two installed `include` trees. It reports added and changed
+files and fails on removed files, empty trees, or links. Once a verified previous
+release package is available, compare it with a clean candidate install:
+
+```powershell
+./scripts/compare-package-headers.ps1 -BaselineInclude "<previous-prefix>/include" -CurrentInclude "<candidate-prefix>/include"
+```
+
+CI exercises matching, added, changed, removed, and empty-tree fixtures; it does
+not compare a real previous release. Hash differences include comments and other
+non-API edits; unchanged files do not establish ABI or behavioral compatibility.
+Inspect changes manually and verify both trees' provenance and completeness.
 
 `RELEASE_CHECKLIST.md` lists the Phase 11 release-candidate review steps, including
 recording build provenance, inspecting the actual release artifacts, and comparing
@@ -525,6 +546,9 @@ it is not a finalized cross-release ABI guarantee.
 
 The opt-in `test_async_c_contract` checks a C callback, zero and null submission
 behavior, waiting, caller-owned data, and shutdown draining in a controlled run.
+The opt-in `test_async_mixed_contract` additionally submits a callback compiled
+as C from a C++ caller and checks its completion and user-data pointer. Windows
+CI runs the mixed-language test against both build-tree and installed libraries.
 The C and C++ compatibility checks also cover the current async signatures and
 handle typedefs. They do not prove all thread interleavings, persistence, platform
 ABIs, or future compatibility.

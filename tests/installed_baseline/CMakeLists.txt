@@ -33,6 +33,13 @@ target_link_libraries(installed_async_c_contract PRIVATE PhysicsEngine::PhysicsE
 add_test(NAME installed_async_c_contract COMMAND installed_async_c_contract)
 set_tests_properties(installed_async_c_contract PROPERTIES TIMEOUT 30)
 
+add_executable(installed_async_mixed_contract
+	"${project_root}/tests/test_async_mixed_contract.cpp"
+	"${project_root}/tests/test_async_c_compat_client.c")
+target_link_libraries(installed_async_mixed_contract PRIVATE PhysicsEngine::PhysicsEngine)
+add_test(NAME installed_async_mixed_contract COMMAND installed_async_mixed_contract)
+set_tests_properties(installed_async_mixed_contract PROPERTIES TIMEOUT 30)
+
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
 	add_library(installed_quantum_layout_c OBJECT "${project_root}/tests/test_quantum_record_layout_c.c")
 	target_link_libraries(installed_quantum_layout_c PRIVATE PhysicsEngine::PhysicsEngine)

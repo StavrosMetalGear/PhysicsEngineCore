@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $library = (Resolve-Path -LiteralPath $LibraryPath).Path
 $inventory = (Resolve-Path -LiteralPath $InventoryPath).Path
-$dumpbin = (Get-Command dumpbin.exe -CommandType Application -ErrorAction Stop).Source
+$dumpbin = (Get-Command dumpbin.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 
 $output = @(& $dumpbin /linkermember:1 $library)
 if ($LASTEXITCODE -ne 0) {
@@ -60,6 +60,11 @@ foreach ($header in @('PhysicsMetadata.h', 'PhysicsAsync.h', 'PhysicsCoupling.h'
 	foreach ($match in $matchesInHeader) { [void]$required.Add($match.Groups[1].Value) }
 }
 
+$missing = @($required | Where-Object { -not $symbols.Contains($_) } | Sort-Object)
+if ($missing.Count -ne 0) {
+	throw "Missing $($missing.Count) expected C symbols: $($missing -join ', ')"
+}
+
 if ($SymbolListPath) {
 	$listPath = [IO.Path]::GetFullPath($SymbolListPath)
 	if ([StringComparer]::OrdinalIgnoreCase.Equals($listPath, $library) -or
@@ -71,8 +76,4 @@ if ($SymbolListPath) {
 	[IO.File]::WriteAllLines($listPath, $sortedSymbols)
 }
 
-$missing = @($required | Where-Object { -not $symbols.Contains($_) } | Sort-Object)
-if ($missing.Count -ne 0) {
-	throw "Missing $($missing.Count) expected C symbols: $($missing -join ', ')"
-}
 Write-Output "Verified $($required.Count) C symbols ($moduleCount module, $($required.Count - $moduleCount) engine); archive contains $symbolRows public symbol entries."
