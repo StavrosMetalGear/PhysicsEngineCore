@@ -116,6 +116,21 @@ example uses a C++ linker because the library contains C++ implementation code.
 Windows CI builds both examples; this is representative package coverage, not a
 guarantee for every function, ABI, platform, or shared-library configuration.
 
+`tests/installed_baseline` checks the same engine signature snapshot against the
+installed package in C11 and C++17 and checks the Quantum layout snapshot on MSVC
+x64. It also compiles a deliberately altered copy of the installed metadata
+header to verify that both languages reject a changed signature. After installing
+the package, run:
+
+```powershell
+cmake -S tests/installed_baseline -B out/installed-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="<install-prefix>"
+cmake --build out/installed-baseline
+```
+
+The two negative compile probes are expected to fail. Windows CI runs these checks
+against its installed static package. They do not compare a previous release,
+check every installed declaration, or prove that a header matches the linked binary.
+
 On Windows, `scripts/inspect-msvc-symbols.ps1` uses `dumpbin /linkermember:1` to
 inspect the installed MSVC x64 static library. It checks the module declarations
 listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsMetadata.h`,

@@ -440,6 +440,8 @@ STATUS: STARTED
   in a local Release x64 build; a cross-release compatibility policy remains open.
 - Added an external C11 installed-package consumer alongside the C++ example; both
   built and ran against the local Release x64 static package and are checked in CI.
+- Added installed-package C/C++ signature and MSVC x64 Quantum layout snapshot
+  checks, with altered installed-header signature probes in CI.
 - Added MSVC static-library symbol inspection and failure-path tests. An earlier
   Release archive contained all 811 inventoried module and 19 engine C names; CI
   checks the installed archive and uploads its full symbol list.
