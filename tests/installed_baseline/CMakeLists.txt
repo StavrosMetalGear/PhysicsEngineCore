@@ -18,6 +18,20 @@ add_library(installed_capability_baseline_c OBJECT "${project_root}/tests/test_c
 target_link_libraries(installed_capability_baseline_c PRIVATE PhysicsEngine::PhysicsEngine)
 add_library(installed_capability_baseline_cpp OBJECT "${project_root}/tests/test_capability_baseline.cpp")
 target_link_libraries(installed_capability_baseline_cpp PRIVATE PhysicsEngine::PhysicsEngine)
+add_library(installed_api_compat_cpp OBJECT "${project_root}/tests/test_api_compat_cpp.cpp")
+target_link_libraries(installed_api_compat_cpp PRIVATE PhysicsEngine::PhysicsEngine)
+
+enable_testing()
+add_executable(installed_api_compat_c "${project_root}/tests/test_api_compat_c.c")
+set_target_properties(installed_api_compat_c PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(installed_api_compat_c PRIVATE PhysicsEngine::PhysicsEngine)
+add_test(NAME installed_api_compat_c COMMAND installed_api_compat_c)
+
+add_executable(installed_async_c_contract "${project_root}/tests/test_async_c_contract.c")
+set_target_properties(installed_async_c_contract PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(installed_async_c_contract PRIVATE PhysicsEngine::PhysicsEngine)
+add_test(NAME installed_async_c_contract COMMAND installed_async_c_contract)
+set_tests_properties(installed_async_c_contract PROPERTIES TIMEOUT 30)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
 	add_library(installed_quantum_layout_c OBJECT "${project_root}/tests/test_quantum_record_layout_c.c")

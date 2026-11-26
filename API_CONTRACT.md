@@ -143,20 +143,36 @@ example uses a C++ linker because the library contains C++ implementation code.
 Windows CI builds both examples; this is representative package coverage, not a
 guarantee for every function, ABI, platform, or shared-library configuration.
 
+`tests/package_relocation/test_relocation.ps1` copies an installed package's
+`include` and `lib` directories to a new path containing spaces, verifies the
+imported Release target points to the copied headers and archive, then builds
+and runs both examples against the copy. Windows CI runs this MSVC x64 check.
+From an MSVC developer environment, use a fresh test directory:
+
+```powershell
+./tests/package_relocation/test_relocation.ps1 -PackagePrefix "<install-prefix>" -TestRoot "<new-test-directory>"
+```
+
+This checks representative static-package relocation, not other configurations,
+platforms, toolchains, shared libraries, or cross-release ABI compatibility.
+
 `tests/installed_baseline` checks the same engine signature snapshot against the
 installed package in C11 and C++17 and checks the Quantum layout snapshot on MSVC
-x64. It also compiles a deliberately altered copy of the installed metadata
-header to verify that both languages reject a changed signature. After installing
-the package, run:
+x64. It also compiles representative C++ API types, links and runs the
+representative C API check, and runs the C async callback lifecycle test against
+the installed static library. A deliberately altered copy of the installed
+metadata header verifies that both languages reject a changed signature. After
+installing the package, run:
 
 ```powershell
 cmake -S tests/installed_baseline -B out/installed-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="<install-prefix>"
 cmake --build out/installed-baseline
+ctest --test-dir out/installed-baseline --output-on-failure
 ```
 
 The two negative compile probes are expected to fail. Windows CI runs these checks
 against its installed static package. They do not compare a previous release,
-check every installed declaration, or prove that a header matches the linked binary.
+check every installed declaration, or prove that every header matches the linked binary.
 
 `tests/installed_headers` independently compiles each of the 20 currently listed
 installed C API and export headers as C11 and C++17, and each of the 11 currently
@@ -190,7 +206,18 @@ listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsMetadata
 Windows CI checks the installed library and uploads the sorted archive symbol list.
 That list includes implementation and toolchain symbols; it is not a public API
 manifest or a DLL export list. The generated module inventory is a snapshot and
-must be regenerated and reviewed when declarations change. Name presence does not
+must be regenerated and reviewed when declarations change. Windows CI now
+regenerates declaration names from the current module headers and compares each
+module with the checked-in inventory before inspecting the archive. To run the
+matching and deliberately altered-inventory fixtures locally, use a fresh path:
+
+```powershell
+./tests/test_c_api_inventory.ps1 -ReposRoot "<sibling-repositories-directory>" -TestRoot "<new-test-directory>"
+```
+
+The audit uses a regex-based parser, not a C/C++ compiler: it can miss or
+misinterpret declarations and does not check signatures or preprocessing.
+Consequently, a matching inventory is not proof of completeness. Name presence does not
 verify signatures, behavior, structure layout, cross-release ABI compatibility, or
 shared-library exports; a previous-release comparison and stable-surface policy
 remain open.
@@ -211,6 +238,11 @@ need review against the eventual public API classification. The script compares
 names only; unchanged names do not prove compatible signatures, structure layouts,
 calling conventions, behavior, or binary compatibility. CI tests the comparison
 logic with fixtures, but does not yet compare against a real previous release.
+
+`RELEASE_CHECKLIST.md` lists the Phase 11 release-candidate review steps, including
+recording build provenance, inspecting the actual release artifacts, and comparing
+against a verified previous release. It is a manual checklist, not an automated
+release gate or an approved cross-release compatibility policy.
 
 Solid State declares `ss_flux_quantum()` and `ss_conductance_quantum()` with empty
 parameter lists, which are non-prototypes in C before C23. These functions are not

@@ -89,12 +89,18 @@ jobs:
         shell: pwsh
         run: cmake -DTEST_ROOT="$env:RUNNER_TEMP\physics-package-version-fixture" -DPACKAGE_PREFIX="$env:INSTALL_DIR" -P tests/package_version/test_version.cmake
 
+      - name: Verify relocated package consumers
+        shell: pwsh
+        run: ./tests/package_relocation/test_relocation.ps1 -PackagePrefix "$env:INSTALL_DIR" -TestRoot "$env:RUNNER_TEMP\physics-package-relocation-fixture"
+
       - name: Verify installed header baselines
         shell: pwsh
         run: |
           cmake -S tests/installed_baseline -B build-installed-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cmake --build build-installed-baseline --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ctest --test-dir build-installed-baseline --output-on-failure
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify installed headers independently
@@ -110,6 +116,7 @@ jobs:
       - name: Inspect installed static-library symbols
         shell: pwsh
         run: |
+          ./tests/test_c_api_inventory.ps1 -ReposRoot "$env:DEPS_DIR" -TestRoot "$env:RUNNER_TEMP\physics-inventory-fixture"
           ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib"
           ./tests/test_compare_msvc_c_symbols.ps1
           ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"

@@ -101,7 +101,7 @@ $report.Add('|---|---|---|---:|---:|---:|---:|')
 foreach ($module in $modules) {
 	$repo = Join-Path (Resolve-Path $ReposRoot) $module.Name
 	$headerPath = Join-Path $repo $module.Header
-	if (-not (Test-Path -LiteralPath $headerPath)) {
+	if ($module.Name -eq 'FluidDynamicsCore') {
 		$headerPath = Join-Path $projectRoot 'fluid_c_api.h'
 	}
 	$sourcePath = Join-Path $repo $module.Source
