@@ -73,6 +73,10 @@ jobs:
         shell: pwsh
         run: cmake -S tests/signature_baseline -B build-signature-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
 
+      - name: Verify Quantum record layout baseline checks
+        shell: pwsh
+        run: cmake -S tests/quantum_layout_baseline -B build-quantum-layout -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
+
       - name: Install package
         shell: pwsh
         run: cmake --install build --prefix "$env:INSTALL_DIR"

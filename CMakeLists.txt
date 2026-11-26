@@ -254,6 +254,11 @@ target_link_libraries(test_metadata_header_cpp PRIVATE PhysicsEngine)
 add_library(test_engine_api_baseline_cpp OBJECT tests/test_engine_api_baseline.cpp)
 target_link_libraries(test_engine_api_baseline_cpp PRIVATE PhysicsEngine)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
+    add_library(test_quantum_record_layout_cpp OBJECT tests/test_quantum_record_layout_cpp.cpp)
+    target_link_libraries(test_quantum_record_layout_cpp PRIVATE PhysicsEngine)
+endif()
+
 if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     add_library(test_metadata_header_c OBJECT tests/test_metadata_header_c.c)
     set_target_properties(test_metadata_header_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
@@ -262,6 +267,12 @@ if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     add_library(test_engine_api_baseline_c OBJECT tests/test_engine_api_baseline.c)
     set_target_properties(test_engine_api_baseline_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
     target_link_libraries(test_engine_api_baseline_c PRIVATE PhysicsEngine)
+
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
+        add_library(test_quantum_record_layout_c OBJECT tests/test_quantum_record_layout_c.c)
+        set_target_properties(test_quantum_record_layout_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+        target_link_libraries(test_quantum_record_layout_c PRIVATE PhysicsEngine)
+    endif()
 
     add_executable(test_api_compat_c tests/test_api_compat_c.c)
     set_target_properties(test_api_compat_c PROPERTIES

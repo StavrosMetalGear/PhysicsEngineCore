@@ -80,6 +80,24 @@ release or an approved stable-surface definition. It does not cover the module
 APIs, new declarations, exports, calling conventions on every toolchain, layouts,
 behavior, or cross-release ABI compatibility.
 
+`tests/baselines/quantum_records_msvc_x64.h` is a provisional layout snapshot
+of the four Quantum C records from pinned QuantumCore revision
+`529d5912af6f2e15f1f1a2b04b82f029b6c4e90c`. MSVC x64 C11 and C++17
+compile-only targets check their sizes, alignments, and listed field offsets and
+types under the default packing configuration. The C check is enabled by
+`PHYSICSCORE_ENABLE_C_API_CHECKS`; the C++ check is always built on MSVC x64.
+Windows CI also runs positive and deliberately changed-offset compile probes:
+
+```powershell
+cmake -S tests/quantum_layout_baseline -B out/phase11-quantum-layout -G Ninja -DCMAKE_BUILD_TYPE=Release
+```
+
+Set `PHYSICSCORE_REPOS_DIR` if the sibling repositories are not in the default
+location. The two failed negative probes are intentional. This snapshot is not a
+previous release or a stability guarantee. It does not cover other records,
+platforms, nondefault packing, newly added fields that fit existing padding,
+function calling conventions, or runtime and cross-release ABI compatibility.
+
 `tests/test_api_compat_c.c` is a representative C11 consumer check. It includes
 `PhysicsEngine.h`, checks selected function and task types, links selected symbols
 from all eight modules and engine layers against the static library, and executes

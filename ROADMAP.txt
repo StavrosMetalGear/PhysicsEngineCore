@@ -431,6 +431,8 @@ STATUS: STARTED
 - Added a compile-only C++ signature check for representative engine and module APIs.
 - Added a provisional C/C++ source-signature snapshot for all 20 engine-owned
   metadata, async, and coupling functions, with negative-fixture checks in CI.
+- Added MSVC x64 C/C++ layout checks for four pinned Quantum C records, with
+  changed-offset negative probes in CI; this is not a cross-release ABI baseline.
 - Added an opt-in C11 consumer check for representative signatures and static-library
 	linkage, enabled in Windows CI.
 - Documented the current handle, task, callback, and result compatibility baseline;
