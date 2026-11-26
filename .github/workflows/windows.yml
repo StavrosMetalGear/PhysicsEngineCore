@@ -73,6 +73,10 @@ jobs:
         shell: pwsh
         run: cmake -S tests/signature_baseline -B build-signature-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
 
+      - name: Verify capability baseline checks
+        shell: pwsh
+        run: cmake -S tests/capability_baseline -B build-capability-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
+
       - name: Verify Quantum record layout baseline checks
         shell: pwsh
         run: cmake -S tests/quantum_layout_baseline -B build-quantum-layout -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
@@ -81,12 +85,26 @@ jobs:
         shell: pwsh
         run: cmake --install build --prefix "$env:INSTALL_DIR"
 
+      - name: Verify installed package version selection
+        shell: pwsh
+        run: cmake -DTEST_ROOT="$env:RUNNER_TEMP\physics-package-version-fixture" -DPACKAGE_PREFIX="$env:INSTALL_DIR" -P tests/package_version/test_version.cmake
+
       - name: Verify installed header baselines
         shell: pwsh
         run: |
           cmake -S tests/installed_baseline -B build-installed-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cmake --build build-installed-baseline --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify installed headers independently
+        shell: pwsh
+        run: |
+          cmake -DTEST_ROOT="$env:RUNNER_TEMP\physics-header-manifest-fixture" -P tests/installed_headers/test_manifest.cmake
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake -S tests/installed_headers -B build-installed-headers -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build-installed-headers --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Inspect installed static-library symbols

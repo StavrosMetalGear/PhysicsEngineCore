@@ -1,4 +1,5 @@
 #include "PhysicsEngine.h"
+#include "baselines/capability_snapshot.h"
 
 #include <iostream>
 #include <string>
@@ -26,11 +27,11 @@ int main()
 		return 1;
 	}
 
-	const uint64_t expectedCapabilities =
-		PE_CAPABILITY_METADATA | PE_CAPABILITY_ASYNC | PE_CAPABILITY_COUPLING |
-		PE_CAPABILITY_QUANTUM | PE_CAPABILITY_CLASSICAL | PE_CAPABILITY_ELECTRODYNAMICS |
-		PE_CAPABILITY_FLUID | PE_CAPABILITY_NUCLEAR | PE_CAPABILITY_OPTICS |
-		PE_CAPABILITY_SOLID_STATE | PE_CAPABILITY_THERMODYNAMICS;
+	const uint64_t expectedCapabilities = UINT64_C(0)
+#define EXPECTED_CAPABILITY(name, value) | (value)
+		PE_CAPABILITY_BASELINE(EXPECTED_CAPABILITY)
+#undef EXPECTED_CAPABILITY
+		;
 	if ((pe_capabilities() & expectedCapabilities) != expectedCapabilities) {
 		std::cerr << "FAIL: missing compiled-in API capability\n";
 		return 1;

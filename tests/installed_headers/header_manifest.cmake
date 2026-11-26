@@ -1,0 +1,36 @@
+set(c_headers
+	PhysicsEngine.h
+	PhysicsMetadata.h
+	PhysicsEngine_export.h
+	PhysicsAsync.h
+	PhysicsCoupling.h
+	quantum_c_api.h
+	QuantumExport.h
+	classical_c_api.h
+	ClassicalExport.h
+	em_c_api.h
+	EMExport.h
+	fluid_c_api.h
+	FluidExport.h
+	nuclear_c_api.h
+	NuclearExport.h
+	optics_c_api.h
+	OpticsExport.h
+	solidstate_c_api.h
+	thermo_c_api.h
+	ThermoExport.h
+)
+
+set(collision_headers
+	physics/AABB.h
+	physics/Broadphase.h
+	physics/Capsule.h
+	physics/ConvexPolyhedron.h
+	physics/Narrowphase.h
+	physics/OBB.h
+	physics/Plane.h
+	physics/Ray.h
+	physics/Shape.h
+	physics/Sphere.h
+	physics/Triangle.h
+)

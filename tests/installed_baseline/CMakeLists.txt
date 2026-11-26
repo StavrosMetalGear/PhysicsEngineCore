@@ -14,6 +14,10 @@ add_library(installed_engine_baseline_c OBJECT "${project_root}/tests/test_engin
 target_link_libraries(installed_engine_baseline_c PRIVATE PhysicsEngine::PhysicsEngine)
 add_library(installed_engine_baseline_cpp OBJECT "${project_root}/tests/test_engine_api_baseline.cpp")
 target_link_libraries(installed_engine_baseline_cpp PRIVATE PhysicsEngine::PhysicsEngine)
+add_library(installed_capability_baseline_c OBJECT "${project_root}/tests/test_capability_baseline.c")
+target_link_libraries(installed_capability_baseline_c PRIVATE PhysicsEngine::PhysicsEngine)
+add_library(installed_capability_baseline_cpp OBJECT "${project_root}/tests/test_capability_baseline.cpp")
+target_link_libraries(installed_capability_baseline_cpp PRIVATE PhysicsEngine::PhysicsEngine)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
 	add_library(installed_quantum_layout_c OBJECT "${project_root}/tests/test_quantum_record_layout_c.c")

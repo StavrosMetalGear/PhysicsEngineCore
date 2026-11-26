@@ -442,6 +442,10 @@ STATUS: STARTED
   built and ran against the local Release x64 static package and are checked in CI.
 - Added installed-package C/C++ signature and MSVC x64 Quantum layout snapshot
   checks, with altered installed-header signature probes in CI.
+- Added independent C11/C++17 compile checks for the 20 listed installed C API
+  and export headers and C++17 checks for the 11 listed collision headers.
+- Added a reviewed current-package header manifest with missing, unexpected, and
+  duplicate-entry checks; the manifest is not a previous-release stability promise.
 - Added MSVC static-library symbol inspection and failure-path tests. An earlier
   Release archive contained all 811 inventoried module and 19 engine C names; CI
   checks the installed archive and uploads its full symbol list.
@@ -449,10 +453,24 @@ STATUS: STARTED
   a real previous-release baseline, signature checks, and ABI comparison remain open.
 - Added provisional C API revision macros and a runtime bitmask of compiled-in
   API capabilities; a formal versioning and compatibility policy remains open.
+- Added installed CMake package version-selection probes for accepted and rejected
+  requests in Windows CI; version selection does not prove ABI compatibility.
+- Added C/C++ build-tree and installed-header checks against a snapshot of the 11
+  assigned capability bits, runtime checks, and changed-value negative probes.
 - Added a deprecation annotation and C/C++ diagnostic checks for static and shared
   declaration modes. No API is deprecated; warning periods and removal rules remain open.
 - Broader C compatibility, stable-surface classification, ABI and symbol checks,
   versioning, and deprecation policies remain open. Phase 10.5 measurements remain pending.
+
+REMAINING ROADMAP ITEMS: 9 (98-106)
+- 98-99: approve stable and implementation-only surfaces and their guarantees.
+- 100: finish and approve representative compatibility coverage.
+- 101: require symbol inspection for every release artifact, beyond Windows CI.
+- 102-104: finalize deprecation, versioning, and handle/callback/result policies.
+- 105: compare against a real previous release; its artifact or baseline is needed.
+- 106: finalize source, binary, and package compatibility documentation.
+These are roadmap items, not an estimate of remaining implementation sessions;
+several are partially complete and some require a maintainer decision or artifact.
 
 PHASE 11 CHECKPOINT
 -------------------

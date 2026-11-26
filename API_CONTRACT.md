@@ -33,6 +33,19 @@ is provisional; the versioning and compatibility policy is not yet finalized.
 It is a compile-time header value, not proof that a separately supplied binary
 matches those headers. `pe_version()` reports the engine release version instead.
 
+The installed CMake package currently reports project version `1.0.0` and uses
+CMake's `SameMajorVersion` selection rule: a non-exact request must have the
+same major version and must not be newer than the package. `EXACT` requires the
+same version string, so `1.0` does not match `1.0.0`. CMake also checks pointer
+size when both package and consumer provide it. This selection rule is not proof
+of source or ABI compatibility and is not the finalized versioning policy.
+Windows CI checks representative accepted and rejected requests against the
+installed package. In an MSVC x64 developer environment, use a fresh test path:
+
+```powershell
+cmake -DTEST_ROOT="<new-test-directory>" -DPACKAGE_PREFIX="<install-prefix>" -P tests/package_version/test_version.cmake
+```
+
 `pe_capabilities()` returns a `uint64_t` bitmask describing the metadata, async,
 coupling, and eight module C APIs compiled into this library. Check the named
 `PE_CAPABILITY_*` bits individually and ignore unknown bits. Existing bit values
@@ -42,6 +55,20 @@ repository, numerical correctness, allocation behavior, or platform performance.
 The separate C++ collision headers are not represented in this C API bitmask.
 This function is a new symbol: earlier builds reporting engine version 1.0.0 do
 not necessarily provide it, so callers must link against a matching newer library.
+
+`tests/baselines/capability_snapshot.h` records the 11 currently assigned bit
+values independently of the public macros. C11 and C++17 compile checks compare
+both build-tree and installed headers with this snapshot; the metadata runtime
+test checks that the current library reports all recorded bits while allowing
+additional bits. Windows CI runs these checks and negative compile probes:
+
+```powershell
+cmake -S tests/capability_baseline -B out/phase11-capability-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
+```
+
+The two negative probes intentionally fail after changing a snapshot value.
+This detects reassignment or removal of listed values, not newly added duplicate
+bits, semantic changes, or compatibility with a previous release.
 
 ### Deprecation annotation
 
@@ -130,6 +157,25 @@ cmake --build out/installed-baseline
 The two negative compile probes are expected to fail. Windows CI runs these checks
 against its installed static package. They do not compare a previous release,
 check every installed declaration, or prove that a header matches the linked binary.
+
+`tests/installed_headers` independently compiles each of the 20 currently listed
+installed C API and export headers as C11 and C++17, and each of the 11 currently
+listed collision headers as C++17. It uses only the package target's include paths.
+Windows CI builds this check against the installed package. To run it locally:
+
+```powershell
+cmake -S tests/installed_headers -B out/installed-headers -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="<install-prefix>"
+cmake --build out/installed-headers
+```
+
+The configure step compares every file in the installed include directory with
+`tests/installed_headers/header_manifest.cmake` and fails on missing or unexpected
+files. Use a clean, dedicated install prefix; stale or unrelated files also fail
+the check. Review and update the manifest when the installed surface intentionally
+changes. CI exercises matching, missing, unexpected, and duplicate-entry fixtures.
+The manifest is a current package inventory, not a stability promise or a previous
+release comparison. Independent inclusion does not validate function prototypes, linking, behavior, or ABI
+compatibility; in particular, the Solid State C non-prototypes noted below remain.
 
 On Windows, `scripts/inspect-msvc-symbols.ps1` uses `dumpbin /linkermember:1` to
 inspect the installed MSVC x64 static library. It checks the module declarations

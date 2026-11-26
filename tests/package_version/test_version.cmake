@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.15)
+if(NOT DEFINED TEST_ROOT OR TEST_ROOT STREQUAL "" OR NOT DEFINED PACKAGE_PREFIX OR PACKAGE_PREFIX STREQUAL "")
+	message(FATAL_ERROR "TEST_ROOT and PACKAGE_PREFIX are required.")
+endif()
+if(EXISTS "${TEST_ROOT}")
+	message(FATAL_ERROR "Refusing to overwrite an existing test directory: ${TEST_ROOT}")
+endif()
+if(NOT IS_DIRECTORY "${PACKAGE_PREFIX}")
+	message(FATAL_ERROR "Package prefix does not exist: ${PACKAGE_PREFIX}")
+endif()
+file(MAKE_DIRECTORY "${TEST_ROOT}")
+
+function(probe label version exact expected_success)
+	set(output_dir "${TEST_ROOT}/${label}")
+	execute_process(
+		COMMAND "${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}" -B "${output_dir}"
+			-G Ninja "-DPACKAGE_PREFIX=${PACKAGE_PREFIX}"
+			"-DREQUEST_VERSION=${version}" "-DEXACT_REQUEST=${exact}"
+		RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
+	set(combined "${output}\n${error}")
+	if(expected_success)
+		if(NOT result STREQUAL "0" OR NOT combined MATCHES "Found PhysicsEngine package version 1\\.0\\.0")
+			message(FATAL_ERROR "${label}: expected package version 1.0.0, got: ${combined}")
+		endif()
+	else()
+		if(result STREQUAL "0" OR NOT combined MATCHES "1\\.0\\.0" OR NOT combined MATCHES "${version}")
+			message(FATAL_ERROR "${label}: expected version rejection for ${version}, got: ${combined}")
+		endif()
+	endif()
+endfunction()
+
+probe(exact_current 1.0.0 ON TRUE)
+probe(older_same_major 1.0 OFF TRUE)
+probe(exact_short 1.0 ON FALSE)
+probe(newer_minor 1.1 OFF FALSE)
+probe(different_major 2.0 OFF FALSE)
+probe(exact_newer_patch 1.0.1 ON FALSE)
+message(STATUS "Package version acceptance and rejection checks passed. Fixtures retained at ${TEST_ROOT}.")
