@@ -20,12 +20,21 @@ add_library(installed_capability_baseline_cpp OBJECT "${project_root}/tests/test
 target_link_libraries(installed_capability_baseline_cpp PRIVATE PhysicsEngine::PhysicsEngine)
 add_library(installed_api_compat_cpp OBJECT "${project_root}/tests/test_api_compat_cpp.cpp")
 target_link_libraries(installed_api_compat_cpp PRIVATE PhysicsEngine::PhysicsEngine)
+add_library(installed_quantum_callback_c OBJECT "${project_root}/tests/test_quantum_callback_baseline.c")
+target_link_libraries(installed_quantum_callback_c PRIVATE PhysicsEngine::PhysicsEngine)
+add_library(installed_quantum_callback_cpp OBJECT "${project_root}/tests/test_quantum_callback_baseline.cpp")
+target_link_libraries(installed_quantum_callback_cpp PRIVATE PhysicsEngine::PhysicsEngine)
 
 enable_testing()
 add_executable(installed_api_compat_c "${project_root}/tests/test_api_compat_c.c")
 set_target_properties(installed_api_compat_c PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(installed_api_compat_c PRIVATE PhysicsEngine::PhysicsEngine)
 add_test(NAME installed_api_compat_c COMMAND installed_api_compat_c)
+
+add_executable(installed_quantum_callback_contract "${project_root}/tests/test_quantum_callback_contract.c")
+set_target_properties(installed_quantum_callback_contract PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(installed_quantum_callback_contract PRIVATE PhysicsEngine::PhysicsEngine)
+add_test(NAME installed_quantum_callback_contract COMMAND installed_quantum_callback_contract)
 
 add_executable(installed_async_c_contract "${project_root}/tests/test_async_c_contract.c")
 set_target_properties(installed_async_c_contract PROPERTIES LINKER_LANGUAGE CXX)
@@ -100,6 +109,80 @@ foreach(language IN ITEMS C CXX)
 endforeach()
 
 message(STATUS "C and C++ installed-header checks detect the changed fixture.")
+
+unset(installed_callback_quantum_header CACHE)
+find_file(installed_callback_quantum_header NAMES quantum_c_api.h PATHS ${package_includes} NO_DEFAULT_PATH)
+if(NOT installed_callback_quantum_header)
+	message(FATAL_ERROR "quantum_c_api.h not found in the installed package include directories.")
+endif()
+file(READ "${installed_callback_quantum_header}" callback_quantum_header)
+set(callback_original "typedef double (*QP_PotentialFunc)(double x, double param);")
+set(callback_changed "typedef double (*QP_PotentialFunc)(double x, float param);")
+set(wkb_original "int n, int numIntegPoints);")
+set(wkb_changed "int n, double numIntegPoints);")
+string(REPLACE "${callback_original}" "${callback_changed}" callback_fixture "${callback_quantum_header}")
+string(REPLACE "${wkb_original}" "${wkb_changed}" wkb_fixture "${callback_quantum_header}")
+if(callback_fixture STREQUAL callback_quantum_header OR wkb_fixture STREQUAL callback_quantum_header)
+	message(FATAL_ERROR "Could not construct the installed Quantum callback signature fixtures.")
+endif()
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/negative-callback" "${CMAKE_CURRENT_BINARY_DIR}/negative-wkb")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/negative-callback/quantum_c_api.h" "${callback_fixture}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/negative-wkb/quantum_c_api.h" "${wkb_fixture}")
+set(callback_control [=[
+#include "quantum_c_api.h"
+#ifdef __cplusplus
+#include <type_traits>
+static_assert(std::is_same_v<QP_PotentialFunc, double (*)(double, float)>, "callback fixture not selected");
+#else
+_Static_assert(_Generic((QP_PotentialFunc)0, double (*)(double, float): 1, default: 0), "callback fixture not selected");
+#endif
+]=])
+set(wkb_control [=[
+#include "quantum_c_api.h"
+typedef double (*ChangedWkb)(QP_Handle, QP_PotentialFunc, double, double, double, int, double);
+#ifdef __cplusplus
+#include <type_traits>
+static_assert(std::is_same_v<decltype(&qp_wkb_bohr_sommerfeld), ChangedWkb>, "WKB fixture not selected");
+#else
+_Static_assert(_Generic(&qp_wkb_bohr_sommerfeld, ChangedWkb: 1, default: 0), "WKB fixture not selected");
+#endif
+]=])
+foreach(language IN ITEMS C CXX)
+	if(language STREQUAL "C")
+		file(READ "${project_root}/tests/test_quantum_callback_baseline.c" source)
+	else()
+		file(READ "${project_root}/tests/test_quantum_callback_baseline.cpp" source)
+	endif()
+	set(positive "${language}_INSTALLED_QUANTUM_CALLBACK_COMPILES")
+	unset(${positive} CACHE)
+	set(CMAKE_REQUIRED_INCLUDES "${project_root}/tests")
+	if(language STREQUAL "C")
+		check_c_source_compiles("${source}" ${positive})
+	else()
+		check_cxx_source_compiles("${source}" ${positive})
+	endif()
+	if(NOT ${positive})
+		message(FATAL_ERROR "${language}: installed Quantum callback signatures do not match the baseline.")
+	endif()
+	foreach(fixture IN ITEMS callback wkb)
+		set(control "${language}_${fixture}_FIXTURE_CONTROL_COMPILES")
+		set(negative "${language}_CHANGED_${fixture}_SIGNATURE_COMPILES")
+		unset(${control} CACHE)
+		unset(${negative} CACHE)
+		set(CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/negative-${fixture};${project_root}/tests")
+		if(language STREQUAL "C")
+			check_c_source_compiles("${${fixture}_control}" ${control})
+			check_c_source_compiles("${source}" ${negative})
+		else()
+			check_cxx_source_compiles("${${fixture}_control}" ${control})
+			check_cxx_source_compiles("${source}" ${negative})
+		endif()
+		if(NOT ${control} OR ${negative})
+			message(FATAL_ERROR "${language}: the changed ${fixture} signature fixture was not correctly detected.")
+		endif()
+	endforeach()
+endforeach()
+message(STATUS "Installed Quantum callback signature checks detect both changed fixtures.")
 
 if((CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64") OR
    (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64"))

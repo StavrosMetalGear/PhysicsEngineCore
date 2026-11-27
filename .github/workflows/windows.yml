@@ -11,12 +11,18 @@ permissions:
 jobs:
   build-test-package:
     runs-on: windows-2025
-    env:
-      DEPS_DIR: ${{ github.workspace }}\deps
-      INSTALL_DIR: ${{ github.workspace }}\install
     steps:
       - name: Checkout PhysicsEngineCore
         uses: actions/checkout@v4
+
+      - name: Set external build paths
+        shell: pwsh
+        run: |
+          $ciRoot = Join-Path $env:RUNNER_TEMP 'physics-engine-ci'
+          "CI_ROOT=$ciRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "DEPS_DIR=$ciRoot\deps" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "INSTALL_DIR=$ciRoot\install" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "BUILD_DIR=$ciRoot\build" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install Ninja
         shell: pwsh
@@ -55,35 +61,35 @@ jobs:
 
       - name: Configure
         shell: pwsh
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=cl.exe -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR" -DPHYSICSCORE_ENABLE_C_API_CHECKS=ON
+        run: cmake -S . -B "$env:BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=cl.exe -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR" -DPHYSICSCORE_ENABLE_C_API_CHECKS=ON
 
       - name: Build
         shell: pwsh
-        run: cmake --build build --parallel 2
+        run: cmake --build "$env:BUILD_DIR" --parallel 2
 
       - name: Test
         shell: pwsh
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir "$env:BUILD_DIR" --output-on-failure
 
       - name: Verify C and C++ deprecation diagnostics
         shell: pwsh
-        run: cmake -S tests/deprecation -B build-deprecation -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S tests/deprecation -B "$env:CI_ROOT\build-deprecation" -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Verify engine signature baseline checks
         shell: pwsh
-        run: cmake -S tests/signature_baseline -B build-signature-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S tests/signature_baseline -B "$env:CI_ROOT\build-signature-baseline" -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Verify capability baseline checks
         shell: pwsh
-        run: cmake -S tests/capability_baseline -B build-capability-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S tests/capability_baseline -B "$env:CI_ROOT\build-capability-baseline" -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Verify Quantum record layout baseline checks
         shell: pwsh
-        run: cmake -S tests/quantum_layout_baseline -B build-quantum-layout -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
+        run: cmake -S tests/quantum_layout_baseline -B "$env:CI_ROOT\build-quantum-layout" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPHYSICSCORE_REPOS_DIR="$env:DEPS_DIR"
 
       - name: Install package
         shell: pwsh
-        run: cmake --install build --prefix "$env:INSTALL_DIR"
+        run: cmake --install "$env:BUILD_DIR" --prefix "$env:INSTALL_DIR"
 
       - name: Verify installed package version selection
         shell: pwsh
@@ -96,11 +102,11 @@ jobs:
       - name: Verify installed header baselines
         shell: pwsh
         run: |
-          cmake -S tests/installed_baseline -B build-installed-baseline -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          cmake -S tests/installed_baseline -B "$env:CI_ROOT\build-installed-baseline" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build build-installed-baseline --parallel 2
+          cmake --build "$env:CI_ROOT\build-installed-baseline" --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          ctest --test-dir build-installed-baseline --output-on-failure
+          ctest --test-dir "$env:CI_ROOT\build-installed-baseline" --output-on-failure
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify installed headers independently
@@ -108,46 +114,58 @@ jobs:
         run: |
           cmake -DTEST_ROOT="$env:RUNNER_TEMP\physics-header-manifest-fixture" -P tests/installed_headers/test_manifest.cmake
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake -S tests/installed_headers -B build-installed-headers -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          cmake -S tests/installed_headers -B "$env:CI_ROOT\build-installed-headers" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build build-installed-headers --parallel 2
+          cmake --build "$env:CI_ROOT\build-installed-headers" --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Inspect installed static-library symbols
         shell: pwsh
         run: |
           ./tests/test_c_api_inventory.ps1 -ReposRoot "$env:DEPS_DIR" -HeadersRoot "$env:INSTALL_DIR\include" -TestRoot "$env:RUNNER_TEMP\physics-inventory-fixture"
+          ./scripts/check-installed-c-api-inventory.ps1 -HeadersRoot "$env:INSTALL_DIR\include"
           ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -EngineHeadersPath "$env:INSTALL_DIR\include"
           ./tests/test_compare_msvc_c_symbols.ps1
           ./tests/test_compare_package_headers.ps1
           ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -EngineHeadersPath "$env:INSTALL_DIR\include" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"
 
+      - name: Record compatibility evidence
+        shell: pwsh
+        run: |
+          ./tests/test_compatibility_evidence.ps1
+          ./scripts/write-compatibility-evidence.ps1 -ProjectRoot "$env:GITHUB_WORKSPACE" -ReposRoot "$env:DEPS_DIR" -BuildRoot "$env:BUILD_DIR" -PackageRoot "$env:INSTALL_DIR" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt" -OutputPath "$env:RUNNER_TEMP\PhysicsEngine-evidence.json"
+
       - name: Build external consumer
         shell: pwsh
         run: |
-          cmake -S examples/consumer -B consumer-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
-          cmake --build consumer-build --parallel 2
-          .\consumer-build\physics_engine_consumer.exe
+          cmake -S examples/consumer -B "$env:CI_ROOT\consumer-build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build "$env:CI_ROOT\consumer-build" --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:CI_ROOT\consumer-build\physics_engine_consumer.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build and test external C consumer
         shell: pwsh
         run: |
-          cmake -S examples/c_consumer -B c-consumer-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
+          cmake -S examples/c_consumer -B "$env:CI_ROOT\c-consumer-build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:INSTALL_DIR"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build c-consumer-build --parallel 2
+          cmake --build "$env:CI_ROOT\c-consumer-build" --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          ctest --test-dir c-consumer-build --output-on-failure
+          ctest --test-dir "$env:CI_ROOT\c-consumer-build" --output-on-failure
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Upload static-library symbol list
+      - name: Upload symbol list and compatibility evidence
         uses: actions/upload-artifact@v4
         with:
           name: PhysicsEngineCore-symbols-${{ github.sha }}
-          path: ${{ runner.temp }}\PhysicsEngine-symbols.txt
+          path: |
+            ${{ runner.temp }}\PhysicsEngine-symbols.txt
+            ${{ runner.temp }}\PhysicsEngine-evidence.json
           if-no-files-found: error
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: PhysicsEngineCore-${{ github.sha }}
-          path: ${{ env.INSTALL_DIR }}
+          path: ${{ runner.temp }}\physics-engine-ci\install

@@ -433,6 +433,10 @@ STATUS: STARTED
 - Added a compile-only C++ signature check for representative engine and module APIs.
 - Added a provisional C/C++ source-signature snapshot for all 20 engine-owned
   metadata, async, and coupling functions, with negative-fixture checks in CI.
+- Added C/C++ source-signature checks for the Quantum potential callback and both
+	WKB functions, including altered installed-header fixtures.
+- Added a C callback execution check for both WKB functions against build-tree and
+  installed libraries; callback policy and general scientific validation remain open.
 - Added MSVC x64 C/C++ layout checks for four pinned Quantum C records, with
   changed-offset negative probes in CI; this is not a cross-release ABI baseline.
 - Added an opt-in C11 consumer check for representative signatures and static-library
@@ -463,6 +467,8 @@ STATUS: STARTED
   negative fixture before CI symbol inspection; the regex parser is not exhaustive.
 - Extended the inventory comparison to installed module headers, with changed-name
   and missing-Fluid-header fixtures; it does not verify signatures or ABI.
+- Added a standalone installed module inventory check for release candidates that
+  requires no sibling source repositories; regex and ABI limitations remain.
 - Hardened MSVC archive inspection so failed name checks do not create or overwrite
   symbol evidence; verified tool selection when multiple dumpbin paths are present.
 - Added candidate engine-header selection to archive inspection, with CI using the
@@ -471,6 +477,10 @@ STATUS: STARTED
   module-list fixtures; this cannot establish completeness or ABI compatibility.
 - Added a release-candidate compatibility review checklist covering provenance,
   artifact inspection, comparison, and outstanding policy decisions.
+- Added Windows CI evidence for observed repository revisions, dirty states, cache
+  metadata, and package/symbol hashes; provenance and runtime flags need review.
+- Moved CI-generated directories outside the source checkout so Git dirty status
+  reflects unignored source changes; it remains a point-in-time observation.
 - Added a tested comparison for candidate C symbol names in two archive lists;
   a real previous-release baseline, signature checks, and ABI comparison remain open.
 - Hardened that x64 comparison to reject recognizable x86-style decorated candidate

@@ -15,9 +15,11 @@ $null = New-Item -ItemType Directory -Path $TestRoot
 $root = (Resolve-Path -LiteralPath $TestRoot).Path
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $script = Join-Path $project 'scripts\check-c-api-inventory.ps1'
+$installedScript = Join-Path $project 'scripts\check-installed-c-api-inventory.ps1'
 $inventory = Join-Path $project 'PHASE10_API_INVENTORY.md'
 & $script -ReposRoot $ReposRoot -InventoryPath $inventory -ScratchPath (Join-Path $root 'matching')
 & $script -ReposRoot $ReposRoot -HeadersRoot $HeadersRoot -InventoryPath $inventory -ScratchPath (Join-Path $root 'installed-matching')
+& $installedScript -HeadersRoot $HeadersRoot -InventoryPath $inventory
 
 $text = [IO.File]::ReadAllText($inventory)
 $changed = $text -creplace '(?m)^(- Declarations: [^\r\n]*?)\bqp_create\b', '${1}qp_phase11_missing_symbol'
@@ -33,6 +35,15 @@ try {
 	$rejected = $true
 }
 if (-not $rejected) { throw 'Changed declaration names were not detected.' }
+$rejected = $false
+try {
+	& $installedScript -HeadersRoot $HeadersRoot -InventoryPath $fixture
+} catch {
+	if ($_.Exception.Message -cnotmatch 'QuantumCore removed: qp_phase11_missing_symbol' -or
+		$_.Exception.Message -cnotmatch 'QuantumCore added: qp_create') { throw }
+	$rejected = $true
+}
+if (-not $rejected) { throw 'The standalone check accepted a changed inventory.' }
 
 $headerFixture = Join-Path $root 'installed-headers'
 New-Item -ItemType Directory -Path $headerFixture | Out-Null
@@ -54,6 +65,15 @@ try {
 	$rejected = $true
 }
 if (-not $rejected) { throw 'Changed installed declaration names were not detected.' }
+$rejected = $false
+try {
+	& $installedScript -HeadersRoot $headerFixture -InventoryPath $inventory
+} catch {
+	if ($_.Exception.Message -cnotmatch 'QuantumCore removed: qp_create' -or
+		$_.Exception.Message -cnotmatch 'QuantumCore added: qp_phase11_changed_create') { throw }
+	$rejected = $true
+}
+if (-not $rejected) { throw 'The standalone check accepted changed installed declarations.' }
 
 Remove-Item -LiteralPath (Join-Path $headerFixture 'fluid_c_api.h')
 $rejected = $false
@@ -66,10 +86,26 @@ try {
 if (-not $rejected) { throw 'A missing installed Fluid header was not detected.' }
 $rejected = $false
 try {
+	& $installedScript -HeadersRoot $headerFixture -InventoryPath $inventory
+} catch {
+	if ($_.Exception.Message -cnotmatch 'Missing API header for FluidDynamicsCore') { throw }
+	$rejected = $true
+}
+if (-not $rejected) { throw 'The standalone check accepted a missing Fluid header.' }
+$rejected = $false
+try {
 	& $script -ReposRoot $ReposRoot -HeadersRoot '' -InventoryPath $inventory -ScratchPath (Join-Path $root 'installed-empty')
 } catch {
 	if ($_.Exception.Message -cnotmatch 'Invalid API header directory') { throw }
 	$rejected = $true
 }
 if (-not $rejected) { throw 'An empty installed header directory was not rejected.' }
+$rejected = $false
+try {
+	& $installedScript -HeadersRoot '' -InventoryPath $inventory
+} catch {
+	if ($_.Exception.Message -cnotmatch 'Invalid API header directory|empty string') { throw }
+	$rejected = $true
+}
+if (-not $rejected) { throw 'The standalone check accepted an empty header directory.' }
 Write-Output "Inventory comparison fixtures passed. Fixture retained at $root"

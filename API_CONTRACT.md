@@ -111,6 +111,20 @@ release or an approved stable-surface definition. It does not cover the module
 APIs, new declarations, exports, calling conventions on every toolchain, layouts,
 behavior, or cross-release ABI compatibility.
 
+`tests/test_quantum_callback_baseline.c` and `.cpp` check the observed
+`QP_PotentialFunc` type and the two WKB function signatures in build-tree and
+installed headers. The installed-baseline project also compiles independently
+altered callback-type and WKB-parameter fixtures, with controls verifying that
+the modified headers are selected. These are representative source checks, not
+tests of callback lifetime, null handling, calling conventions on
+every platform, or cross-release ABI compatibility.
+
+`tests/test_quantum_callback_contract.c` additionally calls both WKB functions
+with a C constant-potential callback, checking invocation, argument forwarding,
+and representative results against build-tree and installed static libraries.
+It does not establish a general callback lifetime, thread, null-handling, or
+scientific-correctness policy, or prove cross-release ABI compatibility.
+
 `tests/baselines/quantum_records_msvc_x64.h` is a provisional layout snapshot
 of the four Quantum C records from pinned QuantumCore revision
 `529d5912af6f2e15f1f1a2b04b82f029b6c4e90c`. MSVC x64 C11 and C++17
@@ -216,6 +230,14 @@ developer environment, run:
 Windows CI checks the installed library against its installed engine headers and
 the module inventory, then uploads the sorted archive symbol list. Engine names
 are extracted with a regex, which can miss declarations or include inactive code.
+CI also writes a JSON evidence file containing observed repository commits and
+dirty states, selected CMake cache entries, and SHA-256 hashes of the cache,
+symbol list, and installed package files. CI places dependencies and generated
+build and package directories outside the source checkout so they do not obscure
+the source repository's Git status. Status is a point-in-time observation and
+does not report ignored files. These are local observations, not a
+signed attestation: ignored files, actual compiler flags and runtime settings,
+build provenance, and cross-release ABI compatibility still require review.
 The inspector validates eight distinct, nonempty module declaration lists and
 rejects duplicate names within a list; this does not prove inventory completeness.
 That list includes implementation and toolchain symbols; it is not a public API
@@ -232,6 +254,16 @@ inventory and installed-header fixtures locally, use a fresh path:
 ```powershell
 ./tests/test_c_api_inventory.ps1 -ReposRoot "<sibling-repositories-directory>" -HeadersRoot "<install-prefix>/include" -TestRoot "<new-test-directory>"
 ```
+
+For release review, compare the actual candidate module headers directly with the
+reviewed inventory, without sibling source repositories or generated reports:
+
+```powershell
+./scripts/check-installed-c-api-inventory.ps1 -HeadersRoot "<candidate-prefix>/include" -InventoryPath "<reviewed-inventory.md>"
+```
+
+The inventory defaults to `PHASE10_API_INVENTORY.md`; use one reviewed for the
+candidate. This read-only check compares names per module, not prior releases.
 
 The audit uses a regex-based parser, not a C/C++ compiler: it can miss or
 misinterpret declarations and does not check signatures or preprocessing.

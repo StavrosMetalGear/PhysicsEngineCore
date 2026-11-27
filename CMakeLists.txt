@@ -255,6 +255,8 @@ add_library(test_engine_api_baseline_cpp OBJECT tests/test_engine_api_baseline.c
 target_link_libraries(test_engine_api_baseline_cpp PRIVATE PhysicsEngine)
 add_library(test_capability_baseline_cpp OBJECT tests/test_capability_baseline.cpp)
 target_link_libraries(test_capability_baseline_cpp PRIVATE PhysicsEngine)
+add_library(test_quantum_callback_baseline_cpp OBJECT tests/test_quantum_callback_baseline.cpp)
+target_link_libraries(test_quantum_callback_baseline_cpp PRIVATE PhysicsEngine)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
     add_library(test_quantum_record_layout_cpp OBJECT tests/test_quantum_record_layout_cpp.cpp)
@@ -274,6 +276,10 @@ if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     set_target_properties(test_capability_baseline_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
     target_link_libraries(test_capability_baseline_c PRIVATE PhysicsEngine)
 
+    add_library(test_quantum_callback_baseline_c OBJECT tests/test_quantum_callback_baseline.c)
+    set_target_properties(test_quantum_callback_baseline_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+    target_link_libraries(test_quantum_callback_baseline_c PRIVATE PhysicsEngine)
+
     if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
         add_library(test_quantum_record_layout_c OBJECT tests/test_quantum_record_layout_c.c)
         set_target_properties(test_quantum_record_layout_c PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
@@ -288,6 +294,11 @@ if(PHYSICSCORE_ENABLE_C_API_CHECKS)
     )
     target_link_libraries(test_api_compat_c PRIVATE PhysicsEngine)
     add_test(NAME test_api_compat_c COMMAND test_api_compat_c)
+
+    add_executable(test_quantum_callback_contract tests/test_quantum_callback_contract.c)
+    set_target_properties(test_quantum_callback_contract PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON LINKER_LANGUAGE CXX)
+    target_link_libraries(test_quantum_callback_contract PRIVATE PhysicsEngine)
+    add_test(NAME test_quantum_callback_contract COMMAND test_quantum_callback_contract)
 
     add_executable(test_async_c_contract tests/test_async_c_contract.c)
     set_target_properties(test_async_c_contract PROPERTIES

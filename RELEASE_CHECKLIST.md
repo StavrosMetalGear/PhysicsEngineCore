@@ -42,6 +42,9 @@
 	  treating its proposed rules as a release guarantee.
 - [ ] Record the candidate commit, compiler/toolset, architecture, build configuration,
 	  runtime settings, and all eight sibling revisions with the release evidence.
+- [ ] Retain and verify package and symbol-list hashes with build evidence; the
+	  Windows CI JSON records observed revisions and cache values but is not a signed
+	  attestation and does not establish actual runtime flags or clean ignored files.
 - [ ] Review the installed header manifest and changes against the last released
 	  package; explicitly classify additions, removals, and compatibility impact.
 - [ ] Compare verified previous and candidate include trees with
@@ -50,6 +53,9 @@
 	  installed consumer, and relocation checks appropriate to the release target.
 - [ ] Regenerate and review the module declaration inventory; account for limitations
 	  of the regex parser and independently review public declaration changes.
+- [ ] Compare the candidate include directory against the reviewed inventory using
+	  `scripts/check-installed-c-api-inventory.ps1 -HeadersRoot <candidate-include>`;
+	  matching regex-derived names do not prove declaration or ABI compatibility.
 - [ ] Inspect each release archive with a tool appropriate to its platform and retain
 	  the symbol list together with the corresponding package and build provenance.
 - [ ] For an MSVC x64 static package, run `scripts/inspect-msvc-symbols.ps1` on the
