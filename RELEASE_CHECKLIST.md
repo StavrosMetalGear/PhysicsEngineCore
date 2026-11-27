@@ -53,7 +53,8 @@
 - [ ] Inspect each release archive with a tool appropriate to its platform and retain
 	  the symbol list together with the corresponding package and build provenance.
 - [ ] For an MSVC x64 static package, run `scripts/inspect-msvc-symbols.ps1` on the
-	  actual candidate archive and retain its output and symbol list. Windows CI
+	  actual candidate archive with `-EngineHeadersPath` set to the candidate include
+	  directory, and retain its output and symbol list. Windows CI
 	  currently covers its own installed artifact, not every possible release artifact.
 - [ ] Obtain the actual previous-release artifact or verified symbol list, record its
 	  provenance, and compare comparable builds. Review removals and additions; name

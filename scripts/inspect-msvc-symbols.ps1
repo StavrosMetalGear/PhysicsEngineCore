@@ -3,14 +3,16 @@ param(
 	[Parameter(Mandatory = $true)]
 	[string]$LibraryPath,
 	[string]$InventoryPath = (Join-Path $PSScriptRoot '..\PHASE10_API_INVENTORY.md'),
-	[string]$SymbolListPath
+	[string]$SymbolListPath,
+	[string]$EngineHeadersPath = (Join-Path $PSScriptRoot '..')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $library = (Resolve-Path -LiteralPath $LibraryPath).Path
 $inventory = (Resolve-Path -LiteralPath $InventoryPath).Path
+$headerDirectory = Get-Item -LiteralPath $EngineHeadersPath
+if (-not $headerDirectory.PSIsContainer) { throw "EngineHeadersPath must be a directory: $EngineHeadersPath" }
 $dumpbin = (Get-Command dumpbin.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 
 $output = @(& $dumpbin /linkermember:1 $library)
@@ -40,21 +42,19 @@ if ($expectedRows -le 0 -or $symbolRows -ne $expectedRows) {
 }
 
 $required = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-$declarationLines = @(Get-Content -LiteralPath $inventory | Where-Object { $_ -match '^- Declarations: ' })
-if ($declarationLines.Count -ne 8) {
-	throw "Expected eight module declaration lists in the inventory; found $($declarationLines.Count)."
-}
-foreach ($line in $declarationLines) {
-	foreach ($name in (($line -replace '^- Declarations: ', '') -split ', ')) {
-		if ($name -cnotmatch '^(qp|cp|em|fluid|np|op|ss|td)_[A-Za-z0-9_]+$') {
-			throw "Invalid declaration in inventory: $name"
-		}
+. (Join-Path $PSScriptRoot 'read-c-api-inventory.ps1')
+$moduleDeclarations = Read-Inventory $inventory
+foreach ($names in $moduleDeclarations.Values) {
+	foreach ($name in $names) {
 		[void]$required.Add($name)
 	}
 }
 $moduleCount = $required.Count
+$headerPaths = [System.Collections.Generic.List[string]]::new()
 foreach ($header in @('PhysicsMetadata.h', 'PhysicsAsync.h', 'PhysicsCoupling.h')) {
-	$text = Get-Content -Raw -LiteralPath (Join-Path $projectRoot $header)
+	$headerPath = (Resolve-Path -LiteralPath (Join-Path $headerDirectory.FullName $header)).Path
+	$headerPaths.Add($headerPath)
+	$text = Get-Content -Raw -LiteralPath $headerPath
 	$matchesInHeader = [regex]::Matches($text, 'PHYSENG_API\s+[^;{}]*?\b(pe_[A-Za-z0-9_]+)\s*\(')
 	if ($matchesInHeader.Count -eq 0) { throw "No engine declarations found in $header." }
 	foreach ($match in $matchesInHeader) { [void]$required.Add($match.Groups[1].Value) }
@@ -70,6 +70,11 @@ if ($SymbolListPath) {
 	if ([StringComparer]::OrdinalIgnoreCase.Equals($listPath, $library) -or
 		[StringComparer]::OrdinalIgnoreCase.Equals($listPath, $inventory)) {
 		throw 'The symbol list must not overwrite the library or inventory.'
+	}
+	foreach ($headerPath in $headerPaths) {
+		if ([StringComparer]::OrdinalIgnoreCase.Equals($listPath, $headerPath)) {
+			throw 'The symbol list must not overwrite an engine header.'
+		}
 	}
 	$sortedSymbols = [string[]]@($symbols)
 	[Array]::Sort($sortedSymbols, [StringComparer]::Ordinal)

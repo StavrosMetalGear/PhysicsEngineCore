@@ -116,11 +116,11 @@ jobs:
       - name: Inspect installed static-library symbols
         shell: pwsh
         run: |
-          ./tests/test_c_api_inventory.ps1 -ReposRoot "$env:DEPS_DIR" -TestRoot "$env:RUNNER_TEMP\physics-inventory-fixture"
-          ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib"
+          ./tests/test_c_api_inventory.ps1 -ReposRoot "$env:DEPS_DIR" -HeadersRoot "$env:INSTALL_DIR\include" -TestRoot "$env:RUNNER_TEMP\physics-inventory-fixture"
+          ./tests/test_inspect_msvc_symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -EngineHeadersPath "$env:INSTALL_DIR\include"
           ./tests/test_compare_msvc_c_symbols.ps1
           ./tests/test_compare_package_headers.ps1
-          ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"
+          ./scripts/inspect-msvc-symbols.ps1 -LibraryPath "$env:INSTALL_DIR\lib\PhysicsEngine.lib" -EngineHeadersPath "$env:INSTALL_DIR\include" -SymbolListPath "$env:RUNNER_TEMP\PhysicsEngine-symbols.txt"
 
       - name: Build external consumer
         shell: pwsh

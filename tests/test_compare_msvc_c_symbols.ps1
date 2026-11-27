@@ -33,6 +33,21 @@ try {
 	}
 	if (-not $rejected) { throw 'A removed symbol was not rejected.' }
 
+	foreach ($decorated in @('_qp_destroy', '_qp_destroy@8', 'qp_destroy@8')) {
+		foreach ($inputPath in @($baseline, $current)) {
+			[IO.File]::WriteAllLines($baseline, $names)
+			[IO.File]::WriteAllLines($current, $names)
+			[IO.File]::WriteAllLines($inputPath, [string[]]($names + $decorated))
+			$rejected = $false
+			try { & $script -BaselinePath $baseline -CurrentPath $current } catch {
+				if (-not $_.Exception.Message.Contains("Unsupported decorated candidate C symbol in ${inputPath}: $decorated")) { throw }
+				$rejected = $true
+			}
+			if (-not $rejected) { throw "Decorated symbol $decorated was not rejected in $inputPath." }
+		}
+	}
+	[IO.File]::WriteAllLines($baseline, $names)
+
 	[IO.File]::WriteAllLines($current, [string[]]@($names | Where-Object { $_ -cne 'em_create' }))
 	$rejected = $false
 	try { & $script -BaselinePath $baseline -CurrentPath $current } catch {

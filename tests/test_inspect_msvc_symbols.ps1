@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
 	[Parameter(Mandatory = $true)]
-	[string]$LibraryPath
+	[string]$LibraryPath,
+	[string]$EngineHeadersPath = (Join-Path $PSScriptRoot '..')
 )
 
 Set-StrictMode -Version Latest
@@ -14,7 +15,7 @@ New-Item -ItemType Directory -Path $temp -Force | Out-Null
 
 try {
 	$listPath = Join-Path $temp 'symbols.txt'
-	& $script -LibraryPath $LibraryPath -SymbolListPath $listPath
+	& $script -LibraryPath $LibraryPath -EngineHeadersPath $EngineHeadersPath -SymbolListPath $listPath
 	$names = @(Get-Content -LiteralPath $listPath)
 	if ('pe_version' -cnotin $names -or 'qp_create' -cnotin $names) {
 		throw 'The symbol list is missing expected entries.'
@@ -47,6 +48,54 @@ try {
 	if (-not $rejected -or [IO.File]::ReadAllText($failedListPath) -cne 'existing evidence') {
 		throw 'A failed verification modified an existing symbol list.'
 	}
+
+	$malformedFixtures = @(
+		@{ Name = 'duplicate-module'; Text = $contents -creplace '(?m)^## OpticsCore\s*$', '## QuantumCore'; Expected = 'Duplicate module.*QuantumCore' },
+		@{ Name = 'duplicate-name'; Text = $contents -creplace '(?m)^(- Declarations: [^\r\n]*?)\bqp_create\b', '${1}qp_create, qp_create'; Expected = 'Invalid or duplicate declaration.*qp_create' },
+		@{ Name = 'missing-list'; Text = $contents -creplace '(?m)^(- Declarations: )(?=op_)[^\r\n]+', '${1}'; Expected = 'Missing declaration list for OpticsCore' }
+	)
+	foreach ($case in $malformedFixtures) {
+		if ($case.Text -ceq $contents) { throw "Could not create fixture $($case.Name)." }
+		$fixture = Join-Path $temp "$($case.Name).md"
+		[IO.File]::WriteAllText($fixture, $case.Text)
+		$rejected = $false
+		try {
+			& $script -LibraryPath $LibraryPath -InventoryPath $fixture -SymbolListPath $failedListPath
+		} catch {
+			if ($_.Exception.Message -cnotmatch $case.Expected) { throw }
+			$rejected = $true
+		}
+		if (-not $rejected -or [IO.File]::ReadAllText($failedListPath) -cne 'existing evidence') {
+			throw "Malformed inventory $($case.Name) was not safely rejected."
+		}
+	}
+
+	$headerFixture = Join-Path $temp 'headers'
+	New-Item -ItemType Directory -Path $headerFixture | Out-Null
+	foreach ($header in @('PhysicsMetadata.h', 'PhysicsAsync.h', 'PhysicsCoupling.h')) {
+		Copy-Item -LiteralPath (Join-Path $EngineHeadersPath $header) -Destination $headerFixture
+	}
+	$metadata = Join-Path $headerFixture 'PhysicsMetadata.h'
+	$originalMetadata = [IO.File]::ReadAllText($metadata)
+	$rejected = $false
+	try {
+		& $script -LibraryPath $LibraryPath -EngineHeadersPath $headerFixture -SymbolListPath $metadata
+	} catch {
+		if ($_.Exception.Message -cnotmatch 'must not overwrite an engine header') { throw }
+		$rejected = $true
+	}
+	if (-not $rejected -or [IO.File]::ReadAllText($metadata) -cne $originalMetadata) {
+		throw 'An engine header was not protected from symbol output.'
+	}
+	[IO.File]::AppendAllText($metadata, "`nPHYSENG_API int pe_phase11_missing_header_symbol(void);`n")
+	$rejected = $false
+	try {
+		& $script -LibraryPath $LibraryPath -EngineHeadersPath $headerFixture
+	} catch {
+		if ($_.Exception.Message -cnotmatch 'pe_phase11_missing_header_symbol') { throw }
+		$rejected = $true
+	}
+	if (-not $rejected) { throw 'A missing symbol from the selected engine header was not detected.' }
 
 	$rejected = $false
 	try {

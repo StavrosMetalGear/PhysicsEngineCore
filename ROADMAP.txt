@@ -448,6 +448,8 @@ STATUS: STARTED
   consumers against copied package headers and a Release archive at a new path.
 - Added installed-package C/C++ signature and MSVC x64 Quantum layout snapshot
   checks, with altered installed-header signature probes in CI.
+- Added installed Quantum header field-type mutation probes and layout-preserving
+  controls for MSVC x64 C and C++; this is not a cross-release ABI guarantee.
 - Extended installed-package coverage to representative module C/C++ types, C
   static-library linkage, and the C async callback lifecycle test.
 - Added independent C11/C++17 compile checks for the 20 listed installed C API
@@ -459,12 +461,20 @@ STATUS: STARTED
   checks the installed archive and uploads its full symbol list.
 - Added a current-header declaration-name inventory comparison and changed-name
   negative fixture before CI symbol inspection; the regex parser is not exhaustive.
+- Extended the inventory comparison to installed module headers, with changed-name
+  and missing-Fluid-header fixtures; it does not verify signatures or ABI.
 - Hardened MSVC archive inspection so failed name checks do not create or overwrite
   symbol evidence; verified tool selection when multiple dumpbin paths are present.
+- Added candidate engine-header selection to archive inspection, with CI using the
+  installed headers and negative fixtures; module names still use the inventory.
+- Shared structural inventory validation with archive inspection, including malformed
+  module-list fixtures; this cannot establish completeness or ABI compatibility.
 - Added a release-candidate compatibility review checklist covering provenance,
   artifact inspection, comparison, and outstanding policy decisions.
 - Added a tested comparison for candidate C symbol names in two archive lists;
   a real previous-release baseline, signature checks, and ABI comparison remain open.
+- Hardened that x64 comparison to reject recognizable x86-style decorated candidate
+  names in either input; this does not establish architecture or list completeness.
 - Added a tested installed-include-tree comparison for added, removed, and
   byte-changed files; semantic and real previous-release review remain open.
 - Added provisional C API revision macros and a runtime bitmask of compiled-in

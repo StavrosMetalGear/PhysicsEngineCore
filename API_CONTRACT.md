@@ -124,7 +124,11 @@ cmake -S tests/quantum_layout_baseline -B out/phase11-quantum-layout -G Ninja -D
 ```
 
 Set `PHYSICSCORE_REPOS_DIR` if the sibling repositories are not in the default
-location. The two failed negative probes are intentional. This snapshot is not a
+location. The two failed negative probes are intentional. The installed-baseline
+project also tests a copied installed Quantum header whose `QP_EnergyLevel2D::nx`
+type is changed from `int` to `unsigned int`: C and C++ control probes verify the
+fixture's type, size, alignment, and offsets, and the snapshot checks must reject it.
+These probes run only for MSVC x64. This snapshot is not a
 previous release or a stability guarantee. It does not cover other records,
 platforms, nondefault packing, newly added fields that fit existing padding,
 function calling conventions, or runtime and cross-release ABI compatibility.
@@ -200,26 +204,33 @@ compatibility; in particular, the Solid State C non-prototypes noted below remai
 On Windows, `scripts/inspect-msvc-symbols.ps1` uses `dumpbin /linkermember:1` to
 inspect the installed MSVC x64 static library. It checks the module declarations
 listed in `PHASE10_API_INVENTORY.md` and engine declarations in `PhysicsMetadata.h`,
-`PhysicsAsync.h`, and `PhysicsCoupling.h`. In an MSVC developer environment, run:
+`PhysicsAsync.h`, and `PhysicsCoupling.h`. Specify `EngineHeadersPath` to inspect
+the candidate package headers; it defaults to the current source tree. In an MSVC
+developer environment, run:
 
 ```powershell
-./scripts/inspect-msvc-symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib -SymbolListPath out/phase11-symbols.txt
-./tests/test_inspect_msvc_symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib
+./scripts/inspect-msvc-symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib -EngineHeadersPath out/phase11-install/include -SymbolListPath out/phase11-symbols.txt
+./tests/test_inspect_msvc_symbols.ps1 -LibraryPath out/phase11-install/lib/PhysicsEngine.lib -EngineHeadersPath out/phase11-install/include
 ```
 
-Windows CI checks the installed library and uploads the sorted archive symbol list.
+Windows CI checks the installed library against its installed engine headers and
+the module inventory, then uploads the sorted archive symbol list. Engine names
+are extracted with a regex, which can miss declarations or include inactive code.
+The inspector validates eight distinct, nonempty module declaration lists and
+rejects duplicate names within a list; this does not prove inventory completeness.
 That list includes implementation and toolchain symbols; it is not a public API
 manifest or a DLL export list. The inspector writes the requested list only after
 all expected names are present; if verification fails, an existing list is left
 untouched and may be stale. Use a fresh output path for each artifact. The
 generated module inventory is a snapshot and
-must be regenerated and reviewed when declarations change. Windows CI now
-regenerates declaration names from the current module headers and compares each
-module with the checked-in inventory before inspecting the archive. To run the
-matching and deliberately altered-inventory fixtures locally, use a fresh path:
+must be regenerated and reviewed when declarations change. Windows CI compares
+declaration names from both source and installed module headers with the checked-in
+inventory before inspecting the archive. The audit still reads sibling source
+definitions for its other reports. To run the matching and deliberately altered
+inventory and installed-header fixtures locally, use a fresh path:
 
 ```powershell
-./tests/test_c_api_inventory.ps1 -ReposRoot "<sibling-repositories-directory>" -TestRoot "<new-test-directory>"
+./tests/test_c_api_inventory.ps1 -ReposRoot "<sibling-repositories-directory>" -HeadersRoot "<install-prefix>/include" -TestRoot "<new-test-directory>"
 ```
 
 The audit uses a regex-based parser, not a C/C++ compiler: it can miss or
@@ -231,7 +242,10 @@ remain open.
 
 `scripts/compare-msvc-c-symbols.ps1` compares two such archive symbol lists. It
 reports additions and fails on removals of undecorated names with the engine or
-module prefixes; it ignores other names. For example, after obtaining the list
+module prefixes. It rejects recognizable leading-underscore and `@N` decorated
+candidate C names rather than silently ignoring them; other names are ignored.
+This check does not identify every decoration or determine the architecture. For
+example, after obtaining the list
 from an actual previous release and generating the current list, run:
 
 ```powershell

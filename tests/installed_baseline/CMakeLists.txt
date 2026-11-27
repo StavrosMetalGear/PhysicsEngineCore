@@ -100,3 +100,75 @@ foreach(language IN ITEMS C CXX)
 endforeach()
 
 message(STATUS "C and C++ installed-header checks detect the changed fixture.")
+
+if((CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "x64") OR
+   (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64"))
+	unset(installed_quantum_header CACHE)
+	find_file(installed_quantum_header NAMES quantum_c_api.h PATHS ${package_includes} NO_DEFAULT_PATH)
+	if(NOT installed_quantum_header)
+		message(FATAL_ERROR "quantum_c_api.h not found in the installed package include directories.")
+	endif()
+	file(READ "${installed_quantum_header}" quantum_header)
+	set(original "int nx, ny;")
+	set(changed "unsigned int nx; int ny;")
+	string(REPLACE "${original}" "${changed}" modified_quantum_header "${quantum_header}")
+	if(modified_quantum_header STREQUAL quantum_header)
+		message(FATAL_ERROR "Could not construct the installed Quantum field-type fixture.")
+	endif()
+	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/negative-quantum")
+	file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/negative-quantum/quantum_c_api.h" "${modified_quantum_header}")
+	set(quantum_fixture_control [=[
+#include "quantum_c_api.h"
+#include <stddef.h>
+#ifdef __cplusplus
+#include <type_traits>
+static_assert(sizeof(QP_EnergyLevel2D) == 16 && alignof(QP_EnergyLevel2D) == 8, "record layout changed");
+static_assert(std::is_same_v<decltype(QP_EnergyLevel2D::nx), unsigned int>, "fixture type not selected");
+#else
+_Static_assert(sizeof(QP_EnergyLevel2D) == 16 && _Alignof(QP_EnergyLevel2D) == 8, "record layout changed");
+_Static_assert(_Generic(((QP_EnergyLevel2D*)0)->nx, unsigned int: 1, default: 0), "fixture type not selected");
+#endif
+#ifdef __cplusplus
+static_assert(offsetof(QP_EnergyLevel2D, nx) == 0 && offsetof(QP_EnergyLevel2D, ny) == 4 && offsetof(QP_EnergyLevel2D, energy) == 8, "field offsets changed");
+#else
+_Static_assert(offsetof(QP_EnergyLevel2D, nx) == 0 && offsetof(QP_EnergyLevel2D, ny) == 4 && offsetof(QP_EnergyLevel2D, energy) == 8, "field offsets changed");
+#endif
+]=])
+	foreach(language IN ITEMS C CXX)
+		if(NOT CMAKE_${language}_COMPILER_ID STREQUAL "MSVC" OR NOT CMAKE_${language}_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
+			continue()
+		endif()
+		if(language STREQUAL "C")
+			file(READ "${project_root}/tests/test_quantum_record_layout_c.c" source)
+		else()
+			file(READ "${project_root}/tests/test_quantum_record_layout_cpp.cpp" source)
+		endif()
+		set(positive "${language}_INSTALLED_QUANTUM_LAYOUT_COMPILES")
+		set(control "${language}_CHANGED_QUANTUM_LAYOUT_CONTROL_COMPILES")
+		set(negative "${language}_CHANGED_QUANTUM_FIELD_TYPE_COMPILES")
+		unset(${positive} CACHE)
+		unset(${control} CACHE)
+		unset(${negative} CACHE)
+		set(CMAKE_REQUIRED_INCLUDES "${project_root}/tests")
+		if(language STREQUAL "C")
+			check_c_source_compiles("${source}" ${positive})
+		else()
+			check_cxx_source_compiles("${source}" ${positive})
+		endif()
+		if(NOT ${positive})
+			message(FATAL_ERROR "${language}: installed Quantum records do not match the layout snapshot.")
+		endif()
+		set(CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_BINARY_DIR}/negative-quantum;${project_root}/tests")
+		if(language STREQUAL "C")
+			check_c_source_compiles("${quantum_fixture_control}" ${control})
+			check_c_source_compiles("${source}" ${negative})
+		else()
+			check_cxx_source_compiles("${quantum_fixture_control}" ${control})
+			check_cxx_source_compiles("${source}" ${negative})
+		endif()
+		if(NOT ${control} OR ${negative})
+			message(FATAL_ERROR "${language}: installed Quantum field-type fixture was not correctly detected.")
+		endif()
+	endforeach()
+	message(STATUS "Installed Quantum layout checks detect the changed field type.")
+endif()

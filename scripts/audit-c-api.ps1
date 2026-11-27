@@ -4,12 +4,17 @@ param(
 	[string]$OutputPath = (Join-Path $PSScriptRoot '..\PHASE10_API_INVENTORY.md'),
 	[string]$CategoryOutputPath = (Join-Path $PSScriptRoot '..\PHASE10_API_CATEGORIES.md'),
 	[string]$TestPlanOutputPath = (Join-Path $PSScriptRoot '..\PHASE10_API_TEST_PLAN.md'),
-	[string]$TestsRoot = (Join-Path $PSScriptRoot '..\tests')
+	[string]$TestsRoot = (Join-Path $PSScriptRoot '..\tests'),
+	[string]$HeadersRoot
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$useHeadersRoot = $PSBoundParameters.ContainsKey('HeadersRoot')
+if ($useHeadersRoot -and ([string]::IsNullOrWhiteSpace($HeadersRoot) -or -not (Test-Path -LiteralPath $HeadersRoot -PathType Container))) {
+	throw "Invalid API header directory: $HeadersRoot"
+}
 
 $modules = @(
 	@{ Name = 'QuantumCore'; Prefix = 'quantum'; Header = 'quantum_c_api.h'; Source = 'quantum_c_api.cpp' },
@@ -101,7 +106,9 @@ $report.Add('|---|---|---|---:|---:|---:|---:|')
 foreach ($module in $modules) {
 	$repo = Join-Path (Resolve-Path $ReposRoot) $module.Name
 	$headerPath = Join-Path $repo $module.Header
-	if ($module.Name -eq 'FluidDynamicsCore') {
+	if ($useHeadersRoot) {
+		$headerPath = Join-Path $HeadersRoot $module.Header
+	} elseif ($module.Name -eq 'FluidDynamicsCore') {
 		$headerPath = Join-Path $projectRoot 'fluid_c_api.h'
 	}
 	$sourcePath = Join-Path $repo $module.Source

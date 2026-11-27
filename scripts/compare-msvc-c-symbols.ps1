@@ -17,6 +17,9 @@ function Read-CandidateSymbols([string]$Path) {
 	foreach ($line in [IO.File]::ReadAllLines($resolved)) {
 		if ($line -notmatch '^\S+$') { throw "Invalid symbol entry in $resolved" }
 		if (-not $all.Add($line)) { throw "Duplicate symbol in ${resolved}: $line" }
+		if ($line -cmatch '^(_(pe|qp|cp|em|fluid|np|op|ss|td)_[A-Za-z0-9_]+(@[0-9]+)?|(pe|qp|cp|em|fluid|np|op|ss|td)_[A-Za-z0-9_]+@[0-9]+)$') {
+			throw "Unsupported decorated candidate C symbol in ${resolved}: $line; compare compatible MSVC x64 symbol lists."
+		}
 		if ($line -cmatch '^(pe|qp|cp|em|fluid|np|op|ss|td)_[A-Za-z0-9_]+$') {
 			[void]$candidates.Add($line)
 		}
