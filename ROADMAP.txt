@@ -67,6 +67,15 @@ Architecture summary
 Phases and ordered work
 -----------------------
 
+Phases 1-10 describe completed or historical work. Phase numbers below are stable
+identifiers, not an instruction to execute in numerical order. After Phase 10,
+the preferred order is 17 -> 14 -> 22 -> 15 -> 11 -> 12 -> 13 -> 16 -> 18 ->
+19 -> 20 -> 21. Work may overlap where dependencies require it: implement the
+minimum collision correctness needed by Phase 17 first, and measure Phase 10.5
+workloads before performance optimization in Phase 15. Phase 10.5 and Phase 11
+remain STARTED, not completed; revisit their open work before making release or
+compatibility promises. Keep build and correctness tests running throughout.
+
 PHASE 1 - Establish a reproducible build foundation
 Goal: Anyone can configure the project without editing source paths.
 
@@ -410,6 +419,107 @@ STATUS: STARTED
 - Phase 10's 811/811 declaration-reference coverage is not proof of scientific
   correctness; retain the open findings in PHASE10_API_AUDIT.md as correctness work.
 
+PHASE 17 - Simulation world and systems layer
+----------------------------------------------
+Goal: Provide a coherent runtime layer above stateless formulas and geometry primitives.
+
+154. Define world, entity, component, and system ownership boundaries.
+155. Decide whether the first runtime targets rigid bodies, particles, fluids, or mixed domains.
+156. Add a fixed-timestep update model with accumulator and interpolation guidance.
+157. Define units, coordinate conventions, integration schemes, and stability limits.
+158. Implement a minimal deterministic world loop using existing collision primitives.
+159. Add broadphase/narrowphase integration with stable entity identifiers.
+160. Add integration tests for gravity, contacts, sleeping, and removal during iteration.
+161. Define serialization and replay requirements for deterministic debugging.
+162. Keep the systems layer additive and separate from the existing C formula APIs.
+
+FIRST VERTICAL SLICE (next active work; Phase 17 is not complete)
+- Select a small, explicit rigid-body and shape subset after inspecting existing
+  collision code and its known limitations; keep unsupported combinations explicit.
+- Define ownership, units, fixed-step semantics, and body identifiers before coding.
+- Build a minimal single-threaded world with gravity, selected collision queries,
+  and simple contact response; add deterministic regression tests for the supported
+  cases and an executable consumer demonstrating bodies interacting with a floor.
+- Integrate only the Phase 14 collision fixes required by that slice; defer broader
+  shape coverage and production-quality solver claims until tested.
+- Design repeatable PC workloads and measure before optimization. Target bounded,
+  low-allocation steady-state behavior where feasible; verify, do not assume it.
+
+PHASE 17 CHECKPOINT
+-------------------
+A minimal deterministic simulation world can be created, stepped, tested, and consumed
+without requiring callers to assemble internal collision and scheduling details manually.
+
+PHASE 14 - Collision accuracy and physical robustness
+------------------------------------------------------
+Goal: Move the collision subsystem from testable primitives toward production accuracy.
+
+125. Define a contact manifold and collision-query result type beyond boolean intersection.
+126. Implement robust OBB cross-axis separation tests.
+127. Implement and validate convex GJK intersection queries.
+128. Add EPA penetration depth and contact-normal support where appropriate.
+129. Improve triangle edge, vertex, and coplanar proximity handling.
+130. Define tolerances and scale policies for very small and very large geometry.
+131. Add randomized differential tests against trusted reference implementations.
+132. Add deterministic regression fixtures for touching, coplanar, nested, and degenerate shapes.
+133. Document collision conventions, coordinate systems, winding, normals, and tolerances.
+134. Benchmark broadphase candidate reduction and narrowphase accuracy separately.
+
+PHASE 14 CHECKPOINT
+-------------------
+Collision queries have documented result semantics, scale-aware tolerances, deterministic
+regressions, and reference-backed accuracy for all supported shape pairs.
+
+PHASE 22 - Small open-world physics integration
+------------------------------------------------
+Goal: Support a bounded, playable small-world physics prototype without claiming a
+complete GTA-scale game engine or adding rendering, AI, or asset systems to this library.
+
+199. Define an initial representative map extent, body counts, timestep, supported
+	 PC targets and Android target devices; record these as provisional workloads.
+200. Define world/physics ownership and host-game interfaces for spawning, removing,
+	 transforms, collision queries, and fixed-tick synchronization.
+201. Select and test a spatial partition for active physics bodies and static world
+	 geometry; compare results with a simple reference and measure candidate counts.
+202. Define cell activation and deactivation, collision-data loading boundaries,
+	 and transitions; the host game owns asset and rendering streaming.
+203. Specify coordinate precision and evaluate origin shifting if measurements and
+	 world extent require it; test collision continuity at cell and origin boundaries.
+204. Add representative terrain/static geometry, player and vehicle-like test
+	 scenarios within explicitly supported collision and motion models.
+205. Define bounded memory, body/cell limits, overflow behavior, and allocation
+	 expectations; measure actual allocations, timing, and memory on PC and Android.
+206. Test repeatable cell transitions, object lifecycle, fixed-step operation, and
+	 replay on the same supported configuration; do not assume cross-platform determinism.
+207. Provide a small external game-facing example and document integration limits,
+	 including which rendering, audio, input, networking, and gameplay systems are external.
+
+PHASE 22 CHECKPOINT
+-------------------
+A small host-driven world prototype runs representative scenes with documented
+limits and correctness tests; PC results are measured and Android results are recorded
+on available real hardware rather than inferred from PC.
+
+PHASE 15 - Performance and memory engineering
+-----------------------------------------------
+Goal: Extend the Phase 10.5 baseline into measurable performance budgets and ongoing
+performance engineering for engine and collision workloads.
+
+135. Define representative workloads for metadata, coupling, async, broadphase, and narrowphase.
+136. Add repeatable Release benchmarks with recorded compiler and machine metadata.
+137. Measure allocation counts and peak memory for representative workloads.
+138. Profile worker-pool contention, queue latency, completion retention, and shutdown time.
+139. Profile broadphase pair generation and narrowphase dispatch separately.
+140. Define performance budgets and regression thresholds for critical workloads.
+141. Optimize only after collecting baseline measurements and preserve correctness tests.
+142. Add sanitizer or runtime-checking jobs where supported by each toolchain.
+143. Document benchmark methodology and prevent noisy measurements from becoming hard gates.
+
+PHASE 15 CHECKPOINT
+-------------------
+Performance and memory changes are measurement-driven, reproducible, and protected by
+regression thresholds without sacrificing numerical or collision correctness.
+
 PHASE 11 - API and ABI evolution
 ---------------------------------
 Goal: Establish a controlled compatibility strategy before adding larger features.
@@ -475,12 +585,16 @@ STATUS: STARTED
   installed headers and negative fixtures; module names still use the inventory.
 - Shared structural inventory validation with archive inspection, including malformed
   module-list fixtures; this cannot establish completeness or ABI compatibility.
+- Reject inventory declarations assigned to a module with the wrong name prefix;
+  this checks inventory consistency, not API completeness.
 - Added a release-candidate compatibility review checklist covering provenance,
   artifact inspection, comparison, and outstanding policy decisions.
 - Added Windows CI evidence for observed repository revisions, dirty states, cache
   metadata, and package/symbol hashes; provenance and runtime flags need review.
 - Moved CI-generated directories outside the source checkout so Git dirty status
   reflects unignored source changes; it remains a point-in-time observation.
+- Added fail-fast dependency checkout and pinned-commit verification with negative
+  fixtures; subsequent source changes and release provenance still require review.
 - Added a tested comparison for candidate C symbol names in two archive lists;
   a real previous-release baseline, signature checks, and ABI comparison remain open.
 - Hardened that x64 comparison to reject recognizable x86-style decorated candidate
@@ -551,46 +665,6 @@ PHASE 13 CHECKPOINT
 The supported platform matrix is evidence-based, documented, and continuously tested;
 MSVC remains protected as a required gate throughout the portability work.
 
-PHASE 14 - Collision accuracy and physical robustness
-------------------------------------------------------
-Goal: Move the collision subsystem from testable primitives toward production accuracy.
-
-125. Define a contact manifold and collision-query result type beyond boolean intersection.
-126. Implement robust OBB cross-axis separation tests.
-127. Implement and validate convex GJK intersection queries.
-128. Add EPA penetration depth and contact-normal support where appropriate.
-129. Improve triangle edge, vertex, and coplanar proximity handling.
-130. Define tolerances and scale policies for very small and very large geometry.
-131. Add randomized differential tests against trusted reference implementations.
-132. Add deterministic regression fixtures for touching, coplanar, nested, and degenerate shapes.
-133. Document collision conventions, coordinate systems, winding, normals, and tolerances.
-134. Benchmark broadphase candidate reduction and narrowphase accuracy separately.
-
-PHASE 14 CHECKPOINT
--------------------
-Collision queries have documented result semantics, scale-aware tolerances, deterministic
-regressions, and reference-backed accuracy for all supported shape pairs.
-
-PHASE 15 - Performance and memory engineering
------------------------------------------------
-Goal: Extend the Phase 10.5 baseline into measurable performance budgets and ongoing
-performance engineering for engine and collision workloads.
-
-135. Define representative workloads for metadata, coupling, async, broadphase, and narrowphase.
-136. Add repeatable Release benchmarks with recorded compiler and machine metadata.
-137. Measure allocation counts and peak memory for representative workloads.
-138. Profile worker-pool contention, queue latency, completion retention, and shutdown time.
-139. Profile broadphase pair generation and narrowphase dispatch separately.
-140. Define performance budgets and regression thresholds for critical workloads.
-141. Optimize only after collecting baseline measurements and preserve correctness tests.
-142. Add sanitizer or runtime-checking jobs where supported by each toolchain.
-143. Document benchmark methodology and prevent noisy measurements from becoming hard gates.
-
-PHASE 15 CHECKPOINT
--------------------
-Performance and memory changes are measurement-driven, reproducible, and protected by
-regression thresholds without sacrificing numerical or collision correctness.
-
 PHASE 16 - Async execution and scheduling model
 -----------------------------------------------
 Goal: Evolve the basic worker pool into a predictable engine scheduling service.
@@ -610,25 +684,6 @@ PHASE 16 CHECKPOINT
 -------------------
 Async callers have documented cancellation, failure, result, lifecycle, and scheduling
 semantics with deterministic tests for races and high-volume operation.
-
-PHASE 17 - Simulation world and systems layer
-----------------------------------------------
-Goal: Provide a coherent runtime layer above stateless formulas and geometry primitives.
-
-154. Define world, entity, component, and system ownership boundaries.
-155. Decide whether the first runtime targets rigid bodies, particles, fluids, or mixed domains.
-156. Add a fixed-timestep update model with accumulator and interpolation guidance.
-157. Define units, coordinate conventions, integration schemes, and stability limits.
-158. Implement a minimal deterministic world loop using existing collision primitives.
-159. Add broadphase/narrowphase integration with stable entity identifiers.
-160. Add integration tests for gravity, contacts, sleeping, and removal during iteration.
-161. Define serialization and replay requirements for deterministic debugging.
-162. Keep the systems layer additive and separate from the existing C formula APIs.
-
-PHASE 17 CHECKPOINT
--------------------
-A minimal deterministic simulation world can be created, stepped, tested, and consumed
-without requiring callers to assemble internal collision and scheduling details manually.
 
 PHASE 18 - Developer tools and observability
 --------------------------------------------

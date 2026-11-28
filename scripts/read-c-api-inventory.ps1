@@ -1,6 +1,11 @@
 function Read-Inventory([string]$Path) {
 	$sets = @{}
 	$current = $null
+	$prefixes = @{
+		QuantumCore = 'qp'; ClassicalMechanicsCore = 'cp'; ElectrodynamicsCore = 'em';
+		FluidDynamicsCore = 'fluid'; NuclearCore = 'np'; OpticsCore = 'op';
+		SolidStateCore = 'ss'; ThermodynamicsCore = 'td'
+	}
 	foreach ($line in [IO.File]::ReadAllLines((Resolve-Path -LiteralPath $Path).Path)) {
 		if ($line -cmatch '^## ([A-Za-z]+Core)$') {
 			$current = $Matches[1]
@@ -12,6 +17,9 @@ function Read-Inventory([string]$Path) {
 			foreach ($name in ($Matches[1] -split ', ')) {
 				if ($name -cnotmatch '^(qp|cp|em|fluid|np|op|ss|td)_[A-Za-z0-9_]+$' -or -not $names.Add($name)) {
 					throw "Invalid or duplicate declaration in ${Path}: $name"
+				}
+				if (-not $prefixes.ContainsKey($current) -or -not $name.StartsWith("$($prefixes[$current])_", [StringComparison]::Ordinal)) {
+					throw "Incorrect declaration prefix for ${current} in ${Path}: $name"
 				}
 			}
 			$sets[$current] = $names

@@ -43,6 +43,7 @@ jobs:
       - name: Checkout pinned sibling repositories
         shell: pwsh
         run: |
+          ./tests/test_pinned_revision.ps1
           $repos = @{
             QuantumCore = @('https://github.com/StavrosMetalGear/QuantumCore.git', '529d5912af6f2e15f1f1a2b04b82f029b6c4e90c')
             ClassicalMechanicsCore = @('https://github.com/StavrosMetalGear/ClassicalMechanicsCore.git', '044a8fa6f13fbb32b96b45a27d499fafd853d088')
@@ -56,7 +57,10 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:DEPS_DIR | Out-Null
           foreach ($entry in $repos.GetEnumerator()) {
             git clone $entry.Value[0] "$env:DEPS_DIR\$($entry.Key)"
+            if ($LASTEXITCODE -ne 0) { throw "Clone failed for $($entry.Key): exit $LASTEXITCODE" }
             git -C "$env:DEPS_DIR\$($entry.Key)" checkout --detach $entry.Value[1]
+            if ($LASTEXITCODE -ne 0) { throw "Checkout failed for $($entry.Key): exit $LASTEXITCODE" }
+            ./scripts/check-pinned-revision.ps1 -RepositoryPath "$env:DEPS_DIR\$($entry.Key)" -ExpectedCommit $entry.Value[1]
           }
 
       - name: Configure

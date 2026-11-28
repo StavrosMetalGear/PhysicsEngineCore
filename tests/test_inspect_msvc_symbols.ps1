@@ -52,6 +52,7 @@ try {
 	$malformedFixtures = @(
 		@{ Name = 'duplicate-module'; Text = $contents -creplace '(?m)^## OpticsCore\s*$', '## QuantumCore'; Expected = 'Duplicate module.*QuantumCore' },
 		@{ Name = 'duplicate-name'; Text = $contents -creplace '(?m)^(- Declarations: [^\r\n]*?)\bqp_create\b', '${1}qp_create, qp_create'; Expected = 'Invalid or duplicate declaration.*qp_create' },
+		@{ Name = 'wrong-module-prefix'; Text = $contents -creplace '(?m)^(- Declarations: [^\r\n]*?)\bqp_create\b', '${1}cp_create'; Expected = 'Incorrect declaration prefix for QuantumCore.*cp_create' },
 		@{ Name = 'missing-list'; Text = $contents -creplace '(?m)^(- Declarations: )(?=op_)[^\r\n]+', '${1}'; Expected = 'Missing declaration list for OpticsCore' }
 	)
 	foreach ($case in $malformedFixtures) {

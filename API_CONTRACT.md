@@ -238,8 +238,11 @@ the source repository's Git status. Status is a point-in-time observation and
 does not report ignored files. These are local observations, not a
 signed attestation: ignored files, actual compiler flags and runtime settings,
 build provenance, and cross-release ABI compatibility still require review.
+CI checks each sibling checkout against its pinned commit and stops on Git
+clone or checkout failures; this does not verify subsequent source changes.
 The inspector validates eight distinct, nonempty module declaration lists and
-rejects duplicate names within a list; this does not prove inventory completeness.
+rejects duplicate names within a list and names with the wrong module prefix;
+this does not prove inventory completeness.
 That list includes implementation and toolchain symbols; it is not a public API
 manifest or a DLL export list. The inspector writes the requested list only after
 all expected names are present; if verification fails, an existing list is left
