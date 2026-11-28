@@ -371,6 +371,17 @@ target_include_directories(PhysicsEngineTest PRIVATE
 )
 
 # ── Unified API integration test ─────────────────────────────────────────────
+add_library(phase17_simulation_world STATIC experimental/SimulationWorld.cpp)
+target_include_directories(phase17_simulation_world PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(test_simulation_world tests/test_simulation_world.cpp)
+target_link_libraries(test_simulation_world PRIVATE phase17_simulation_world)
+add_test(NAME test_simulation_world COMMAND test_simulation_world)
+
+add_executable(simulation_world_example examples/simulation_world.cpp)
+target_link_libraries(simulation_world_example PRIVATE phase17_simulation_world)
+add_test(NAME simulation_world_example COMMAND simulation_world_example)
+
 add_executable(test_engine_integration tests/test_engine_integration.cpp)
 target_link_libraries(test_engine_integration PRIVATE PhysicsEngine)
 target_include_directories(test_engine_integration PRIVATE
